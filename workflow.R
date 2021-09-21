@@ -33,6 +33,7 @@ make_exp_details = function(folder_name, samplesheet) {
                               str_detect(value, "DGY1315") ~ "ctrl2",
                               TRUE ~ samp)) %>%
     select(value,sample) %>%
+    rename(name = value) %>%
     filter(!is.na(sample))
   
   all = files %>%
