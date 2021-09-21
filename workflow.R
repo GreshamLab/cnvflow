@@ -2,17 +2,6 @@
 #Started: Sept 21, 2021
 #Authors: Julie Chuong, Titir De, Grace Avecilla, David Gresham
 
-##Install CytoExplorer package and requirements (can be skipped if already installed)
-#library(BiocManager)
-#install("cytolib", "flowCore", "flowWorkspace", "openCyto")
-
-##Install CytoExploreR from GitHub:
-#library(devtools)
-#devtools::install_github("DillonHammill/CytoExploreR")
-
-# Load required packages
-library(CytoExploreR)
-library(tidyverse)
 
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
