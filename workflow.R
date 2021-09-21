@@ -18,7 +18,33 @@ library(tidyverse)
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
 #Author: Grace
+setwd('./Summer 2021 Group LTEE/FCS files/')
 
+make_exp_details = function(folder_name, samplesheet) {
+  pref = folder_name %>% str_extract("^([0-9])+_EE_GAP1_ArchMuts_2021")
+  generation = folder_name %>% str_extract("[g]\\d+") %>% str_remove("g")
+  
+  files = as_tibble(list.files(paste0("./",folder_name))) %>%
+    separate(value, into = c("well", "samp"), sep = " ", remove = F) %>%
+    mutate(well = str_extract(well, "([A-Z])([0-9]){1,2}$")) %>%
+    mutate(samp = str_remove(samp, ".fcs")) %>%
+    mutate(sample = case_when(str_detect(value, "Unstained") ~ "ctrl0",
+                              str_detect(value, "DGY500") ~ "ctrl1",
+                              str_detect(value, "DGY1315") ~ "ctrl2",
+                              TRUE ~ samp)) %>%
+    select(value,sample) %>%
+    filter(!is.na(sample))
+  
+  all = files %>%
+    left_join(read_csv(paste0("./",samplesheet)), by = c("sample" = "Sample name")) %>%
+    mutate(generation = as.numeric(generation))
+  
+  write_csv(all, file = paste0("./",folder_name,"/",pref,"_experiment_details.csv"))
+  
+}
+
+folders = dir()[1:24]
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 
 #STEP 2: Read in all files in a directory and rename the channels.
 #Results in a gating set containing all .fcs files, associated experiment details, and marker details
