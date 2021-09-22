@@ -65,6 +65,10 @@ file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Exper
 #Results in a gating file, and gates applied to all samples in the gating set.
 #Author: Titir
 
+#First transform the data
+timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
+                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
+
 
 #STEP 4:  Generate statistics table
 #Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies]
