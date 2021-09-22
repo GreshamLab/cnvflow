@@ -23,7 +23,7 @@ setwd('./Summer 2021 Group LTEE/FCS files/')
 make_exp_details = function(folder_name, samplesheet) {
   pref = folder_name %>% str_extract("^([0-9])+_EE_GAP1_ArchMuts_2021")
   generation = folder_name %>% str_extract("[g]\\d+") %>% str_remove("g")
-  
+
   files = as_tibble(list.files(paste0("./",folder_name))) %>%
     separate(value, into = c("well", "samp"), sep = " ", remove = F) %>%
     mutate(well = str_extract(well, "([A-Z])([0-9]){1,2}$")) %>%
@@ -35,13 +35,13 @@ make_exp_details = function(folder_name, samplesheet) {
     select(value,sample) %>%
     rename(name = value) %>%
     filter(!is.na(sample))
-  
+
   all = files %>%
     left_join(read_csv(paste0("./",samplesheet)), by = c("sample" = "Sample name")) %>%
     mutate(generation = as.numeric(generation))
-  
+
   write_csv(all, file = paste0("./",folder_name,"/",pref,"_experiment_details.csv"))
-  
+
 }
 
 folders = dir()[1:24]
@@ -51,6 +51,14 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 #Results in a gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 
+#Do this this for files in timepoint01 directory
+#Problem is I want to write the experiment-markers.csv inside the timepoint directory ie) the same path where the FCS files live. NOT the working directory which is its parent directory!
+setwd("./01_EE_GAP1_ArchMuts_2021_061621_g8_GA") #reset the wd but this feels wrong. Ask Grace for thoughts.
+timept01_gating_set <- cyto_setup(path="./",restrict=TRUE, select="fcs", details=F) #details=F because experiment-details.csv files were already generated in STEP 1 and live in the same directory where the FCS data files live.
+
+file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file from cytoexplorer's default to whatever you want. Since this is a universal file to be used across all timepoints I gave it the experiment name.
+
+# Will copy and paste this universal experimental-markers.csv to all subsequent timepoint directories? that's in STEP 5 Grace
 
 #STEP 3:  Perform gating on gating set
 #Gate for 1) Cells, 2) Singlets, 3) CNVS
