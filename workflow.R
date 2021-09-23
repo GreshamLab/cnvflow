@@ -113,6 +113,12 @@ cyto_gate_draw(transformed_timept01,
 #Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies]
 #Author: Titir
 
+stats_timept1 <- cyto_stats_compute(transformed_timept01,
+                                  parent = "Single_cells",
+                                  alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                  stat="freq",
+                                  save_as = "stats_timept1.csv")
+
 #STEP 5:  Use function to perform analysis
 #A function that will
 #1 Read in all the files in a folder
