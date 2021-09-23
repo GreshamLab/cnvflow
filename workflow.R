@@ -18,7 +18,6 @@ library(tidyverse)
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
 #Author: Grace
-setwd('./Summer 2021 Group LTEE/FCS files/')
 
 setwd('./Summer 2021 Group LTEE/FCS files/')
 
