@@ -69,7 +69,45 @@ file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Exper
 #First we transform the data
 timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
                                               channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
+transformed_timept01 <- cyto_transform(timept01_gating_set,
+                                       trans = timept01_transformed) #not fully sure whether this step is redundant, since the transformation is now being done in one step instead of 3
 
+##Gating using the entire timepoint1 dataset
+#First we gate for the cells
+cyto_gate_draw(transformed_timept01,
+               parent = "root",
+               alias = "Cells",
+               channels = c("FSC-A","SSC-A"),
+               axes_limits = "data",
+               gatingTemplate = "Cytek_gating.csv",
+)
+
+#Then we define the singlets based on forward scatter height and width
+cyto_gate_draw(transformed_timept01,
+               parent = "Cells",
+               alias = "Single_cells",
+               channels = c("FSC-A","FSC-H"),
+               axes_limits = "data",
+               gatingTemplate = "Cytek_gating.csv"
+)
+
+#Gating for CNVs using the 0,1 and 2 copy controls:
+zero_copy <- cyto_extract(transformed_timept01, "Single_cells")[[1]] #DGY1
+
+one_copy <- cyto_extract(transformed_timept01, "Single_cells")[[2]] #DGY500
+
+two_copy <- cyto_extract(transformed_timept01, "Single_cells")[[3]] #DGY1315
+
+cyto_gate_draw(transformed_timept01,
+               parent = "Single_cells",
+               alias = c("zero_copy", "one_copy", "two_copy","multi_copy"), #defines gate names
+               channels = c("FSC-A","B2-A"),
+               axes_limits = "data",
+               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
+               gatingTemplate = "Cytek_gating_multiple.csv",
+               overlay = c(zero_copy, one_copy, two_copy),
+               point_col = c("black", "green", "red", "blue")
+)
 
 #STEP 4:  Generate statistics table
 #Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies]
