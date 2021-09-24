@@ -2,7 +2,6 @@
 #Started: Sept 21, 2021
 #Authors: Julie Chuong, Titir De, Grace Avecilla, David Gresham
 
-
 ##Install CytoExplorer package and requirements (can be skipped if already installed)
 #library(BiocManager)
 #install("cytolib", "flowCore", "flowWorkspace", "openCyto")
@@ -55,9 +54,11 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 #Do this this for files in timepoint01 directory
 #Grace and I decided to write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
 
+#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
+
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
-timept01_gating_set <- cyto_setup(path=folders[1],restrict=TRUE, select="fcs", details=F) #details=F because experiment-details.csv files were already generated in STEP 1
+timept01_gating_set <- cyto_setup(path=folders[1],restrict=TRUE, select="fcs", details=T) #details=F; use interactive GUI to paste in experiment details for first timepoint
 
 file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file from cytoexplorer's default to whatever you want. Since this is a universal file to be used across all timepoints I gave it the experiment name. Grace and I decided to have it sit in the parent directory since it's universal file.
 
@@ -92,11 +93,11 @@ cyto_gate_draw(transformed_timept01,
 )
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
-zero_copy <- cyto_extract(transformed_timept01, "Single_cells")[[1]] #DGY1
+zero_copy <- cyto_extract(transformed_timept01, "Single_cells")[[30]] #DGY1
 
-one_copy <- cyto_extract(transformed_timept01, "Single_cells")[[2]] #DGY500
+one_copy <- cyto_extract(transformed_timept01, "Single_cells")[[1]] #DGY500
 
-two_copy <- cyto_extract(transformed_timept01, "Single_cells")[[3]] #DGY1315
+two_copy <- cyto_extract(transformed_timept01, "Single_cells")[[31]] #DGY1315
 
 cyto_gate_draw(transformed_timept01,
                parent = "Single_cells",
@@ -104,7 +105,7 @@ cyto_gate_draw(transformed_timept01,
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
                select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "Cytek_gating_multiple.csv",
+               gatingTemplate = "Cytek_gating.csv",
                overlay = c(zero_copy, one_copy, two_copy),
                point_col = c("black", "green", "red", "blue")
 )
@@ -122,12 +123,50 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 #STEP 5:  Use function to perform analysis
 #A function that will
 #1 Read in all the files in a folder
-#2 Red in experiment details files
+#2 Read in experiment details files
 #3 Specify experiment markers
 #4 Transform gating set
 #5 Apply existing gating file
 #6.Output stats file as .csv
 #Author: David
+
+#to be executed from the parent directory
+
+analyze_all_exp = function(folder_name, experiment_details, experiment_markers, gating_template) {
+
+  my_path <- paste0("./", folder_name) #gets relative path name for folder to be analyzed
+
+  prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
+
+  my_expt_details <- paste0(my_path,"/",experiment_details) #gets experiment details .csv from correct directory
+
+#  my_experiment_markers <- 'EE_GAP1_ArchMuts_2021-Experiment-Markers.csv' # provided as argument and in working directory
+
+#  my_gating_template <- 'Cytek_gating.csv' #provided as argument and in working directory
+
+  timepoint_gating_set <- cyto_setup(path=my_path, restrict=TRUE, select="fcs", details=F, gatingTemplate = gating_template)
+
+  #transform data
+
+  timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
+                                                   channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
+  transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                         trans = timepoint_gating_set_transformed) #
+
+  stats_timept2 <- cyto_stats_compute(transformed_timepoint_gating_set,
+                                      parent = "Single_cells",
+                                      alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                      stat="freq",
+                                      save_as = paste0("stats_timept",prefix,".csv") #writes to working directory
+                                      )
+  }
+
+#example
+
+analyze_all_exp('2_EE_GAP1_ArchMuts_2021_062121_g21_TD',
+                '2_EE_GAP1_ArchMuts_2021_experiment_details.csv',
+                'EE_GAP1_ArchMuts_2021-Experiment-Markers.csv',
+                'Cytek_gating.csv')
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
 #Uses map from purr() to apply function from step 5 to all directories
