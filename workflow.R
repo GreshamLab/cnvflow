@@ -54,7 +54,7 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 #Do this this for files in timepoint01 directory
 #Grace and I decided to write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
 
-#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
+setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
 
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
@@ -104,7 +104,7 @@ cyto_gate_draw(transformed_timept01,
                alias = c("zero_copy", "one_copy", "two_copy","multi_copy"), #defines gate names
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
-               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
+#               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
                gatingTemplate = "Cytek_gating.csv",
                overlay = c(zero_copy, one_copy, two_copy),
                point_col = c("black", "green", "red", "blue")
@@ -133,6 +133,12 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 #to be executed from the parent directory
 
 analyze_all_exp = function(folder_name, experiment_details, experiment_markers, gating_template) {
+
+  #Dev
+  folder_name <- '2_EE_GAP1_ArchMuts_2021_062121_g21_TD'
+  experiment_details <- '2_EE_GAP1_ArchMuts_2021_experiment_details.csv'
+  experiment_markers <- 'EE_GAP1_ArchMuts_2021-Experiment-Markers.csv'
+  gating_template <- 'Cytek_gating.csv'
 
   my_path <- paste0("./", folder_name) #gets relative path name for folder to be analyzed
 
