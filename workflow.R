@@ -54,15 +54,28 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 #Do this this for files in timepoint01 directory
 #Grace and I decided to write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
 
-setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
+#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
 
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
 timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
 
-#annotarte using pData.  Figure out how to add the whole dataframe
-test_1_EE_GAP1_ArchMuts_2021_experiment_details <- read_csv("01_EE_GAP1_ArchMuts_2021_061621_g8_GA/1_EE_GAP1_ArchMuts_2021_experiment_details.csv")
-pData(transformed_timept01)$sample <- test_1_EE_GAP1_ArchMuts_2021_experiment_details$sample
+cyto_details(timept01_gating_set) #currently ONLY the name column
+
+#annotate the experiment details file associated with the gating set using pData.
+#our workaround to cyto_setup() not being able to read in the experimental-details.csv file we generated in STEP 1.
+tp01_experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+pData(timept01_gating_set)$name<-tp01_experiment_details$name
+flowWorkspace::pData(timept01_gating_set)$sample<-tp01_experiment_details$sample
+cyto_details(timept01_gating_set) #check what the experiment details for this gs look like
+flowWorkspace::pData(timept01_gating_set)$`Outflow Well`<-tp01_experiment_details$`Outflow well`
+flowWorkspace::pData(timept01_gating_set)$Media<-tp01_experiment_details$Media
+flowWorkspace::pData(timept01_gating_set)$Strain<-tp01_experiment_details$Strain
+flowWorkspace::pData(timept01_gating_set)$Type<-tp01_experiment_details$Type
+flowWorkspace::pData(timept01_gating_set)$Description<-tp01_experiment_details$Description
+flowWorkspace::pData(timept01_gating_set)$generation<-tp01_experiment_details$generation
+
+cyto_details(timept01_gating_set) #all experimental details metadata now associated with the gating set
 
 file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file from cytoexplorer's default to whatever you want. Since this is a universal file to be used across all timepoints I gave it the experiment name. Grace and I decided to have it sit in the parent directory since it's universal file.
 
@@ -73,9 +86,11 @@ file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Exper
 
 #First transform the data
 timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
-                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
+                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) # error about channel not being valid can occur if markers = F in cyto_setup() because markers are not assigned
+# check if cyto_markers() is NULL
 transformed_timept01 <- cyto_transform(timept01_gating_set,
                                        trans = timept01_transformed)
+
 
 ##Gating using the entire timepoint1 dataset
 #First we gate for the cells
@@ -136,7 +151,7 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 
 #to be executed from the parent directory
 
-timept02_gating_set <- cyto_setup(path=folders[2], restrict=TRUE, markers=F, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
+timept02_gating_set <- cyto_setup(path=folders[2], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
 
 
 analyze_all_exp = function(folder_name, experiment_details, experiment_markers, gating_template) {
