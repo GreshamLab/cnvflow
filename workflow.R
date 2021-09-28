@@ -136,6 +136,9 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 
 #to be executed from the parent directory
 
+timept02_gating_set <- cyto_setup(path=folders[2], restrict=TRUE, markers=F, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
+
+
 analyze_all_exp = function(folder_name, experiment_details, experiment_markers, gating_template) {
 
   #Dev
@@ -149,6 +152,9 @@ analyze_all_exp = function(folder_name, experiment_details, experiment_markers, 
   prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
 
   my_expt_details <- paste0(my_path,"/",experiment_details) #gets experiment details .csv from correct directory
+
+  gt <- gatingTemplate("Cytek_gating.csv")
+#  my_gates <- cyto_gate_extract("Cells", gatingTemplate="Cytek_gating.csv")
 
 #  my_experiment_markers <- 'EE_GAP1_ArchMuts_2021-Experiment-Markers.csv' # provided as argument and in working directory
 
@@ -167,6 +173,7 @@ analyze_all_exp = function(folder_name, experiment_details, experiment_markers, 
                                       parent = "Single_cells",
                                       alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                       stat="freq",
+                                      gate = gt,
                                       save_as = paste0("stats_timept",prefix,".csv") #writes to working directory
                                       )
   }
