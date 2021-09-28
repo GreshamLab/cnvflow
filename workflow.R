@@ -58,7 +58,11 @@ setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determina
 
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
-timept01_gating_set <- cyto_setup(path=folders[1],restrict=TRUE, select="fcs", details=T) #details=F; use interactive GUI to paste in experiment details for first timepoint
+timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
+
+#annotarte using pData.  Figure out how to add the whole dataframe
+test_1_EE_GAP1_ArchMuts_2021_experiment_details <- read_csv("01_EE_GAP1_ArchMuts_2021_061621_g8_GA/1_EE_GAP1_ArchMuts_2021_experiment_details.csv")
+pData(transformed_timept01)$sample <- test_1_EE_GAP1_ArchMuts_2021_experiment_details$sample
 
 file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file from cytoexplorer's default to whatever you want. Since this is a universal file to be used across all timepoints I gave it the experiment name. Grace and I decided to have it sit in the parent directory since it's universal file.
 
@@ -71,7 +75,7 @@ file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Exper
 timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
                                               channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
 transformed_timept01 <- cyto_transform(timept01_gating_set,
-                                       trans = timept01_transformed) #not fully sure whether this step is redundant, since the transformation is now being done in one step instead of 3
+                                       trans = timept01_transformed)
 
 ##Gating using the entire timepoint1 dataset
 #First we gate for the cells
