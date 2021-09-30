@@ -14,11 +14,15 @@
 library(CytoExploreR)
 library(tidyverse)
 
+# Set working directory and get list of subdirectories
+#setwd('./Summer 2021 Group LTEE/FCS files/') #Grace's working directory
+#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
+
+folders = list.dirs()[-1]
+
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
 #Author: Grace
-
-setwd('./Summer 2021 Group LTEE/FCS files/')
 
 make_exp_details = function(folder_name, samplesheet) {
   pref = folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021")
@@ -44,8 +48,8 @@ make_exp_details = function(folder_name, samplesheet) {
 
 }
 
-folders = list.dirs()[-1]
-map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
+
+#map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
 
 #STEP 2: Read in all files in a directory and rename the channels.
 #Results in a gating set containing all .fcs files, associated experiment details, and marker details
@@ -53,8 +57,6 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 
 #Do this this for files in timepoint01 directory
 #Grace and I decided to write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
-
-#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files')
 
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
