@@ -157,12 +157,6 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 
 
 
-analyze_all_exp(folders[-1], markers.new, gating_template
-#one folder name,
-# we want this function to applied to many folders
-#markers and gating template is universal
-map(folders[-1], analyze_all_exp(experiment_markers = markers.new, gating_template = "cytek_gating_all.csv"))
-
 #Dev
 folder_name <- '02_EE_GAP1_ArchMuts_2021_062121_g21_TD'
 #experiment_details <- '02_EE_GAP1_ArchMuts_2021_experiment_details.csv'
@@ -190,7 +184,7 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   #1. read in files and make a gating set
   timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F) #do not set gatingTemplate = gating_template it will overwrite any existing gating template with a BLANK csv file #read in details and markers later
 
-  #2. read in experiment details
+  #2. read in experiment details for that gating set
   my_experiment_details <- read_csv(my_expt_details_path) #import experiment-details.csv
   flowWorkspace::pData(timepoint_gating_set)$name<-my_experiment_details$name
   flowWorkspace::pData(timepoint_gating_set)$sample<-my_experiment_details$sample
@@ -201,10 +195,10 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   flowWorkspace::pData(timepoint_gating_set)$Description<-my_experiment_details$Description
   flowWorkspace::pData(timepoint_gating_set)$generation<-my_experiment_details$generation
 
-  #3. specify markers
+  #3. specify markers for that gating set
   #cyto_markers(timepoint_gating_set) #currently no markers
   markernames(timepoint_gating_set)<-my_markers
-  #cyto_markers(timepoint_gating_set) GFP channel now specified
+  cyto_markers(timepoint_gating_set) #GFP channel now specified
 
   #4. transform data
   timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
@@ -215,18 +209,18 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   #apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate = gating_template)
 
-  cyto_plot_gating_scheme(transformed_timepoint_gating_set)[[,"Strain"=="DGY500"]# plot with drawn gates will appear if gates were indeed applied
-  cyto_plot_gating_scheme(transformed_timepoint_gating_set)["Strain"=="DGY1"]
-  cyto_plot_gating_scheme(transformed_timepoint_gating_set)["Strain"=="DGY1315"]
-  #, #DGY500 sample
-   #                       gatingTemplate = "time01_gating.csv",
-    #                      back_gate = TRUE,
-     #                     gate_track = TRUE)
+  #check if gates appear on controls strains
+  cyto_plot_gating_scheme(transformed_timepoint_gating_set[1], #DGY500
+                          back_gate = T, #colors the cells inside each gates with diff colors
+                          gate_track = T) #colorcode-outlines gates within a gate within a gate
+  cyto_plot_gating_scheme(transformed_timepoint_gating_set[length(transformed_timepoint_gating_set)-1]) #DGY1
+  cyto_plot_gating_scheme(transformed_timepoint_gating_set[length(transformed_timepoint_gating_set)]) #DGY1315
 
   #write stats freq file for % of cells inside each gate
-  stats_timept2 <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                      parent = "Single_cells",
-                                      alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+  stats_twoParents <- cyto_stats_compute(transformed_timepoint_gating_set,
+                                      parent = c("Cells","Single_cells"),
+                              #parent = "root",
+                              alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                       stat="freq",
                                       #gate = gt,
                                       save_as = paste0("stats_timept_",prefix,".csv") #writes to working directory
@@ -244,7 +238,7 @@ analyze_all_exp('2_EE_GAP1_ArchMuts_2021_062121_g21_TD',
 #Uses map from purr() to apply function from step 5 to all directories
 #Author: Grace
 
-map(folders[-1], analyze_all_exp(experiment_markers = markers.new, gating_template = "cytek_gating_all.csv")) #sorry Grace I got ahead of myself. Does
+map(folders[-1], analyze_all_exp(experiment_markers = markers.new, gating_template = "cytek_gating_all.csv")) #sorry Grace I got ahead of myself.
 
 #STEP 7:  Combine stats_freq.csv files into a single dataframe
 #Pull in all stats_freq files from directories and assemble into a single dataframe
