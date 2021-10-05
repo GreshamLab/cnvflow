@@ -17,6 +17,7 @@ library(tidyverse)
 # Set working directory and get list of subdirectories
 #setwd('./Summer 2021 Group LTEE/FCS files/') #Grace's working directory
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
+#setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 
 folders = list.dirs()[-1]
 
@@ -160,7 +161,7 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 #to be executed from the parent directory
 
 #Dev
-folder_name <- folders[8]
+folder_name <- folders[2]
 
 my_markers<-c("GFP") #list your marker name(s)
 channel<-c("B2-A") #list your channel(s)
@@ -168,9 +169,9 @@ names(my_markers)<-channel
 
 gating_template <- 'cytek_gating_all.csv'
 
-analyze_all_exp = function(folder_name, my_markers, gating_template) {
+#analyze_all_exp = function(folder_name, my_markers, gating_template) {
 
-  my_path <- paste0("./", folder_name) #gets relative path name for folder to be analyzed
+  my_path <- folder_name #paste0("./", folder_name) #gets relative path name for folder to be analyzed
 
   prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
 
@@ -204,6 +205,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template) {
   #cyto_transform( type = biex)
   timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
                                                    channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
+  transformed_timepoint_gating_set <-cyto_transform(timepoint_gating_set, trans = timepoint_gating_set_transformed)
   biex_timepoint_gating_set <- cyto_transformer_biex(timepoint_gating_set,
                         channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
                         widthBasis = -100)
@@ -235,10 +237,13 @@ analyze_all_exp = function(folder_name, my_markers, gating_template) {
                                       #gate = gt,
                                       save_as = paste0("stats_",prefix,".csv") #writes to working directory
                                       )
-  #other stats files to output
-  #median_fsc <-
-  #median_GFP <-
-  }
+  stats_median <- cyto_stats_compute(transformed_timepoint_gating_set,
+                                     parent = c("Single_cells"),
+                                     alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                     channels = c("FSC-A", "B2-A"), #For each strain, this gives either median fluor or median FSC, indicated by the 'marker'; does not calculate both median values for each strain.
+                                     stat="median",
+                                     save_as = paste0("stats_median_", prefix,".csv"))
+  #}
 
 #example
 analyze_all_exp(folders[5],
