@@ -93,10 +93,11 @@ timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
 transformed_timept01 <- cyto_transform(timept01_gating_set,
                                        trans = timept01_transformed)
 
-#biex_trans01 <- cyto_transformer_biex(timept01_gating_set,
-#                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")
-#)
-#trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01)
+biex_trans01 <- cyto_transformer_biex(timept01_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
+
+)
+trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01, type = "logicle")
 
 
 ##Gating using the entire timepoint1 dataset
