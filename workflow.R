@@ -62,7 +62,7 @@ exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_
 
 timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
 
-cyto_details(timept01_gating_set) #currently ONLY the name column
+#cyto_details(timept01_gating_set) #currently ONLY the name column
 
 #annotate the experiment details file associated with the gating set using pData.
 #our workaround to cyto_setup() not being able to read in the experimental-details.csv file we generated in STEP 1.
@@ -77,9 +77,9 @@ flowWorkspace::pData(timept01_gating_set)$Type<-tp01_experiment_details$Type
 flowWorkspace::pData(timept01_gating_set)$Description<-tp01_experiment_details$Description
 flowWorkspace::pData(timept01_gating_set)$generation<-tp01_experiment_details$generation
 
-cyto_details(timept01_gating_set) #all experimental details metadata now associated with the gating set
+#cyto_details(timept01_gating_set) #all experimental details metadata now associated with the gating set
 
-file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file from cytoexplorer's default to whatever you want. Since this is a universal file to be used across all timepoints I gave it the experiment name. Grace and I decided to have it sit in the parent directory since it's universal file.
+#file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. only need to do once
 
 #STEP 3:  Perform gating on gating set
 #Gate for 1) Cells, 2) Singlets, 3) CNVS
@@ -92,6 +92,11 @@ timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
 # check if cyto_markers() is NULL
 transformed_timept01 <- cyto_transform(timept01_gating_set,
                                        trans = timept01_transformed)
+
+#biex_trans01 <- cyto_transformer_biex(timept01_gating_set,
+#                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")
+#)
+#trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01)
 
 
 ##Gating using the entire timepoint1 dataset
@@ -154,7 +159,7 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 #to be executed from the parent directory
 
 #Dev
-#folder_name <- '02_EE_GAP1_ArchMuts_2021_062121_g21_TD'
+folder_name <- folders[8]
 
 my_markers<-c("GFP") #list your marker name(s)
 channel<-c("B2-A") #list your channel(s)
@@ -193,6 +198,9 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   #4. transform data
   timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
                                                    channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
+  biex_timepoint_gating_set <- cyto_transformer_biex(timepoint_gating_set,
+                        channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A") )
+  transformed_timepoint_gating_set <-cyto_transform(timepoint_gating_set, trans = biex_timepoint_gating_set)
   transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
                                          trans = timepoint_gating_set_transformed) # applies the transformation and converts the list to a GatingSet object
 
@@ -217,7 +225,6 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   }
 
 #example
-
 analyze_all_exp(folders[5],
                 my_markers,
                 'cytek_gating_all.csv')
@@ -227,6 +234,9 @@ analyze_all_exp(folders[5],
 #Author: Grace
 
 map(folders[-1], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating_all.csv") #sorry Grace I got ahead of myself.
+#timepoint 05 gets error when doing cyto_transformer_logicle()...Error in .lgclTrans(x, p, ...) : w is negative!Try to increase 'm'
+#timepoint 07,08 gets same error
+map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating_all.csv")
 
 #STEP 7:  Combine stats_freq.csv files into a single dataframe
 #Pull in all stats_freq files from directories and assemble into a single dataframe
