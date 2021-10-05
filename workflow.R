@@ -94,10 +94,10 @@ transformed_timept01 <- cyto_transform(timept01_gating_set,
                                        trans = timept01_transformed)
 
 biex_trans01 <- cyto_transformer_biex(timept01_gating_set,
-                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),widthBasis = -100
 
 )
-trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01, type = "logicle")
+trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01)
 
 
 ##Gating using the entire timepoint1 dataset
@@ -168,7 +168,7 @@ names(my_markers)<-channel
 
 gating_template <- 'cytek_gating_all.csv'
 
-analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
+analyze_all_exp = function(folder_name, my_markers, gating_template) {
 
   my_path <- paste0("./", folder_name) #gets relative path name for folder to be analyzed
 
@@ -180,6 +180,7 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F) #do not set gatingTemplate = gating_template it will overwrite any existing gating template with a BLANK csv file #read in details and markers later
 
   #2. read in experiment details for that gating set
+  # instead --> loop through column names instead of hardcoding
   my_experiment_details <- read_csv(my_expt_details_path) #import experiment-details.csv
   flowWorkspace::pData(timepoint_gating_set)$name<-my_experiment_details$name
   flowWorkspace::pData(timepoint_gating_set)$sample<-my_experiment_details$sample
@@ -197,13 +198,24 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
   #cyto_markers(timepoint_gating_set) #GFP channel now specified
 
   #4. transform data
+  #logicle_transform() hard code the w and m
+  #use cyto_biex with changes axes scaling manually and widthBasis
+  #simply log  the data without cyto_
+  #cyto_transform( type = biex)
   timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
                                                    channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
   biex_timepoint_gating_set <- cyto_transformer_biex(timepoint_gating_set,
-                        channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A") )
+                        channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
+                        widthBasis = -100)
   transformed_timepoint_gating_set <-cyto_transform(timepoint_gating_set, trans = biex_timepoint_gating_set)
   transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
-                                         trans = timepoint_gating_set_transformed) # applies the transformation and converts the list to a GatingSet object
+                                         #trans = timepoint_gating_set_transformed
+                                         type = "biex") # applies the transformation and converts the list to a GatingSet object
+
+  cyto_plot_explore(transformed_timepoint_gating_set[1],
+                    channels_x = "FSC-A",
+                    channels_y = "GFP"
+  )
 
   #apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate = gating_template)
@@ -223,6 +235,9 @@ analyze_all_exp = function(folder_name, experiment_markers, gating_template) {
                                       #gate = gt,
                                       save_as = paste0("stats_",prefix,".csv") #writes to working directory
                                       )
+  #other stats files to output
+  #median_fsc <-
+  #median_GFP <-
   }
 
 #example
@@ -238,6 +253,9 @@ map(folders[-1], analyze_all_exp, experiment_markers = my_markers, gating_templa
 #timepoint 05 gets error when doing cyto_transformer_logicle()...Error in .lgclTrans(x, p, ...) : w is negative!Try to increase 'm'
 #timepoint 07,08 gets same error
 map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating_all.csv")
+#?try
+#?possibly
+#?safely
 
 #STEP 7:  Combine stats_freq.csv files into a single dataframe
 #Pull in all stats_freq files from directories and assemble into a single dataframe
@@ -246,9 +264,9 @@ map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers
 #search files for patterns containing_stats_
 # dplyr::bind
 
-#STEP 8: Assess gates
-#Determine whether =>95% of controls are in the correct gate
-#Author: Julie
+#STEP 8: Plot time series & assess gates
+#Determine whether =>90-95% of controls are in the correct gate
+#Author: Grace
 
 #dplyr::select filter controls, zero copy, one copy, two copy,
 
