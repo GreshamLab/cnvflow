@@ -49,7 +49,6 @@ make_exp_details = function(folder_name, samplesheet) {
 
 }
 
-
 #map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
 
 #STEP 2: Read in all files in a directory and rename the channels.
@@ -57,14 +56,13 @@ make_exp_details = function(folder_name, samplesheet) {
 #Author: Julie
 
 #Do this this for files in timepoint01 directory
-#Grace and I decided to write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
+#Write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
 
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
 
 timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
 
 #cyto_details(timept01_gating_set) #currently ONLY the name column
-
 #annotate the experiment details file associated with the gating set using pData.
 #our workaround to cyto_setup() not being able to read in the experimental-details.csv file we generated in STEP 1.
 tp01_experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
@@ -87,19 +85,22 @@ flowWorkspace::pData(timept01_gating_set)$generation<-tp01_experiment_details$ge
 #Results in a gating file, and gates applied to all samples in the gating set.
 #Author: Titir
 
-#First transform the data
-timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
-                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) # error about channel not being valid can occur if markers = F in cyto_setup() because markers are not assigned
-# check if cyto_markers() is NULL
+#First log transform the data
+#timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
+#                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
+timept01_transformed <- cyto_transformer_log(timept01_gating_set,
+                                                 channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
 transformed_timept01 <- cyto_transform(timept01_gating_set,
-                                       trans = timept01_transformed)
+                                       trans = timept01_transformed) #applies the the transformation and returns it as a gatingSet
+# try these other transformation alternatives
+#logicle_transform() hard code the w and m
+#use cyto_biex with changes axes scaling manually and widthBasis
+#simply log  the data without cyto_
+#cyto_transform( type = biex)
 
-biex_trans01 <- cyto_transformer_biex(timept01_gating_set,
-                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),widthBasis = -100
-
-)
-trans_biex <-cyto_transform(timept01_gating_set, trans = biex_trans01)
-
+cyto_plot_explore(transformed_timept01,
+                  channels_x = "FSC-A",
+                  channels_y = "GFP")
 
 ##Gating using the entire timepoint1 dataset
 #First we gate for the cells
@@ -108,7 +109,7 @@ cyto_gate_draw(transformed_timept01,
                alias = "Cells",
                channels = c("FSC-A","SSC-A"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_all.csv",
+               gatingTemplate = "cytek_gating.csv",
 )
 
 #Then we define the singlets based on forward scatter height and width
@@ -117,7 +118,7 @@ cyto_gate_draw(transformed_timept01,
                alias = "Single_cells",
                channels = c("FSC-A","FSC-H"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_all.csv"
+               gatingTemplate = "cytek_gating.csv"
 )
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
@@ -133,7 +134,7 @@ cyto_gate_draw(transformed_timept01,
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
 #               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "cytek_gating_all.csv",
+               gatingTemplate = "cytek_gating.csv",
                overlay = c(zero_copy, one_copy, two_copy),
                point_col = c("black", "green", "red", "blue")
 )
@@ -142,11 +143,11 @@ cyto_gate_draw(transformed_timept01,
 #Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies]
 #Author: Titir
 
-stats_timept1 <- cyto_stats_compute(transformed_timept01,
+stats_freq_01 <- cyto_stats_compute(transformed_timept01,
                                   parent = "Single_cells",
                                   alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                   stat="freq",
-                                  save_as = "stats_timept1.csv")
+                                  save_as = "stats_freq_01.csv")
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -161,13 +162,18 @@ stats_timept1 <- cyto_stats_compute(transformed_timept01,
 #to be executed from the parent directory
 
 #Dev
+<<<<<<< Updated upstream
 folder_name <- folders[2]
+=======
+folders = list.dirs()[-1]
+folder_name <- folders[5]
+>>>>>>> Stashed changes
 
 my_markers<-c("GFP") #list your marker name(s)
 channel<-c("B2-A") #list your channel(s)
 names(my_markers)<-channel
 
-gating_template <- 'cytek_gating_all.csv'
+gating_template <- 'cytek_gating.csv'
 
 #analyze_all_exp = function(folder_name, my_markers, gating_template) {
 
@@ -203,6 +209,7 @@ gating_template <- 'cytek_gating_all.csv'
   #use cyto_biex with changes axes scaling manually and widthBasis
   #simply log  the data without cyto_
   #cyto_transform( type = biex)
+<<<<<<< Updated upstream
   timepoint_gating_set_transformed <- cyto_transformer_logicle(timepoint_gating_set,
                                                    channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
   transformed_timepoint_gating_set <-cyto_transform(timepoint_gating_set, trans = timepoint_gating_set_transformed)
@@ -220,6 +227,16 @@ gating_template <- 'cytek_gating_all.csv'
   )
 
   #apply gating-template.csv to transformed gating set
+=======
+  #cyto_transformer_log
+
+  timepoint_gating_set_transformed <- cyto_transformer_log(timepoint_gating_set,
+                                                           channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
+  transformed_timepoint_gating_set<- cyto_transform(timepoint_gating_set,
+                                                    trans = timepoint_gating_set_transformed)
+
+  #5. apply gating-template.csv to transformed gating set
+>>>>>>> Stashed changes
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate = gating_template)
 
   #check if gates appear on controls strains
@@ -229,13 +246,13 @@ gating_template <- 'cytek_gating_all.csv'
   #cyto_plot_gating_scheme(transformed_timepoint_gating_set[length(transformed_timepoint_gating_set)-1]) #DGY1, zero-copy control
   #cyto_plot_gating_scheme(transformed_timepoint_gating_set[length(transformed_timepoint_gating_set)]) #DGY1315,two-copy control
 
-  #write stats freq file for % of cells inside each gate
-  stats <- cyto_stats_compute(transformed_timepoint_gating_set,
+  #6. write stats freq file for % of cells inside each gate
+  stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
                                       parent = c("Single_cells"),
                               alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                       stat="freq",
                                       #gate = gt,
-                                      save_as = paste0("stats_",prefix,".csv") #writes to working directory
+                                      save_as = paste0("stats_freq_",prefix,".csv") #writes to working directory
                                       )
   stats_median <- cyto_stats_compute(transformed_timepoint_gating_set,
                                      parent = c("Single_cells"),
@@ -248,16 +265,16 @@ gating_template <- 'cytek_gating_all.csv'
 #example
 analyze_all_exp(folders[5],
                 my_markers,
-                'cytek_gating_all.csv')
+                'cytek_gating.csv')
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
 #Uses map from purr() to apply function from step 5 to all directories
-#Author: Grace
+#Author: Julie
 
-map(folders[-1], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating_all.csv") #sorry Grace I got ahead of myself.
+map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
 #timepoint 05 gets error when doing cyto_transformer_logicle()...Error in .lgclTrans(x, p, ...) : w is negative!Try to increase 'm'
 #timepoint 07,08 gets same error
-map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating_all.csv")
+map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers, gating_template = "cytek_gating.csv")
 #?try
 #?possibly
 #?safely
@@ -266,8 +283,13 @@ map(folders[9:length(folders)], analyze_all_exp, experiment_markers = my_markers
 #Pull in all stats_freq files from directories and assemble into a single dataframe
 #Author: Julie
 
-#search files for patterns containing_stats_
-# dplyr::bind
+#make a list of all filescontaining pattern "stats_freq"
+#its adding rows because it's adding generations and frequency
+# join_all(list(stats_freq_tables), by = cols 1:7 )
+# dplyr::bind or inner_join
+#do.call("rbind", list(DF1, DF2, DF3))
+#tidyverse::bind_rows(DF1, DF2, DF3)
+#
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>90-95% of controls are in the correct gate
