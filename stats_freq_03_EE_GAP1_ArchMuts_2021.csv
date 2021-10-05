@@ -1,0 +1,125 @@
+"Type","Strain","Media","Outflow Well","name","sample","Description","generation","Population","Parent","Frequency"
+"1_copy_ctrl","DGY500","glutamine-limited","D03","Experiment_043-Plate_001-1 copy control-D3 DGY500.fcs","ctrl1","1 copy control","29","zero_copy","Single_cells",2.38895545494067
+"1_copy_ctrl","DGY500","glutamine-limited","D03","Experiment_043-Plate_001-1 copy control-D3 DGY500.fcs","ctrl1","1 copy control","29","one_copy","Single_cells",94.2412707164746
+"1_copy_ctrl","DGY500","glutamine-limited","D03","Experiment_043-Plate_001-1 copy control-D3 DGY500.fcs","ctrl1","1 copy control","29","two_copy","Single_cells",1.83969716569999
+"1_copy_ctrl","DGY500","glutamine-limited","D03","Experiment_043-Plate_001-1 copy control-D3 DGY500.fcs","ctrl1","1 copy control","29","multi_copy","Single_cells",0.00424137675089334
+"Experimental","DGY2150","glutamine-limited","A10","Experiment_043-Plate_001-Experimental-A10 gap1_ars_7.fcs","gap1_ars_7","GAP1 ARS KO","29","zero_copy","Single_cells",2.48476711762883
+"Experimental","DGY2150","glutamine-limited","A10","Experiment_043-Plate_001-Experimental-A10 gap1_ars_7.fcs","gap1_ars_7","GAP1 ARS KO","29","one_copy","Single_cells",14.6906950325312
+"Experimental","DGY2150","glutamine-limited","A10","Experiment_043-Plate_001-Experimental-A10 gap1_ars_7.fcs","gap1_ars_7","GAP1 ARS KO","29","two_copy","Single_cells",77.5730661984922
+"Experimental","DGY2150","glutamine-limited","A10","Experiment_043-Plate_001-Experimental-A10 gap1_ars_7.fcs","gap1_ars_7","GAP1 ARS KO","29","multi_copy","Single_cells",0.0485386760301559
+"Experimental","DGY2071","glutamine-limited","A04","Experiment_043-Plate_001-Experimental-A4 gap1_all_1.fcs","gap1_all_1","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",2.3571676173069
+"Experimental","DGY2071","glutamine-limited","A04","Experiment_043-Plate_001-Experimental-A4 gap1_all_1.fcs","gap1_all_1","GAP1 LTR + ARS KO","29","one_copy","Single_cells",20.7302597716363
+"Experimental","DGY2071","glutamine-limited","A04","Experiment_043-Plate_001-Experimental-A4 gap1_all_1.fcs","gap1_all_1","GAP1 LTR + ARS KO","29","two_copy","Single_cells",70.7307849872373
+"Experimental","DGY2071","glutamine-limited","A04","Experiment_043-Plate_001-Experimental-A4 gap1_all_1.fcs","gap1_all_1","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0588241473124718
+"Experimental","DGY2071","glutamine-limited","A06","Experiment_043-Plate_001-Experimental-A6 gap1_all_3.fcs","gap1_all_3","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",0.987908252306158
+"Experimental","DGY2071","glutamine-limited","A06","Experiment_043-Plate_001-Experimental-A6 gap1_all_3.fcs","gap1_all_3","GAP1 LTR + ARS KO","29","one_copy","Single_cells",9.99542923626693
+"Experimental","DGY2071","glutamine-limited","A06","Experiment_043-Plate_001-Experimental-A6 gap1_all_3.fcs","gap1_all_3","GAP1 LTR + ARS KO","29","two_copy","Single_cells",84.2339815507355
+"Experimental","DGY2071","glutamine-limited","A06","Experiment_043-Plate_001-Experimental-A6 gap1_all_3.fcs","gap1_all_3","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.114269093326685
+"Experimental","DGY2071","glutamine-limited","A08","Experiment_043-Plate_001-Experimental-A8 gap1_all_5.fcs","gap1_all_5","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",3.88005047892918
+"Experimental","DGY2071","glutamine-limited","A08","Experiment_043-Plate_001-Experimental-A8 gap1_all_5.fcs","gap1_all_5","GAP1 LTR + ARS KO","29","one_copy","Single_cells",71.8528249581066
+"Experimental","DGY2071","glutamine-limited","A08","Experiment_043-Plate_001-Experimental-A8 gap1_all_5.fcs","gap1_all_5","GAP1 LTR + ARS KO","29","two_copy","Single_cells",20.7832509257918
+"Experimental","DGY2071","glutamine-limited","A08","Experiment_043-Plate_001-Experimental-A8 gap1_all_5.fcs","gap1_all_5","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.00413761714628545
+"Experimental","DGY2071","glutamine-limited","B05","Experiment_043-Plate_001-Experimental-B5 gap1_all_2.fcs","gap1_all_2","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",2.97008924626668
+"Experimental","DGY2071","glutamine-limited","B05","Experiment_043-Plate_001-Experimental-B5 gap1_all_2.fcs","gap1_all_2","GAP1 LTR + ARS KO","29","one_copy","Single_cells",45.3929928426261
+"Experimental","DGY2071","glutamine-limited","B05","Experiment_043-Plate_001-Experimental-B5 gap1_all_2.fcs","gap1_all_2","GAP1 LTR + ARS KO","29","two_copy","Single_cells",46.2920827074313
+"Experimental","DGY2071","glutamine-limited","B05","Experiment_043-Plate_001-Experimental-B5 gap1_all_2.fcs","gap1_all_2","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0585402491826456
+"Experimental","DGY2071","glutamine-limited","B07","Experiment_043-Plate_001-Experimental-B7 gap1_all_4.fcs","gap1_all_4","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",4.80490958724164
+"Experimental","DGY2071","glutamine-limited","B07","Experiment_043-Plate_001-Experimental-B7 gap1_all_4.fcs","gap1_all_4","GAP1 LTR + ARS KO","29","one_copy","Single_cells",7.81182652244412
+"Experimental","DGY2071","glutamine-limited","B07","Experiment_043-Plate_001-Experimental-B7 gap1_all_4.fcs","gap1_all_4","GAP1 LTR + ARS KO","29","two_copy","Single_cells",83.4722193715236
+"Experimental","DGY2071","glutamine-limited","B07","Experiment_043-Plate_001-Experimental-B7 gap1_all_4.fcs","gap1_all_4","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0266825393567456
+"Experimental","DGY2076","glutamine-limited","B09","Experiment_043-Plate_001-Experimental-B9 gap1_ltr_6.fcs","gap1_ltr_6","GAP1 LTR KO","29","zero_copy","Single_cells",0.619456127930704
+"Experimental","DGY2076","glutamine-limited","B09","Experiment_043-Plate_001-Experimental-B9 gap1_ltr_6.fcs","gap1_ltr_6","GAP1 LTR KO","29","one_copy","Single_cells",96.9037604630825
+"Experimental","DGY2076","glutamine-limited","B09","Experiment_043-Plate_001-Experimental-B9 gap1_ltr_6.fcs","gap1_ltr_6","GAP1 LTR KO","29","two_copy","Single_cells",1.65223004206055
+"Experimental","DGY2076","glutamine-limited","B09","Experiment_043-Plate_001-Experimental-B9 gap1_ltr_6.fcs","gap1_ltr_6","GAP1 LTR KO","29","multi_copy","Single_cells",0.00936992462416191
+"Experimental","DGY2071","glutamine-limited","C10","Experiment_043-Plate_001-Experimental-C10 gap1_all_8.fcs","gap1_all_8","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",1.30172593054689
+"Experimental","DGY2071","glutamine-limited","C10","Experiment_043-Plate_001-Experimental-C10 gap1_all_8.fcs","gap1_all_8","GAP1 LTR + ARS KO","29","one_copy","Single_cells",89.8908296943231
+"Experimental","DGY2071","glutamine-limited","C10","Experiment_043-Plate_001-Experimental-C10 gap1_all_8.fcs","gap1_all_8","GAP1 LTR + ARS KO","29","two_copy","Single_cells",6.13953004782699
+"Experimental","DGY2071","glutamine-limited","C10","Experiment_043-Plate_001-Experimental-C10 gap1_all_8.fcs","gap1_all_8","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0114368891661468
+"Experimental","DGY2076","glutamine-limited","C04","Experiment_043-Plate_001-Experimental-C4 gap1_ltr_1.fcs","gap1_ltr_1","GAP1 LTR KO","29","zero_copy","Single_cells",2.9658645775042
+"Experimental","DGY2076","glutamine-limited","C04","Experiment_043-Plate_001-Experimental-C4 gap1_ltr_1.fcs","gap1_ltr_1","GAP1 LTR KO","29","one_copy","Single_cells",95.2838400795872
+"Experimental","DGY2076","glutamine-limited","C04","Experiment_043-Plate_001-Experimental-C4 gap1_ltr_1.fcs","gap1_ltr_1","GAP1 LTR KO","29","two_copy","Single_cells",1.01245621670915
+"Experimental","DGY2076","glutamine-limited","C04","Experiment_043-Plate_001-Experimental-C4 gap1_ltr_1.fcs","gap1_ltr_1","GAP1 LTR KO","29","multi_copy","Single_cells",0.00621774544550146
+"Experimental","DGY2076","glutamine-limited","C06","Experiment_043-Plate_001-Experimental-C6 gap1_ltr_3.fcs","gap1_ltr_3","GAP1 LTR KO","29","zero_copy","Single_cells",1.58023109200273
+"Experimental","DGY2076","glutamine-limited","C06","Experiment_043-Plate_001-Experimental-C6 gap1_ltr_3.fcs","gap1_ltr_3","GAP1 LTR KO","29","one_copy","Single_cells",97.1206515223547
+"Experimental","DGY2076","glutamine-limited","C06","Experiment_043-Plate_001-Experimental-C6 gap1_ltr_3.fcs","gap1_ltr_3","GAP1 LTR KO","29","two_copy","Single_cells",0.795799830504971
+"Experimental","DGY2076","glutamine-limited","C06","Experiment_043-Plate_001-Experimental-C6 gap1_ltr_3.fcs","gap1_ltr_3","GAP1 LTR KO","29","multi_copy","Single_cells",0.00206701254676616
+"Experimental","DGY2076","glutamine-limited","C08","Experiment_043-Plate_001-Experimental-C8 gap1_ltr_5.fcs","gap1_ltr_5","GAP1 LTR KO","29","zero_copy","Single_cells",11.6407150181292
+"Experimental","DGY2076","glutamine-limited","C08","Experiment_043-Plate_001-Experimental-C8 gap1_ltr_5.fcs","gap1_ltr_5","GAP1 LTR KO","29","one_copy","Single_cells",18.8395226165181
+"Experimental","DGY2076","glutamine-limited","C08","Experiment_043-Plate_001-Experimental-C8 gap1_ltr_5.fcs","gap1_ltr_5","GAP1 LTR KO","29","two_copy","Single_cells",64.078901468303
+"Experimental","DGY2076","glutamine-limited","C08","Experiment_043-Plate_001-Experimental-C8 gap1_ltr_5.fcs","gap1_ltr_5","GAP1 LTR KO","29","multi_copy","Single_cells",0.0517975877123437
+"Experimental","DGY2076","glutamine-limited","D05","Experiment_043-Plate_001-Experimental-D5 gap1_ltr_2.fcs","gap1_ltr_2","GAP1 LTR KO","29","zero_copy","Single_cells",3.50559205783609
+"Experimental","DGY2076","glutamine-limited","D05","Experiment_043-Plate_001-Experimental-D5 gap1_ltr_2.fcs","gap1_ltr_2","GAP1 LTR KO","29","one_copy","Single_cells",78.8408065745299
+"Experimental","DGY2076","glutamine-limited","D05","Experiment_043-Plate_001-Experimental-D5 gap1_ltr_2.fcs","gap1_ltr_2","GAP1 LTR KO","29","two_copy","Single_cells",3.27490679903607
+"Experimental","DGY2076","glutamine-limited","D05","Experiment_043-Plate_001-Experimental-D5 gap1_ltr_2.fcs","gap1_ltr_2","GAP1 LTR KO","29","multi_copy","Single_cells",0.0133879837696443
+"Experimental","DGY2076","glutamine-limited","D07","Experiment_043-Plate_001-Experimental-D7 gap1_ltr_4.fcs","gap1_ltr_4","GAP1 LTR KO","29","zero_copy","Single_cells",6.74366578221737
+"Experimental","DGY2076","glutamine-limited","D07","Experiment_043-Plate_001-Experimental-D7 gap1_ltr_4.fcs","gap1_ltr_4","GAP1 LTR KO","29","one_copy","Single_cells",87.0131626866448
+"Experimental","DGY2076","glutamine-limited","D07","Experiment_043-Plate_001-Experimental-D7 gap1_ltr_4.fcs","gap1_ltr_4","GAP1 LTR KO","29","two_copy","Single_cells",3.70220071796473
+"Experimental","DGY2076","glutamine-limited","D07","Experiment_043-Plate_001-Experimental-D7 gap1_ltr_4.fcs","gap1_ltr_4","GAP1 LTR KO","29","multi_copy","Single_cells",0.00520264294261485
+"Experimental","DGY2150","glutamine-limited","D09","Experiment_043-Plate_001-Experimental-D9 gap1_ars_6.fcs","gap1_ars_6","GAP1 ARS KO","29","zero_copy","Single_cells",0.327217723264357
+"Experimental","DGY2150","glutamine-limited","D09","Experiment_043-Plate_001-Experimental-D9 gap1_ars_6.fcs","gap1_ars_6","GAP1 ARS KO","29","one_copy","Single_cells",84.3264768529475
+"Experimental","DGY2150","glutamine-limited","D09","Experiment_043-Plate_001-Experimental-D9 gap1_ars_6.fcs","gap1_ars_6","GAP1 ARS KO","29","two_copy","Single_cells",12.3766502371814
+"Experimental","DGY2150","glutamine-limited","D09","Experiment_043-Plate_001-Experimental-D9 gap1_ars_6.fcs","gap1_ars_6","GAP1 ARS KO","29","multi_copy","Single_cells",0.00308695965343733
+"Experimental","DGY2076","glutamine-limited","E10","Experiment_043-Plate_001-Experimental-E10 gap1_ltr_8.fcs","gap1_ltr_8","GAP1 LTR KO","29","zero_copy","Single_cells",0.946132950643227
+"Experimental","DGY2076","glutamine-limited","E10","Experiment_043-Plate_001-Experimental-E10 gap1_ltr_8.fcs","gap1_ltr_8","GAP1 LTR KO","29","one_copy","Single_cells",77.180052278202
+"Experimental","DGY2076","glutamine-limited","E10","Experiment_043-Plate_001-Experimental-E10 gap1_ltr_8.fcs","gap1_ltr_8","GAP1 LTR KO","29","two_copy","Single_cells",17.5398493157706
+"Experimental","DGY2076","glutamine-limited","E10","Experiment_043-Plate_001-Experimental-E10 gap1_ltr_8.fcs","gap1_ltr_8","GAP1 LTR KO","29","multi_copy","Single_cells",0.00102506278509559
+"Experimental","DGY2150","glutamine-limited","E04","Experiment_043-Plate_001-Experimental-E4 gap1_ars_1.fcs","gap1_ars_1","GAP1 ARS KO","29","zero_copy","Single_cells",0.943756253029819
+"Experimental","DGY2150","glutamine-limited","E04","Experiment_043-Plate_001-Experimental-E4 gap1_ars_1.fcs","gap1_ars_1","GAP1 ARS KO","29","one_copy","Single_cells",75.7892999700886
+"Experimental","DGY2150","glutamine-limited","E04","Experiment_043-Plate_001-Experimental-E4 gap1_ars_1.fcs","gap1_ars_1","GAP1 ARS KO","29","two_copy","Single_cells",17.9860344703104
+"Experimental","DGY2150","glutamine-limited","E04","Experiment_043-Plate_001-Experimental-E4 gap1_ars_1.fcs","gap1_ars_1","GAP1 ARS KO","29","multi_copy","Single_cells",0.00412571039575877
+"Experimental","DGY2150","glutamine-limited","E06","Experiment_043-Plate_001-Experimental-E6 gap1_ars_3.fcs","gap1_ars_3","GAP1 ARS KO","29","zero_copy","Single_cells",2.91402789850573
+"Experimental","DGY2150","glutamine-limited","E06","Experiment_043-Plate_001-Experimental-E6 gap1_ars_3.fcs","gap1_ars_3","GAP1 ARS KO","29","one_copy","Single_cells",69.9584005960512
+"Experimental","DGY2150","glutamine-limited","E06","Experiment_043-Plate_001-Experimental-E6 gap1_ars_3.fcs","gap1_ars_3","GAP1 ARS KO","29","two_copy","Single_cells",23.6919988410116
+"Experimental","DGY2150","glutamine-limited","E06","Experiment_043-Plate_001-Experimental-E6 gap1_ars_3.fcs","gap1_ars_3","GAP1 ARS KO","29","multi_copy","Single_cells",0.00620886626102074
+"Experimental","DGY2150","glutamine-limited","E08","Experiment_043-Plate_001-Experimental-E8 gap1_ars_5.fcs","gap1_ars_5","GAP1 ARS KO","29","zero_copy","Single_cells",5.08465773345798
+"Experimental","DGY2150","glutamine-limited","E08","Experiment_043-Plate_001-Experimental-E8 gap1_ars_5.fcs","gap1_ars_5","GAP1 ARS KO","29","one_copy","Single_cells",91.992313285551
+"Experimental","DGY2150","glutamine-limited","E08","Experiment_043-Plate_001-Experimental-E8 gap1_ars_5.fcs","gap1_ars_5","GAP1 ARS KO","29","two_copy","Single_cells",1.7357432221876
+"Experimental","DGY2150","glutamine-limited","E08","Experiment_043-Plate_001-Experimental-E8 gap1_ars_5.fcs","gap1_ars_5","GAP1 ARS KO","29","multi_copy","Single_cells",0.0103874519580347
+"Experimental","DGY2150","glutamine-limited","F07","Experiment_043-Plate_001-Experimental-F7 gap1_ars_4.fcs","gap1_ars_4","GAP1 ARS KO","29","zero_copy","Single_cells",4.87604409604142
+"Experimental","DGY2150","glutamine-limited","F07","Experiment_043-Plate_001-Experimental-F7 gap1_ars_4.fcs","gap1_ars_4","GAP1 ARS KO","29","one_copy","Single_cells",71.2779838287117
+"Experimental","DGY2150","glutamine-limited","F07","Experiment_043-Plate_001-Experimental-F7 gap1_ars_4.fcs","gap1_ars_4","GAP1 ARS KO","29","two_copy","Single_cells",19.3356826564475
+"Experimental","DGY2150","glutamine-limited","F07","Experiment_043-Plate_001-Experimental-F7 gap1_ars_4.fcs","gap1_ars_4","GAP1 ARS KO","29","multi_copy","Single_cells",0.00410960311507916
+"Experimental","DGY2071","glutamine-limited","F09","Experiment_043-Plate_001-Experimental-F9 gap1_all_7.fcs","gap1_all_7","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",8.59078505786783
+"Experimental","DGY2071","glutamine-limited","F09","Experiment_043-Plate_001-Experimental-F9 gap1_all_7.fcs","gap1_all_7","GAP1 LTR + ARS KO","29","one_copy","Single_cells",20.3797216907652
+"Experimental","DGY2071","glutamine-limited","F09","Experiment_043-Plate_001-Experimental-F9 gap1_all_7.fcs","gap1_all_7","GAP1 LTR + ARS KO","29","two_copy","Single_cells",64.9980658449121
+"Experimental","DGY2071","glutamine-limited","F09","Experiment_043-Plate_001-Experimental-F9 gap1_all_7.fcs","gap1_all_7","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0470470156509739
+"Experimental","DGY2150","glutamine-limited","G10","Experiment_043-Plate_001-Experimental-G10 gap1_ars_8.fcs","gap1_ars_8","GAP1 ARS KO","29","zero_copy","Single_cells",0.727238871590098
+"Experimental","DGY2150","glutamine-limited","G10","Experiment_043-Plate_001-Experimental-G10 gap1_ars_8.fcs","gap1_ars_8","GAP1 ARS KO","29","one_copy","Single_cells",96.2955300154137
+"Experimental","DGY2150","glutamine-limited","G10","Experiment_043-Plate_001-Experimental-G10 gap1_ars_8.fcs","gap1_ars_8","GAP1 ARS KO","29","two_copy","Single_cells",2.240681928683
+"Experimental","DGY2150","glutamine-limited","G10","Experiment_043-Plate_001-Experimental-G10 gap1_ars_8.fcs","gap1_ars_8","GAP1 ARS KO","29","multi_copy","Single_cells",0.0175861462546681
+"Experimental","DGY1657","glutamine-limited","G04","Experiment_043-Plate_001-Experimental-G4 gap1_2.fcs","gap1_2","GAP1 WT architecture","29","zero_copy","Single_cells",3.46695331823542
+"Experimental","DGY1657","glutamine-limited","G04","Experiment_043-Plate_001-Experimental-G4 gap1_2.fcs","gap1_2","GAP1 WT architecture","29","one_copy","Single_cells",80.7303353197174
+"Experimental","DGY1657","glutamine-limited","G04","Experiment_043-Plate_001-Experimental-G4 gap1_2.fcs","gap1_2","GAP1 WT architecture","29","two_copy","Single_cells",1.11042695081351
+"Experimental","DGY1657","glutamine-limited","G04","Experiment_043-Plate_001-Experimental-G4 gap1_2.fcs","gap1_2","GAP1 WT architecture","29","multi_copy","Single_cells",0.00208726870453668
+"Experimental","DGY1657","glutamine-limited","G06","Experiment_043-Plate_001-Experimental-G6 gap1_4.fcs","gap1_4","GAP1 WT architecture","29","zero_copy","Single_cells",2.04660337812847
+"Experimental","DGY1657","glutamine-limited","G06","Experiment_043-Plate_001-Experimental-G6 gap1_4.fcs","gap1_4","GAP1 WT architecture","29","one_copy","Single_cells",5.33329223687996
+"Experimental","DGY1657","glutamine-limited","G06","Experiment_043-Plate_001-Experimental-G6 gap1_4.fcs","gap1_4","GAP1 WT architecture","29","two_copy","Single_cells",89.7289688899848
+"Experimental","DGY1657","glutamine-limited","G06","Experiment_043-Plate_001-Experimental-G6 gap1_4.fcs","gap1_4","GAP1 WT architecture","29","multi_copy","Single_cells",0.0205482266880368
+"Experimental","DGY2071","glutamine-limited","G08","Experiment_043-Plate_001-Experimental-G8 gap1_all_6.fcs","gap1_all_6","GAP1 LTR + ARS KO","29","zero_copy","Single_cells",0.249278540324166
+"Experimental","DGY2071","glutamine-limited","G08","Experiment_043-Plate_001-Experimental-G8 gap1_all_6.fcs","gap1_all_6","GAP1 LTR + ARS KO","29","one_copy","Single_cells",75.4289969900392
+"Experimental","DGY2071","glutamine-limited","G08","Experiment_043-Plate_001-Experimental-G8 gap1_all_6.fcs","gap1_all_6","GAP1 LTR + ARS KO","29","two_copy","Single_cells",20.8070004861449
+"Experimental","DGY2071","glutamine-limited","G08","Experiment_043-Plate_001-Experimental-G8 gap1_all_6.fcs","gap1_all_6","GAP1 LTR + ARS KO","29","multi_copy","Single_cells",0.0072404555280878
+"Experimental","DGY1657","glutamine-limited","H03","Experiment_043-Plate_001-Experimental-H3 gap1_1.fcs","gap1_1","GAP1 WT architecture","29","zero_copy","Single_cells",0.930650187503301
+"Experimental","DGY1657","glutamine-limited","H03","Experiment_043-Plate_001-Experimental-H3 gap1_1.fcs","gap1_1","GAP1 WT architecture","29","one_copy","Single_cells",93.2720646490255
+"Experimental","DGY1657","glutamine-limited","H03","Experiment_043-Plate_001-Experimental-H3 gap1_1.fcs","gap1_1","GAP1 WT architecture","29","two_copy","Single_cells",4.34056937622141
+"Experimental","DGY1657","glutamine-limited","H03","Experiment_043-Plate_001-Experimental-H3 gap1_1.fcs","gap1_1","GAP1 WT architecture","29","multi_copy","Single_cells",0.0200707758939418
+"Experimental","DGY1657","glutamine-limited","H05","Experiment_043-Plate_001-Experimental-H5 gap1_3.fcs","gap1_3","GAP1 WT architecture","29","zero_copy","Single_cells",2.1799864544531
+"Experimental","DGY1657","glutamine-limited","H05","Experiment_043-Plate_001-Experimental-H5 gap1_3.fcs","gap1_3","GAP1 WT architecture","29","one_copy","Single_cells",95.3299610565527
+"Experimental","DGY1657","glutamine-limited","H05","Experiment_043-Plate_001-Experimental-H5 gap1_3.fcs","gap1_3","GAP1 WT architecture","29","two_copy","Single_cells",1.68366915001693
+"Experimental","DGY1657","glutamine-limited","H05","Experiment_043-Plate_001-Experimental-H5 gap1_3.fcs","gap1_3","GAP1 WT architecture","29","multi_copy","Single_cells",0.00529122925838131
+"Experimental","DGY1657","glutamine-limited","H07","Experiment_043-Plate_001-Experimental-H7 gap1_5.fcs","gap1_5","GAP1 WT architecture","29","zero_copy","Single_cells",0.558975003140309
+"Experimental","DGY1657","glutamine-limited","H07","Experiment_043-Plate_001-Experimental-H7 gap1_5.fcs","gap1_5","GAP1 WT architecture","29","one_copy","Single_cells",93.034794623791
+"Experimental","DGY1657","glutamine-limited","H07","Experiment_043-Plate_001-Experimental-H7 gap1_5.fcs","gap1_5","GAP1 WT architecture","29","two_copy","Single_cells",4.93133190972658
+"Experimental","DGY1657","glutamine-limited","H07","Experiment_043-Plate_001-Experimental-H7 gap1_5.fcs","gap1_5","GAP1 WT architecture","29","multi_copy","Single_cells",0.0188418540384374
+"Experimental","DGY2076","glutamine-limited","H09","Experiment_043-Plate_001-Experimental-H9 gap1_ltr_7.fcs","gap1_ltr_7","GAP1 LTR KO","29","zero_copy","Single_cells",0.964886825304701
+"Experimental","DGY2076","glutamine-limited","H09","Experiment_043-Plate_001-Experimental-H9 gap1_ltr_7.fcs","gap1_ltr_7","GAP1 LTR KO","29","one_copy","Single_cells",97.2960368128679
+"Experimental","DGY2076","glutamine-limited","H09","Experiment_043-Plate_001-Experimental-H9 gap1_ltr_7.fcs","gap1_ltr_7","GAP1 LTR KO","29","two_copy","Single_cells",1.17838487687588
+"Experimental","DGY2076","glutamine-limited","H09","Experiment_043-Plate_001-Experimental-H9 gap1_ltr_7.fcs","gap1_ltr_7","GAP1 LTR KO","29","multi_copy","Single_cells",0.00621838985158776
+"0_copy_ctrl","DGY1","glutamine-limited","B03","Experiment_043-Plate_001-Reference Group-B3 Unstained (Cells).fcs","ctrl0","0 copy control","29","zero_copy","Single_cells",92.4778139288533
+"0_copy_ctrl","DGY1","glutamine-limited","B03","Experiment_043-Plate_001-Reference Group-B3 Unstained (Cells).fcs","ctrl0","0 copy control","29","one_copy","Single_cells",0.0129711500005405
+"0_copy_ctrl","DGY1","glutamine-limited","B03","Experiment_043-Plate_001-Reference Group-B3 Unstained (Cells).fcs","ctrl0","0 copy control","29","two_copy","Single_cells",0
+"0_copy_ctrl","DGY1","glutamine-limited","B03","Experiment_043-Plate_001-Reference Group-B3 Unstained (Cells).fcs","ctrl0","0 copy control","29","multi_copy","Single_cells",0
+"2_copy_ctrl","DGY1315","glutamine-limited","F03","Experiment_043-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs","ctrl2","2 copy control","29","zero_copy","Single_cells",0.270698464992813
+"2_copy_ctrl","DGY1315","glutamine-limited","F03","Experiment_043-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs","ctrl2","2 copy control","29","one_copy","Single_cells",4.39412857127868
+"2_copy_ctrl","DGY1315","glutamine-limited","F03","Experiment_043-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs","ctrl2","2 copy control","29","two_copy","Single_cells",93.0468266375683
+"2_copy_ctrl","DGY1315","glutamine-limited","F03","Experiment_043-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs","ctrl2","2 copy control","29","multi_copy","Single_cells",0.0828882896683419
