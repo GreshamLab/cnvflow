@@ -243,9 +243,9 @@ map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.cs
 #Pull in all stats_freq files from directories and assemble into a single dataframe
 #Author: Julie
 
-stats_freq_list = list.files(path = ".", pattern = "stats_freq")
-all_stats_freq<- read_csv(stats_freq_list)
-write_csv(all_stats_freq, file = "stats_freq_all_timepoints.csv")
+list.files(path = ".", pattern = "stats_freq") %>%
+  read_csv() %>%
+  write_csv(file = "stats_freq_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>90-95% of controls are in the correct gate
