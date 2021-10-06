@@ -121,7 +121,7 @@ cyto_gate_draw(transformed_timept01,
 )
 
 #STEP 4:  Generate statistics tables
-#Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies, a .csv file with median GFP fluorescence and a .csv file with median FSC-A fluorescence
+#Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies, a .csv file with overall median GFP and FSC-A, and a third .csv file with gate-wise median GFP and FSC-A.
 #Author: Titir
 
 stats_freq_01 <- cyto_stats_compute(transformed_timept01,
@@ -130,12 +130,19 @@ stats_freq_01 <- cyto_stats_compute(transformed_timept01,
                                   stat="freq",
                                   save_as = "stats_freq_01.csv")
 
-stats_median_01 <- cyto_stats_compute(transformed_timept01,
+stats_median_overall_01 <- cyto_stats_compute(transformed_timept01,
                                       parent = c("Single_cells"),
                                       alias = c("Single_cells"),
                                       channels = c("FSC-A", "B2-A"),
                                       stat="median",
-                                      save_as = "stats_median_01.csv")
+                                      save_as = "stats_median_01_overall.csv")
+
+stats_median_gatewise_01 <- cyto_stats_compute(transformed_timept01,
+                                              parent = c("Single_cells"),
+                                              alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                              channels = c("FSC-A", "B2-A"),
+                                              stat="median",
+                                              save_as = "stats_median_01_gatewise.csv")
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -186,18 +193,26 @@ analyze_all_exp = function(folder_name, my_markers,"cytek_gating.csv") {
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= 'cytek_gating.csv')
 
   #6. write stats freq file for % of cells inside each gate
+  #Titir
   stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
                                       parent = c("Single_cells"),
-                              alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                      alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                       stat="freq",
                                       save_as = paste0("stats_freq_",prefix,".csv") #writes to working directory
                                       )
-  stats_median <- cyto_stats_compute(transformed_timepoint_gating_set,
+  stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
                                      parent = c("Single_cells"),
                                      alias  = c("Single_cells"),
-                                     channels = c("FSC-A", "B2-A"), #For each strain, this gives either median fluor or median FSC, indicated by the 'marker'; does not calculate both median values for each strain.
+                                     channels = c("FSC-A", "B2-A"),
                                      stat="median",
-                                     save_as = paste0("stats_median_", prefix,".csv"))
+                                     save_as = paste0("stats_median_overall", prefix,".csv"))
+
+  stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
+                                              parent = c("Single_cells"),
+                                              alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                              channels = c("FSC-A", "B2-A"),
+                                              stat="median",
+                                              save_as = paste0("stats_median_gatewise", prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
