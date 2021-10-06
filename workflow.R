@@ -49,26 +49,20 @@ make_exp_details = function(folder_name, samplesheet) {
 
 }
 
-#map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
 
 #STEP 2: Read in all files in a directory and rename the channels.
 #Results in a gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 
-#Do this this for files in timepoint01 directory
-#Write the experiment-markers.csv to the parent directory ie) FSC_files not the timepoint subdirectory.
+exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
 
-exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T) #a way to stay in the parent directory but access the timepoint subdirectories as needed when making gating sets in cyto_setup()
+timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F)
 
-timept01_gating_set <- cyto_setup(path=folders[1], restrict=TRUE, select="fcs", details=F) #details=F; use interactive GUI to paste in experiment details for first timepoint
-
-#cyto_details(timept01_gating_set) #currently ONLY the name column
-#annotate the experiment details file associated with the gating set using pData.
-#our workaround to cyto_setup() not being able to read in the experimental-details.csv file we generated in STEP 1.
+#use pData to annotate the experiment details file associated with the gating set
 tp01_experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
 pData(timept01_gating_set)$name<-tp01_experiment_details$name
 flowWorkspace::pData(timept01_gating_set)$sample<-tp01_experiment_details$sample
-cyto_details(timept01_gating_set) #check what the experiment details for this gs look like
 flowWorkspace::pData(timept01_gating_set)$`Outflow Well`<-tp01_experiment_details$`Outflow well`
 flowWorkspace::pData(timept01_gating_set)$Media<-tp01_experiment_details$Media
 flowWorkspace::pData(timept01_gating_set)$Strain<-tp01_experiment_details$Strain
@@ -76,9 +70,7 @@ flowWorkspace::pData(timept01_gating_set)$Type<-tp01_experiment_details$Type
 flowWorkspace::pData(timept01_gating_set)$Description<-tp01_experiment_details$Description
 flowWorkspace::pData(timept01_gating_set)$generation<-tp01_experiment_details$generation
 
-#cyto_details(timept01_gating_set) #all experimental details metadata now associated with the gating set
-
-#file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. only need to do once
+file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. Need to do once.
 
 #STEP 3:  Perform gating on gating set
 #Gate for 1) Cells, 2) Singlets, 3) CNVS
@@ -86,21 +78,10 @@ flowWorkspace::pData(timept01_gating_set)$generation<-tp01_experiment_details$ge
 #Author: Titir
 
 #First log transform the data
-#timept01_transformed <- cyto_transformer_logicle(timept01_gating_set,
-#                                              channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"))
 timept01_transformed <- cyto_transformer_log(timept01_gating_set,
                                                  channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
 transformed_timept01 <- cyto_transform(timept01_gating_set,
                                        trans = timept01_transformed) #applies the the transformation and returns it as a gatingSet
-# try these other transformation alternatives
-#logicle_transform() hard code the w and m
-#use cyto_biex with changes axes scaling manually and widthBasis
-#simply log  the data without cyto_
-#cyto_transform( type = biex)
-
-cyto_plot_explore(transformed_timept01,
-                  channels_x = "FSC-A",
-                  channels_y = "GFP")
 
 ##Gating using the entire timepoint1 dataset
 #First we gate for the cells
@@ -159,8 +140,6 @@ stats_freq_01 <- cyto_stats_compute(transformed_timept01,
 #6.Output stats file as .csv
 #Author: David & Julie
 
-#to be executed from the parent directory
-
 my_markers<-c("GFP") #list your marker name(s)
 channel<-c("B2-A") #list your channel(s)
 names(my_markers)<-channel
@@ -176,7 +155,7 @@ gating_template <- 'cytek_gating.csv'
   my_expt_details_path <- paste0(my_path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
 
   #1. read in files and make a gating set
-  timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F) #do not set gatingTemplate = gating_template it will overwrite any existing gating template with a BLANK csv file #read in details and markers later
+  timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F)
 
   #2. read in experiment details for that gating set
   # instead --> loop through column names instead of hardcoding
