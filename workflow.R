@@ -243,13 +243,9 @@ map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.cs
 #Pull in all stats_freq files from directories and assemble into a single dataframe
 #Author: Julie
 
-#make a list of all filescontaining pattern "stats_freq"
-#its adding rows because it's adding generations and frequency
-# join_all(list(stats_freq_tables), by = cols 1:7 )
-# dplyr::bind or inner_join
-#do.call("rbind", list(DF1, DF2, DF3))
-#tidyverse::bind_rows(DF1, DF2, DF3)
-#
+stats_freq_list = list.files(path = ".", pattern = "stats_freq")
+all_stats_freq<- read_csv(stats_freq_list)
+write_csv(all_stats_freq, file = "stats_freq_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>90-95% of controls are in the correct gate
