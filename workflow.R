@@ -192,7 +192,7 @@ analyze_all_exp = function(folder_name, my_markers,"cytek_gating.csv") {
   #5. apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= 'cytek_gating.csv')
 
-  #6. write stats freq file for % of cells inside each gate
+  #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir
   stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
                                       parent = c("Single_cells"),
@@ -229,9 +229,13 @@ list.files(path = ".", pattern = "stats_freq") %>%
   read_csv() %>%
   write_csv(file = "stats_freq_all_timepoints.csv")
 
-list.files(path = ".", pattern = "stats_median") %>%
+list.files(path = ".", pattern = "stats_median_overall") %>%
   read_csv() %>%
-  write_csv(file = "stats_median_all_timepoints.csv")
+  write_csv(file = "stats_median_overall_all_timepoints.csv")
+
+list.files(path = ".", pattern = "stats_median_gatewise") %>%
+  read.csv() %>%
+  write_csv(file = "stats_median_gatewise_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>90-95% of controls are in the correct gate
