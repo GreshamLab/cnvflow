@@ -135,14 +135,14 @@ stats_median_overall_01 <- cyto_stats_compute(transformed_timept01,
                                       alias = c("Single_cells"),
                                       channels = c("FSC-A", "B2-A"),
                                       stat="median",
-                                      save_as = "stats_median_01_overall.csv")
+                                      save_as = "stats_median_overall_01.csv")
 
 stats_median_gatewise_01 <- cyto_stats_compute(transformed_timept01,
                                               parent = c("Single_cells"),
                                               alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                               channels = c("FSC-A", "B2-A"),
                                               stat="median",
-                                              save_as = "stats_median_01_gatewise.csv")
+                                              save_as = "stats_median_gatewise_01.csv")
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -205,14 +205,14 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
                                      alias  = c("Single_cells"),
                                      channels = c("FSC-A", "B2-A"),
                                      stat="median",
-                                     save_as = paste0("stats_median_overall", prefix,".csv"))
+                                     save_as = paste0("stats_median_overall_", prefix,".csv"))
 
   stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
                                               parent = c("Single_cells"),
                                               alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                               channels = c("FSC-A", "B2-A"),
                                               stat="median",
-                                              save_as = paste0("stats_median_gatewise", prefix,".csv"))
+                                              save_as = paste0("stats_median_gatewise_", prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
