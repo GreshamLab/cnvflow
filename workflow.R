@@ -207,6 +207,13 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
                                      stat="median",
                                      save_as = paste0("stats_median_overall_", prefix,".csv"))
 
+  stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
+                                             parent = c("Single_cells"),
+                                             alias  = c("Single_cells"),
+                                             #channels = c("FSC-A", "B2-A"),
+                                             stat="count",
+                                             save_as = paste0("stats_cell_number_", prefix,".csv"))
+
   stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
                                               parent = c("Single_cells"),
                                               alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
@@ -219,7 +226,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Uses map from purr() to apply function from step 5 to all directories
 #Author: Julie
 
-map(folders[-1], analyze_all_exp, my_markers, "cytek_gating.csv")
+map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
 
 #STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
