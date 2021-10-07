@@ -116,8 +116,8 @@ cyto_gate_draw(transformed_timept01,
                axes_limits = "data",
 #               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
                gatingTemplate = "cytek_gating.csv",
-               overlay = c(zero_copy, one_copy, two_copy),
-               point_col = c("black", "green", "red", "blue")
+               overlay = c(zero_copy, one_copy), #two_copy),
+               point_col = c("black", "green", "red") #, "blue")
 )
 
 #STEP 4:  Generate statistics tables
