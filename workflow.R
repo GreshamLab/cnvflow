@@ -15,7 +15,7 @@ library(CytoExploreR)
 library(tidyverse)
 
 # Set working directory and get list of subdirectories
-#setwd('../FCS files/') #Grace's working directory
+setwd('../FCS files/') #Grace's working directory
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 
@@ -249,7 +249,7 @@ medians_bygate = read_csv("stats_median_gatewise_all_timepoints.csv")
 # check controls are in their proper gates
 freq %>%
   filter(str_detect(Description, "control")) %>%
-  select(Description, Strain, generation, Population, Frequency) %>%
+  select(Description, Strain, generation, Gate, Frequency, name) %>%
   mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 90 ~ "pass",
                           Strain == "DGY1" & Gate == "zero_copy" & Frequency < 90 ~ "fail",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency >= 90 ~ "pass",
@@ -259,6 +259,7 @@ freq %>%
   filter(flag == "fail") %>%
   arrange(Description) %>%
   View()
+
 # plot controls over time
 freq %>%
   filter(str_detect(Description, "control")) %>%
@@ -283,7 +284,7 @@ for(exp in unique(freq$Description)) {
   i = i+1
 }
 names(plot_list) = unique(freq$Description)
-plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+plot_list$`GAP1 LTR + ARS KO` # change index to view replicates for different genetic backgrounds
 
 # plot proportion of the population with a CNV over time
 freq %>%
