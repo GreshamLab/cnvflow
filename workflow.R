@@ -15,7 +15,7 @@ library(CytoExploreR)
 library(tidyverse)
 
 # Set working directory and get list of subdirectories
-#setwd('./Summer 2021 Group LTEE/FCS files/') #Grace's working directory
+#setwd('../FCS files/') #Grace's working directory
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 
@@ -158,7 +158,7 @@ my_markers<-c("GFP") #list your marker name(s)
 channel<-c("B2-A") #list your channel(s)
 names(my_markers)<-channel
 
-analyze_all_exp = function(folder_name, my_markers,"cytek_gating.csv") {
+analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gating.csv") {
 
   my_path <- folder_name #gets relative path name for folder to be analyzed
 
@@ -190,7 +190,7 @@ analyze_all_exp = function(folder_name, my_markers,"cytek_gating.csv") {
                                                     trans = timepoint_gating_set_transformed)
 
   #5. apply gating-template.csv to transformed gating set
-  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= 'cytek_gating.csv')
+  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
 
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir
@@ -241,9 +241,65 @@ list.files(path = ".", pattern = "stats_median_gatewise") %>%
 #Determine whether =>90-95% of controls are in the correct gate
 #Author: Grace
 
-#dplyr::select filter controls, zero copy, one copy, two copy,
+# read in frequency csv, median csvs for all timepoints
+freq = read_csv("stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
+medians = read_csv("stats_median_overall_all_timepoints.csv") # don't have these, can't read them in yet
+medians_bygate = read_csv("stats_median_gatewise_all_timepoints.csv")
 
+# check controls are in their proper gates
+freq %>%
+  filter(str_detect(Description, "control")) %>%
+  select(Description, Strain, generation, Population, Frequency) %>%
+  mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 90 ~ "pass",
+                          Strain == "DGY1" & Gate == "zero_copy" & Frequency < 90 ~ "fail",
+                          Strain == "DGY500" & Gate == "one_copy" & Frequency >= 90 ~ "pass",
+                          Strain == "DGY500" & Gate == "one_copy" & Frequency < 90 ~ "fail",
+                          Strain == "DGY1315" & Gate == "two_copy" & Frequency >= 90 ~ "pass",
+                          Strain == "DGY1315" & Gate == "two_copy" & Frequency < 90 ~ "fail")) %>%
+  filter(flag == "fail") %>%
+  arrange(Description) %>%
+  View()
+# plot controls over time
+freq %>%
+  filter(str_detect(Description, "control")) %>%
+  ggplot(aes(generation, Frequency, color = Gate)) +
+  geom_line() +
+  facet_wrap(~Description) +
+  ylab("% of cells in gate") +
+  theme_minimal()
 
+# plot proportion of population in each gate over time for all experimental
+plot_list = list()
+i=1
+for(exp in unique(freq$Description)) {
+  #print(plot_dist(obs))
+  plot_list[[i]] = freq %>%
+    filter(Description == exp) %>%
+    ggplot(aes(generation, Frequency, color = Gate)) +
+    geom_line() +
+    facet_wrap(~sample) +
+    ylab("% of cells in gate") +
+    theme_minimal()
+  i = i+1
+}
+names(plot_list) = unique(freq$Description)
+plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+
+# plot proportion of the population with a CNV over time
+freq %>%
+  group_by(sample, generation) %>%
+  filter(generation != 174) %>%
+  filter(Gate %in% c("two_copy", "multi_copy")) %>%
+  group_by(sample, generation) %>%
+  mutate(prop_CNV = sum(Frequency)) %>% #View()
+  select(sample, generation, Description, prop_CNV) %>%
+  distinct() %>%
+  ggplot(aes(generation, prop_CNV, color = sample)) +
+  geom_line() +
+  facet_wrap(~Description) +
+  theme_minimal() +
+  ylab("Proportion of the population with GAP1 CNV") #+
+  theme(legend.position = "none")
 
 
 
