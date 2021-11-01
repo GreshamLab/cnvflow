@@ -90,7 +90,7 @@ cyto_gate_draw(transformed_timept01,
                alias = "Cells",
                channels = c("FSC-A","SSC-A"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating.csv",
+               gatingTemplate = "cytek_gating_JC_v3.csv",
 )
 
 #Then we define the singlets based on forward scatter height and width
@@ -99,7 +99,7 @@ cyto_gate_draw(transformed_timept01,
                alias = "Single_cells",
                channels = c("FSC-A","FSC-H"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating.csv"
+               gatingTemplate = "cytek_gating_JC_v3.csv"
 )
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
@@ -115,7 +115,7 @@ cyto_gate_draw(transformed_timept01,
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
 #               select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "cytek_gating.csv",
+               gatingTemplate = "cytek_gating_JC_v3.csv",
                overlay = c(zero_copy, one_copy), #two_copy),
                point_col = c("black", "green", "red") #, "blue")
 )
@@ -198,28 +198,28 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
                                       parent = c("Single_cells"),
                                       alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                       stat="freq",
-                                      save_as = paste0("v2_stats_freq_",prefix,".csv") #writes to working directory
+                                      save_as = paste0("v3_stats_freq_",prefix,".csv") #writes to working directory
                                       )
   stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
                                      parent = c("Single_cells"),
                                      alias  = c("Single_cells"),
                                      channels = c("FSC-A", "B2-A"),
                                      stat="median",
-                                     save_as = paste0("v2_stats_median_overall_", prefix,".csv"))
+                                     save_as = paste0("v3_stats_median_overall_", prefix,".csv"))
 
   stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
                                              parent = c("Single_cells"),
                                              alias  = c("Single_cells"),
                                              #channels = c("FSC-A", "B2-A"),
                                              stat="count",
-                                             save_as = paste0("v2_stats_cell_number_", prefix,".csv"))
+                                             save_as = paste0("v3_stats_cell_number_", prefix,".csv"))
 
   stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
                                               parent = c("Single_cells"),
                                               alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
                                               channels = c("FSC-A", "B2-A"),
                                               stat="median",
-                                              save_as = paste0("v2_stats_median_gatewise_", prefix,".csv"))
+                                              save_as = paste0("v3_stats_median_gatewise_", prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -232,31 +232,31 @@ map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.cs
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
 
-list.files(path = ".", pattern = "v2_stats_freq") %>%
+list.files(path = ".", pattern = "v3_stats_freq") %>%
   read_csv() %>%
-  write_csv(file = "v2_stats_freq_all_timepoints.csv")
+  write_csv(file = "v3_stats_freq_all_timepoints.csv")
 
-list.files(path = ".", pattern = "v2_stats_median_overall") %>%
+list.files(path = ".", pattern = "v3_stats_median_overall") %>%
   read_csv() %>%
-  write_csv(file = "v2_stats_median_overall_all_timepoints.csv")
+  write_csv(file = "v3_stats_median_overall_all_timepoints.csv")
 
-list.files(path = ".", pattern = "v2_stats_median_gatewise") %>%
+list.files(path = ".", pattern = "v3_stats_median_gatewise") %>%
   read_csv() %>%
-  write_csv(file = "v2_stats_median_gatewise_all_timepoints.csv")
+  write_csv(file = "v3_stats_median_gatewise_all_timepoints.csv")
 
-list.files(path = ".", pattern = "v2_stats_cell_number") %>%
+list.files(path = ".", pattern = "v3_stats_cell_number") %>%
   read_csv() %>%
-  write_csv(file = "v2_stats_cell_number_all_timepoints.csv")
+  write_csv(file = "v3_stats_cell_number_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>90-95% of controls are in the correct gate
 #Author: Grace
 
 # read in frequency csv, median csvs for all timepoints
-freq = read_csv("v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
-medians = read_csv("v2_stats_median_overall_all_timepoints.csv") # don't have these, can't read them in yet
-medians_bygate = read_csv("v2_stats_median_gatewise_all_timepoints.csv")
-cell_numbers = read_csv("v2_stats_cell_number_all_timepoints.csv")
+freq = read_csv("v3_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
+medians = read_csv("v3_stats_median_overall_all_timepoints.csv") # don't have these, can't read them in yet
+medians_bygate = read_csv("v3_stats_median_gatewise_all_timepoints.csv")
+cell_numbers = read_csv("v3_stats_cell_number_all_timepoints.csv")
 
 # add cell number column to freq table
 freq = left_join(freq, cell_numbers) %>%
@@ -278,7 +278,7 @@ freq %>%
   filter(flag == "fail") %>%
   arrange(Description) %>%
   View()
-
+  write_csv("v3_fail.csv")
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
