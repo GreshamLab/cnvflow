@@ -263,7 +263,7 @@ freq = left_join(freq, cell_numbers) %>%
   select(-Marker)
 
 # exclude any well/timepoint with less than 70,000 single cells
-freq %>%
+fails = freq %>%
   filter(Count>70000) %>%
 # check controls are in their proper gates
   filter(str_detect(Description, "control")) %>%
@@ -279,10 +279,13 @@ freq %>%
   arrange(Description) %>%
   View()
   #write_csv("v2_83_fail.csv")
+
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
   filter(str_detect(Description, "control")) %>%
+  anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
+  filter(Description == "2 copy control" & Gate == "zero_copy") %>% View() #found more contaminated controls
   ggplot(aes(generation, Frequency, color = Gate)) +
   geom_line() +
   facet_wrap(~Description) +
