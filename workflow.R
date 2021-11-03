@@ -273,11 +273,13 @@ fails = freq %>%
                           Strain == "DGY500" & Gate == "one_copy" & Frequency >= 83 ~ "pass",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency < 83 ~ "fail",
                           Strain == "DGY1315" & Gate == "two_copy" & Frequency >= 83 ~ "pass",
-                          Strain == "DGY1315" & Gate == "two_copy" & Frequency < 83 ~ "fail"
+                          Strain == "DGY1315" & Gate == "two_copy" & Frequency < 83 ~ "fail",
+                          Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 15 ~ "fail",
+                          Strain == "DGY500" & Gate == "two_copy" & Frequency >=15 ~ "fail"
                           ))%>%
   filter(flag == "fail") %>%
-  arrange(Description) %>%
-  View()
+  arrange(Description) #%>%
+  #View()
   #write_csv("v2_83_fail.csv")
 
 # plot controls over time
@@ -285,12 +287,12 @@ freq %>%
 filter(Count>70000) %>%
   filter(str_detect(Description, "control")) %>%
   anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
-  filter(Description == "2 copy control" & Gate == "zero_copy") %>% View() #found more contaminated controls
   ggplot(aes(generation, Frequency, color = Gate)) +
   geom_line() +
   facet_wrap(~Description) +
   ylab("% of cells in gate") +
-  theme_minimal()
+  theme_minimal() +
+  theme(text = element_text(size=20))
 
 # plot proportion of population in each gate over time for all experimental
 plot_list = list()
@@ -304,12 +306,13 @@ for(exp in unique(freq$Description)) {
     geom_line() +
     facet_wrap(~sample) +
     ylab("% of cells in gate") +
-    theme_minimal()
+    theme_minimal()+
+    theme(text = element_text(size=18))
   i = i+1
 }
 names(plot_list) = unique(freq$Description)
 plot_list$`GAP1 LTR + ARS KO` # change index to view replicates for different genetic backgrounds
-plot_list$`GAP1 ARS KO`
+ plot_list$`GAP1 ARS KO`
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 WT architecture`
 # plot proportion of the population with a CNV over time
@@ -328,6 +331,10 @@ freq %>%
   theme_minimal() +
   ylab("Proportion of the population with GAP1 CNV") #+
   theme(legend.position = "none")
+
+#plot median GFP fluorescence over time of experimental
+  #overlay 0,1,2 controls on same graph as experimental with gray lines
+
 
 
 
