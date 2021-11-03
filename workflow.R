@@ -332,9 +332,32 @@ freq %>%
   ylab("Proportion of the population with GAP1 CNV") #+
   theme(legend.position = "none")
 
-#plot median GFP fluorescence over time of experimental
+#plot median GFP fluorescence normalized over median FSC-A over time for experimental
   #overlay 0,1,2 controls on same graph as experimental with gray lines
+norm_medians = medians %>%
+  pivot_wider(names_from = Marker, values_from = MedFI) %>%
+  mutate(NormMedGFP = GFP/`FSC-A`) %>%
+  filter(generation != 174) %>%
+  arrange(Description)
 
+#Mutate Description of controls so we can graph them on experimental facet plots
+adjusted = norm_medians %>%
+  slice(rep(1:56, each = 4)) %>% #repeat each control row 4 times
+  mutate(Description = rep(c("GAP1 ARS KO", "GAP1 LTR + ARS KO", "GAP1 LTR KO","GAP1 WT architecture"), times=56)) %>% #mutate Description of controls
+merge(norm_medians %>% filter(Type == "Experimental"), all = TRUE) %>% #merge back to experimental rows
+  arrange(Description, generation)
+
+#graph experimental with along controls
+ggplot(adjusted, aes(generation, NormMedGFP, color= sample)) +
+  geom_line(aes(linetype = Type)) +
+  scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
+  #scale_color_manual(values=c("gray", "gray", "gray"))+
+  facet_wrap(~Description) +
+  ylab("normalized median fluorescence") +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  theme_classic() +
+  theme(legend.position = "none",
+        text = element_text(size=20))
 
 
 
