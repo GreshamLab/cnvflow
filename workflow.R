@@ -317,13 +317,12 @@ plot_list$`GAP1 LTR + ARS KO` # change index to view replicates for different ge
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 WT architecture`
 # plot proportion of the population with a CNV over time
-#Julie: edit to plot controls on each experimental facet plot.
-#Julie: edit to exclude contaminated control timepoints
+#Julie: dont need controls
 freq %>%
   filter(Count>70000) %>%
   group_by(sample, generation) %>%
   filter(generation != 174) %>%
-  filter(Gate %in% c("two_copy", "multi_copy")) %>%
+  filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
   group_by(sample, generation) %>%
   mutate(prop_CNV = sum(Frequency)) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
@@ -332,8 +331,9 @@ freq %>%
   geom_line() +
   facet_wrap(~Description) +
   theme_minimal() +
-  ylab("Proportion of the population with GAP1 CNV") #+
-  theme(legend.position = "none")
+  ylab("Proportion of the population with GAP1 CNV") +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  theme(text = element_text(size=20), legend.position = "none")
 
 
 #plot median GFP fluorescence normalized over median FSC-A over time for experimental
