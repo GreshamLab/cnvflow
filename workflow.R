@@ -249,8 +249,8 @@ list.files(path = ".", pattern = "v2_stats_cell_number") %>%
   write_csv(file = "v2_stats_cell_number_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
-#Determine whether =>90-95% of controls are in the correct gate
-#Author: Grace
+#Determine whether =>83% of controls are in the correct gate
+#Author: Grace & Julie
 
 # read in frequency csv, median csvs for all timepoints
 freq = read_csv("v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
@@ -295,6 +295,7 @@ filter(Count>70000) %>%
   theme(text = element_text(size=20))
 
 # plot proportion of population in each gate over time for all experimental
+#JULIE: edit to exclude the contaminated control timepoints
 plot_list = list()
 i=1
 for(exp in unique(freq$Description)) {
@@ -316,6 +317,8 @@ plot_list$`GAP1 LTR + ARS KO` # change index to view replicates for different ge
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 WT architecture`
 # plot proportion of the population with a CNV over time
+#Julie: edit to plot controls on each experimental facet plot.
+#Julie: edit to exclude contaminated control timepoints
 freq %>%
   filter(Count>70000) %>%
   group_by(sample, generation) %>%
@@ -331,6 +334,7 @@ freq %>%
   theme_minimal() +
   ylab("Proportion of the population with GAP1 CNV") #+
   theme(legend.position = "none")
+
 
 #plot median GFP fluorescence normalized over median FSC-A over time for experimental
   #overlay 0,1,2 controls on same graph as experimental with gray lines
