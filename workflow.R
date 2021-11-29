@@ -253,10 +253,10 @@ list.files(path = ".", pattern = "v4_stats_cell_number") %>%
 #Author: Grace & Julie
 
 # read in frequency csv, median csvs for all timepoints
-freq = read_csv("v4_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
-medians = read_csv("v4_stats_median_overall_all_timepoints.csv") # don't have these, can't read them in yet
-medians_bygate = read_csv("v4_stats_median_gatewise_all_timepoints.csv")
-cell_numbers = read_csv("v4_stats_cell_number_all_timepoints.csv")
+freq = read_csv("v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
+medians = read_csv("v2_stats_median_overall_all_timepoints.csv")
+medians_bygate = read_csv("v2_stats_median_gatewise_all_timepoints.csv")
+cell_numbers = read_csv("v2_stats_cell_number_all_timepoints.csv")
 
 # add cell number column to freq table
 freq = left_join(freq, cell_numbers) %>%
@@ -278,15 +278,15 @@ fails = freq %>%
                           Strain == "DGY500" & Gate == "two_copy" & Frequency >=15 ~ "fail"
                           ))%>%
   filter(flag == "fail") %>%
-  arrange(Description) #%>%
-  #View()
-  #write_csv("v2_83_fail.csv")
+  arrange(Description)
+
+  #%>% write_csv("v2_83_fail.csv")
 
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
-  filter(str_detect(Description, "control")) %>% View()
-  #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
+  filter(str_detect(Description, "control")) %>%
+  anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
   ggplot(aes(generation, Frequency, color = Gate)) +
   geom_line() +
   facet_wrap(~Description) +
@@ -324,7 +324,7 @@ freq %>%
   filter(generation != 174) %>%
   filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
   group_by(sample, generation) %>%
-  mutate(prop_CNV = sum(Frequency)) %>% #View()
+  mutate(prop_CNV = sum(Frequency)) #%>% View()
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
@@ -335,6 +335,30 @@ freq %>%
   scale_x_continuous(breaks=seq(0,250,50)) +
   theme(text = element_text(size=20), legend.position = "none")
 
+# plot ridgeplots (histograms):
+# normalized fluorescence histograms of controls at each generations
+
+# plot median and mean proportion of the populations with a CNV over time
+  freq %>%
+    filter(Count>70000) %>%
+    group_by(sample, generation) %>%
+    filter(generation != 174, sample != "gap1_4") %>% #View()
+    filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
+    group_by(sample, generation) %>%
+    mutate(prop_CNV = sum(Frequency)) %>%
+    arrange(generation, Description) %>%
+    group_by(Description, generation) %>%
+    mutate(median_propCNV = median(prop_CNV),
+           mean_propCNV = mean(prop_CNV)) %>% #View()
+  select(sample, generation, Description, median_propCNV) %>%
+    distinct() %>% #View()
+    ggplot(aes(generation, median_propCNV, color = Description)) +
+    geom_line() +
+    facet_wrap(~Description) +
+    theme_minimal() +
+    ylab("Median proportion of the population with GAP1 CNV") +
+    scale_x_continuous(breaks=seq(0,250,50)) +
+    theme(text = element_text(size=14), legend.position = "none")
 
 #plot median GFP fluorescence normalized over median FSC-A over time for experimental
   #overlay 0,1,2 controls on same graph as experimental with gray lines
