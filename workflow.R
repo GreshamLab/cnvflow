@@ -320,11 +320,12 @@ plot_list$`GAP1 WT architecture`
 #Julie: dont need controls
 freq %>%
   filter(Count>70000) %>%
+  anti_join(fails) %>%
   group_by(sample, generation) %>%
-  filter(generation != 174) %>%
+  filter(generation != 174) %>% #View()
   filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
   group_by(sample, generation) %>%
-  mutate(prop_CNV = sum(Frequency)) #%>% View()
+  mutate(prop_CNV = sum(Frequency)) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
@@ -335,10 +336,60 @@ freq %>%
   scale_x_continuous(breaks=seq(0,250,50)) +
   theme(text = element_text(size=20), legend.position = "none")
 
-# plot ridgeplots (histograms):
-# normalized fluorescence histograms of controls at each generations
+#Quantify CNV dynamics
+  # 1) First, calculate Tup, the generation at which CNVs are initially detected, (Lang et al. 2011 and Lauer et al. 2018)
+  # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of one-copy control cells appearing in the two copy and multicopy gate across generations 8-260.
+  # In Lauer et al. 2018, the false positive for CNV detection is defined as the average plus one standard deviation.
+  # Since my distribution is not normal, I will use the median plus IQR instead as my false positive threshold.
+  # Like in Lauer et al. 2018, samples surpassing this
 
-# plot median and mean proportion of the populations with a CNV over time
+CNV_false_pos_freq = freq %>%
+  filter(Count>70000) %>%
+  anti_join(fails) %>%
+  filter(generation != 174, Type == "1_copy_ctrl") %>%
+  filter(Gate %in% c("two_copy", "multi_copy")) %>%
+  group_by(generation) %>%
+  mutate(CNV_freq = as.numeric(sum(Frequency))) %>%
+  filter(Gate == "multi_copy")
+ mean(CNV_false_pos_freq$CNV_freq)
+ sd(CNV_false_pos_freq$CNV_freq)
+
+ hist(CNV_false_pos_freq$CNV_freq) #not normal
+  abline(v = median(CNV_false_pos_freq$CNV_freq),col = "red",lwd = 1.5)
+  abline(v = mean(CNV_false_pos_freq$CNV_freq), col = "blue", lwd = 1.5)
+ m = median(CNV_false_pos_freq$CNV_freq) #3.96294
+ iqr = IQR(CNV_false_pos_freq$CNV_freq) #3.159226
+ threshold = m + iqr #threshold from median + IQR #7.122166
+ mean(CNV_false_pos_freq$CNV_freq) #4.113866
+ sd(CNV_false_pos_freq$CNV_freq) #2.72
+ mean(CNV_false_pos_freq$CNV_freq) + sd(CNV_false_pos_freq$CNV_freq) #threshold from mean + 1SD #6.81973
+
+#frequency of experimental sample cells in two_copy and multi_copy gates over generation
+freq %>%
+   filter(Count>70000) %>%
+   filter(generation != 174, Type == "Experimental") %>%
+   anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
+   filter(Gate %in% c("two_copy", "multi_copy")) %>%
+  group_by(sample, generation) %>%
+  mutate(CNV_freq = as.numeric(sum(Frequency))) %>%
+  filter(Gate == "multi_copy") %>%
+   ggplot(aes(generation, CNV_freq, color = sample)) +
+   geom_line() +
+   facet_wrap(~Description) +
+   ylab("% of cells in gate") +
+   theme_minimal() +
+   theme(text = element_text(size=20))
+
+#same as above but the median CNV_frequency of the populations
+
+
+# plot ridgeplots (histograms):
+# normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
+# aka not looking at the median GFP values per population per generation.
+  # We want to see the entire distribution of GFP cells per population per generation.
+
+
+# plot median proportion of the populations with a CNV over time
   freq %>%
     filter(Count>70000) %>%
     group_by(sample, generation) %>%
@@ -349,7 +400,7 @@ freq %>%
     arrange(generation, Description) %>%
     group_by(Description, generation) %>%
     mutate(median_propCNV = median(prop_CNV),
-           mean_propCNV = mean(prop_CNV)) %>% #View()
+           mean_propCNV = mean(prop_CNV)) %>% View()
   select(sample, generation, Description, median_propCNV) %>%
     distinct() %>% #View()
     ggplot(aes(generation, median_propCNV, color = Description)) +
@@ -387,6 +438,7 @@ ggplot(adjusted, aes(generation, NormMedGFP, color= sample)) +
   theme(legend.position = "none",
         text = element_text(size=20))
 
+# plot median of the populations' median normalized fluorescence over time
 
 
 
