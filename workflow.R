@@ -18,7 +18,8 @@ library(tidyverse)
 #setwd('../FCS files/') #Grace's working directory
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
-setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
+#setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
+setwd("~/Documents/Summer_LTEE_2021_FCS_files")
 folders = list.dirs()[-1]
 
 #STEP 1: Generate experiment details file.
@@ -79,14 +80,20 @@ flowWorkspace::pData(timept_gating_set)$generation<-experiment_details$generatio
 
 #Log transform the data
 # looks useful if I want to choose different transformation: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
-timept_transformed <- cyto_transformer_log(timept_gating_set,
-                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
-transformed_timept <- cyto_transform(timept_gating_set,
-                      trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
+#timept_transformed <- cyto_transformer_log(timept_gating_set,
+#                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
+#transformed_timept <- cyto_transform(timept_gating_set,
+#                      trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
 timept_transformed <- cyto_transformer_logicle(timept_gating_set,
-                                           channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
+                                           channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
+                                           widthBasis = -10) #returns it as a list
 transformed_timept <- cyto_transform(timept_gating_set,
                                      trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
+#quickly check the transformation by plotting the data
+cyto_plot_explore(transformed_timept,
+                  channels_x = "FSC-A",
+                  channels_y = "GFP")
+
 ##Gating using the entire timepoint dataset.
 #First we gate for the cells
 cyto_gate_draw(transformed_timept,
@@ -172,6 +179,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   my_expt_details_path <- paste0(my_path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
 
   #1. read in files and make a gating set
+  print(my_path)
   timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F)
 
   #2. read in experiment details for that gating set
@@ -189,42 +197,46 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   markernames(timepoint_gating_set)<-my_markers
 
   #4. transform data
-  timepoint_gating_set_transformed <- cyto_transformer_log(timepoint_gating_set,
-                                                           channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
-  transformed_timepoint_gating_set<- cyto_transform(timepoint_gating_set,
-                                                    trans = timepoint_gating_set_transformed)
-
+#  timepoint_gating_set_transformed <- cyto_transformer_log(timepoint_gating_set,
+#                                                           channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
+#  transformed_timepoint_gating_set<- cyto_transform(timepoint_gating_set,
+#                                                    trans = timepoint_gating_set_transformed)
+  timept_transformed <- cyto_transformer_logicle(timept_gating_set,
+                                                 channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+                                                 )#returns it as a list
+  transformed_timept <- cyto_transform(timept_gating_set,
+                                       trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
   #5. apply gating-template.csv to transformed gating set
-  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
+#  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
 
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir
-  stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                      parent = c("Single_cells"),
-                                     alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
-                                      stat="freq",
-                                      save_as = paste0("manyTimepoints_01_11_v2_stats_freq_",prefix,".csv") #writes to working directory
-                                      )
-  stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                     parent = c("Single_cells"),
-                                     alias  = c("Single_cells"),
-                                     channels = c("FSC-A", "B2-A"),
-                                     stat="median",
-                                   save_as = paste0("manyTimepoints_01_11_v2_stats_median_overall_", prefix,".csv"))
+#  stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
+#                                      parent = c("Single_cells"),
+#                                     alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+#                                      stat="freq",
+#                                      save_as = paste0("manyTimepoints_01_11_v2_stats_freq_",prefix,".csv") #writes to working directory
+#                                      )
+# stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
+#                                     parent = c("Single_cells"),
+#                                     alias  = c("Single_cells"),
+#                                     channels = c("FSC-A", "B2-A"),
+#                                     stat="median",
+#                                   save_as = paste0("manyTimepoints_01_11_v2_stats_median_overall_", prefix,".csv"))
 
-  stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                             parent = c("Single_cells"),
-                                             alias  = c("Single_cells"),
-                                             channels = c("FSC-A", "B2-A"),
-                                             stat="count",
-                                             save_as = paste0("manyTimepoints_01_11_v2_stats_cell_number_", prefix,".csv"))
+#  stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
+#                                             parent = c("Single_cells"),
+#                                             alias  = c("Single_cells"),
+#                                             channels = c("FSC-A", "B2-A"),
+#                                             stat="count",
+#                                             save_as = paste0("manyTimepoints_01_11_v2_stats_cell_number_", prefix,".csv"))
 
- stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                              parent = c("Single_cells"),
-                                              alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
-                                              channels = c("FSC-A", "B2-A"),
-                                              stat="median",
-                                             save_as = paste0("manyTimepoints_01_11_v2_stats_median_gatewise_", prefix,".csv"))
+# stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
+#                                              parent = c("Single_cells"),
+#                                              alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+#                                              channels = c("FSC-A", "B2-A"),
+#                                              stat="median",
+#                                             save_as = paste0("manyTimepoints_01_11_v2_stats_median_gatewise_", prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -232,7 +244,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Author: Julie
 
 map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-safely(map(folders[10:25],analyze_all_exp, my_markers, gating_template = "cytek_gating_JC_manyTimepoints_01_11_v2.csv"))
+try(map(folders[1:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_JC_manyTimepoints_01_11_v2.csv"))
 #STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
