@@ -62,7 +62,7 @@ timept_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select
 
 #use pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
-pData(timept_gating_set)$name<-experiment_details$name
+flowWorkspace::pData(timept_gating_set)$name<-experiment_details$name
 flowWorkspace::pData(timept_gating_set)$sample<-experiment_details$sample
 flowWorkspace::pData(timept_gating_set)$`Outflow Well`<-experiment_details$`Outflow well`
 flowWorkspace::pData(timept_gating_set)$Media<-experiment_details$Media
@@ -84,15 +84,16 @@ flowWorkspace::pData(timept_gating_set)$generation<-experiment_details$generatio
 #                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
 #transformed_timept <- cyto_transform(timept_gating_set,
 #                      trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
-timept_transformed <- cyto_transformer_logicle(timept_gating_set,
-                                           channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
-                                           widthBasis = -10) #returns it as a list
-transformed_timept <- cyto_transform(timept_gating_set,
-                                     trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
+#timept_transformed <- cyto_transformer_logicle(timept_gating_set,
+#                                           channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
+#                                           widthBasis = -10) #returns it as a list
+#transformed_timept <- cyto_transform(timept_gating_set,
+#                                     trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
 #quickly check the transformation by plotting the data
 cyto_plot_explore(transformed_timept,
                   channels_x = "FSC-A",
-                  channels_y = "GFP")
+                  channels_y = "GFP",
+                  axes_limits = "data")
 
 ##Gating using the entire timepoint dataset.
 #First we gate for the cells
@@ -102,7 +103,7 @@ cyto_gate_draw(transformed_timept,
                alias = "Cells",
                channels = c("FSC-A","SSC-A"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_JC_manyTimepoints_01_11_v2.csv",
+               gatingTemplate = "cytek_gating_test.csv",
 )
 
 #Then we define the singlets based on forward scatter height and width
@@ -111,7 +112,7 @@ cyto_gate_draw(transformed_timept,
                alias = "Single_cells",
                channels = c("FSC-A","FSC-H"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_JC_manyTimepoints_01_11_v2.csv"
+               gatingTemplate = "cytek_gating_test.csv"
 )
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
@@ -127,7 +128,7 @@ cyto_gate_draw(transformed_timept,
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
                select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "cytek_gating_JC_manyTimepoints_01_11_v2.csv",
+               #gatingTemplate = "cytek_gating_test.csv",
                overlay = c(zero_copy, one_copy, two_copy),
                point_col = c("black", "green", "red", "blue")
 )
@@ -177,13 +178,13 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
 
   my_expt_details_path <- paste0(my_path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
-
+  #my_expt_details_path <- list.files(path = paste0(my_path), pattern = "_experiment_details.csv", full.names = T)
   #1. read in files and make a gating set
   print(my_path)
   timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F)
 
   #2. read in experiment details for that gating set
-  my_experiment_details <- read_csv(my_expt_details_path) #import experiment-details.csv
+  my_experiment_details <- read_csv(my_expt_details_path, show_col_types = F) #import experiment-details.csv
   flowWorkspace::pData(timepoint_gating_set)$name<-my_experiment_details$name
   flowWorkspace::pData(timepoint_gating_set)$sample<-my_experiment_details$sample
   flowWorkspace::pData(timepoint_gating_set)$`Outflow Well`<-my_experiment_details$`Outflow well`
@@ -201,11 +202,51 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #                                                           channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
 #  transformed_timepoint_gating_set<- cyto_transform(timepoint_gating_set,
 #                                                    trans = timepoint_gating_set_transformed)
-  timept_transformed <- cyto_transformer_logicle(timept_gating_set,
-                                                 channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+  GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
+                                                 channels = c("B2-A"),
+                                                 widthBasis = -10
                                                  )#returns it as a list
-  transformed_timept <- cyto_transform(timept_gating_set,
-                                       trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
+  FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                        channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+                        )
+  combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+  transformed_timept <- cyto_transform(timepoint_gating_set,
+                                       trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+  #cyto_plot_explore(transformed_timept, #quick plot check that it looks okay
+  #                  channels_x = "FSC-A",
+  #                  channels_y = "GFP",
+  #                  axes_limits = "data")
+  #First we gate for the cells
+  #cyto_gate_draw(transformed_timept,
+  #               parent = "root",
+  #               alias = "Cells",
+  #               channels = c("FSC-A","SSC-A"),
+  #               axes_limits = "data",
+  #               gatingTemplate = "cytek_gating_test.csv",
+  #)
+
+  #Then we define the singlets based on forward scatter height and width
+  #cyto_gate_draw(transformed_timept,
+  #               parent = "Cells",
+  #               alias = "Single_cells",
+  #               channels = c("FSC-A","FSC-H"),
+  #               axes_limits = "data",
+  #               gatingTemplate = "cytek_gating_test.csv"
+  #)
+#  zero_copy <- cyto_extract(transformed_timept, "Single_cells")[c(30,61)] #DGY1
+#  one_copy <- cyto_extract(transformed_timept, "Single_cells")[c(1,32)] #DGY500
+#  two_copy <- cyto_extract(transformed_timept, "Single_cells")[c(31,62)] #DGY1315
+#  cyto_gate_draw(transformed_timept,
+#                 parent = "Single_cells", #first color
+#                 alias = c("zero_copy", "one_copy", "two_copy","multi_copy"), #defines gate names
+#                 channels = c("FSC-A","B2-A"),
+#                 axes_limits = "data",
+#                 select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
+#                 gatingTemplate = "cytek_gating_test.csv",
+#                 overlay = c(zero_copy, one_copy, two_copy),
+#                 point_col = c("black", "green", "red", "blue")
+#  )
+
   #5. apply gating-template.csv to transformed gating set
 #  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
 
@@ -244,7 +285,8 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Author: Julie
 
 map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-try(map(folders[1:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_JC_manyTimepoints_01_11_v2.csv"))
+try(map(folders[2:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_test.csv"))
+try(map(folders[5],analyze_all_exp, my_markers, gating_template = "cytek_gating_test.csv"))
 #STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
