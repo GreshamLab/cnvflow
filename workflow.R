@@ -19,7 +19,7 @@ library(tidyverse)
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 #setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
-setwd("~/Documents/Summer_LTEE_2021_FCS_files")
+setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
 folders = list.dirs()[-1]
 
 #STEP 1: Generate experiment details file.
@@ -132,7 +132,7 @@ zero_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30
 
 one_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32,63)] #DGY500
 
-two_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62,93)] #DGY1315
+two_or_more_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62,93)] #DGY1315
 
 cyto_gate_draw(transformed_timepoint_gating_set,
                parent = "Single_cells", #first color
@@ -141,7 +141,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
                axes_limits = "data",
                #select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
                gatingTemplate = "cytek_gating_01_02_04.csv",
-               overlay = c(zero_copy, one_copy, two_copy),
+               overlay = c(zero_copy, one_copy, two_or_more_copy),
                point_col = c("gray", "green", "red", "blue")
 )
 
@@ -151,7 +151,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
 
 stats_freq_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
                                   parent = "Single_cells",
-                                  alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                  alias = c("zero_copy", "one_copy", "two_or_more_copy"),
                                   stat="freq",
                                   save_as = "stats_freq_01.csv")
 
@@ -164,7 +164,7 @@ stats_median_overall_01 <- cyto_stats_compute(transformed_timepoint_gating_set01
 
 stats_median_gatewise_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
                                               parent = c("Single_cells"),
-                                              alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                              alias = c("zero_copy", "one_copy", "two_or_more_copy"),
                                               channels = c("FSC-A", "B2-A"),
                                               stat="median",
                                               save_as = "stats_median_gatewise_01.csv")
@@ -247,15 +247,15 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   #)
 #  zero_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61)] #DGY1
 #  one_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32)] #DGY500
-#  two_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62)] #DGY1315
+#  two_or_more_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62)] #DGY1315
 #  cyto_gate_draw(transformed_timepoint_gating_set,
 #                 parent = "Single_cells", #first color
-#                 alias = c("zero_copy", "one_copy", "two_copy","multi_copy"), #defines gate names
+#                 alias = c("zero_copy", "one_copy", "two_or_more_copy","multi_copy"), #defines gate names
 #                 channels = c("FSC-A","B2-A"),
 #                 axes_limits = "data",
 #                 select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
 #                 gatingTemplate = "cytek_gating_01_02_04.csv",
-#                 overlay = c(zero_copy, one_copy, two_copy),
+#                 overlay = c(zero_copy, one_copy, two_or_more_copy),
 #                 point_col = c("black", "green", "red", "blue")
 #  )
 
@@ -266,30 +266,30 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   #Titir
   stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
                                       parent = c("Single_cells"),
-                                     alias = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                     alias = c("zero_copy", "one_copy", "two_or_more_copy"),
                                       stat="freq",
-                                      save_as = paste0("01_11_GFPlogicle_FSClog_v3_stats_freq_",prefix,".csv") #writes to working directory
+                                      save_as = paste0("01_02_04_v1_stats_freq_",prefix,".csv") #writes to working directory
                                       )
  stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
                                      parent = c("Single_cells"),
                                      alias  = c("Single_cells"),
                                      channels = c("FSC-A", "B2-A"),
                                      stat="median",
-                                   save_as = paste0("01_11_GFPlogicle_FSClog_v3_stats_median_overall_", prefix,".csv"))
+                                   save_as = paste0("01_02_04_v1_stats_median_overall_", prefix,".csv"))
 
   stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
                                              parent = c("Single_cells"),
                                              alias  = c("Single_cells"),
                                              channels = c("FSC-A", "B2-A"),
                                              stat="count",
-                                             save_as = paste0("01_11_GFPlogicle_FSClog_v3_stats_cell_number_", prefix,".csv"))
+                                             save_as = paste0("01_02_04_v1_stats_cell_number_", prefix,".csv"))
 
  stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
                                               parent = c("Single_cells"),
-                                              alias  = c("zero_copy", "one_copy", "two_copy", "multi_copy"),
+                                              alias  = c("zero_copy", "one_copy", "two_or_more_copy"),
                                               channels = c("FSC-A", "B2-A"),
                                               stat="median",
-                                             save_as = paste0("01_11_GFPlogicle_FSClog_v3_stats_median_gatewise_", prefix,".csv"))
+                                             save_as = paste0("01_02_04_v1_stats_median_gatewise_", prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -297,37 +297,38 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Author: Julie
 
 #map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-try(map(folders[18:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04.csv"))
-try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04.csv"))
+try(map(folders[3:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v1.csv"))
+try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v1.csv"))
 #STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
 
-list.files(path = ".", pattern = "01_11_GFPlogicle_FSClog_v3_stats_freq") %>%
+list.files(path = ".", pattern = "01_02_04_v1_stats_freq") %>%
   read_csv() %>%
-  write_csv(file = "01_11_GFPlogicle_FSClog_v3_stats_freq_all_timepoints.csv")
+  write_csv(file = "01_02_04_v1_stats_freq_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_11_GFPlogicle_FSClog_v3_stats_median_overall") %>%
+list.files(path = ".", pattern = "01_02_04_v1_stats_median_overall") %>%
   read_csv() %>%
-  write_csv(file = "01_11_GFPlogicle_FSClog_v3_stats_median_overall_all_timepoints.csv")
+  write_csv(file = "01_02_04_v1_stats_median_overall_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_11_GFPlogicle_FSClog_v3_stats_median_gatewise") %>%
+list.files(path = ".", pattern = "01_02_04_v1_stats_median_gatewise") %>%
   read_csv() %>%
-  write_csv(file = "01_11_GFPlogicle_FSClog_v3_stats_median_gatewise_all_timepoints.csv")
+  write_csv(file = "01_02_04_v1_stats_median_gatewise_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_11_GFPlogicle_FSClog_v3_stats_cell_number") %>%
+list.files(path = ".", pattern = "01_02_04_v1_stats_cell_number") %>%
   read_csv() %>%
-  write_csv(file = "01_11_GFPlogicle_FSClog_v3_stats_cell_number_all_timepoints.csv")
+  write_csv(file = "01_02_04_v1_stats_cell_number_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>83% of controls are in the correct gate
+#Make plots
 #Author: Grace & Julie
 
 # read in frequency csv, median csvs for all timepoints
-freq = read_csv("01_11_GFPlogicle_FSClog_v3_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
-medians = read_csv("01_11_GFPlogicle_FSClog_v3_stats_median_overall_all_timepoints.csv")
-medians_bygate = read_csv("01_11_GFPlogicle_FSClog_v3_stats_median_gatewise_all_timepoints.csv")
-cell_numbers = read_csv("01_11_GFPlogicle_FSClog_v3_stats_cell_number_all_timepoints.csv")
+freq = read_csv("01_02_04_v1_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
+medians = read_csv("01_02_04_v1_stats_median_overall_all_timepoints.csv")
+medians_bygate = read_csv("01_02_04_v1_stats_median_gatewise_all_timepoints.csv")
+cell_numbers = read_csv("01_02_04_v1_stats_cell_number_all_timepoints.csv")
 
 # add cell number column to freq table
 freq = left_join(freq, cell_numbers) %>%
@@ -341,25 +342,28 @@ fails = freq %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
   mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 83 ~ "pass",
                           Strain == "DGY1" & Gate == "zero_copy" & Frequency < 83 ~ "fail",
+                          Strain == "DGY1" & Gate == "one_copy" & Frequency >= 15 ~ "fail",
+                          Strain == "DGY1" & Gate == "two_or_more_copy" & Frequency >=15 ~ "fail",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency >= 83 ~ "pass",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency < 83 ~ "fail",
                           Strain == "DGY500" & Gate == "zero_copy" & Frequency >= 15 ~ "fail",
-                          Strain == "DGY1315" & Gate == "two_copy" & Frequency >= 83 ~ "pass",
-                          Strain == "DGY1315" & Gate == "two_copy" & Frequency < 83 ~ "fail",
+                          Strain == "DGY500" & Gate == "two_or_more_copy" & Frequency >=15 ~ "fail",
+                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency >= 83 ~ "pass",
+                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency < 83 ~ "fail",
                           Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 15 ~ "fail",
-                          Strain == "DGY500" & Gate == "two_copy" & Frequency >=15 ~ "fail"
+                          Strain == "DGY1315" & Gate == "one_copy" & Frequency >=15 ~ "fail"
                           ))%>%
   filter(flag == "fail") %>%
   arrange(Description)
   View(fails)
-  fails %>% write_csv("01_11_GFPlogicle_FSClog_v3_83_fail.csv")
+  fails %>% write_csv("01_02_04_v1_83_fail.csv")
 
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
   filter(str_detect(Description, "control")) %>%
-  filter(Type == "0_copy_ctrl", generation >200) %>%
-  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>% View()
+  #filter(generation != 79, generation != 116, generation != 252) %>% #View()
+  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>% #View()
   #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
   ggplot(aes(generation, Frequency, color = Gate)) +
   geom_line() +
@@ -397,7 +401,7 @@ freq %>%
   filter(Count>70000) %>%
   #anti_join(fails) %>%
   group_by(sample, generation) %>% #View()
-  filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
+  filter(Gate %in% c("two_or_more_copy", "multi_copy"), Type == "Experimental") %>%
   group_by(sample, generation) %>%
   mutate(prop_CNV = sum(Frequency)) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
@@ -421,7 +425,7 @@ CNV_false_pos_freq = freq %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
   filter(generation != 174, Type == "1_copy_ctrl") %>%
-  filter(Gate %in% c("two_copy", "multi_copy")) %>%
+  filter(Gate %in% c("two_or_more_copy", "multi_copy")) %>%
   group_by(generation) %>%
   mutate(CNV_freq = as.numeric(sum(Frequency))) %>%
   filter(Gate == "multi_copy")
@@ -438,13 +442,13 @@ CNV_false_pos_freq = freq %>%
  sd(CNV_false_pos_freq$CNV_freq) #2.72
  mean(CNV_false_pos_freq$CNV_freq) + sd(CNV_false_pos_freq$CNV_freq) #threshold from mean + 1SD #6.81973
 
-#frequency of experimental sample cells in two_copy and multi_copy gates over generation
+#frequency of experimental sample cells in two_or_more_copy and multi_copy gates over generation
  # sooo this is the same as the propCNV plot
 freq %>%
    filter(Count>70000) %>%
    filter(generation != 174, Type == "Experimental") %>%
    #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
-   filter(Gate %in% c("two_copy", "multi_copy")) %>%
+   filter(Gate %in% c("two_or_more_copy", "multi_copy")) %>%
   group_by(sample, generation) %>%
   mutate(CNV_freq = as.numeric(sum(Frequency))) %>%
   filter(Gate == "multi_copy") %>%
@@ -469,7 +473,7 @@ freq %>%
     filter(Count>70000) %>%
     group_by(sample, generation) %>%
     #filter(generation != 174, sample != "gap1_4") %>%
-    filter(Gate %in% c("two_copy", "multi_copy"), Type == "Experimental") %>%
+    filter(Gate %in% c("two_or_more_copy", "multi_copy"), Type == "Experimental") %>%
     group_by(sample, generation) %>%
     mutate(prop_CNV = sum(Frequency)) %>%
     arrange(generation, Description) %>%
