@@ -56,9 +56,9 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs
 #Results in one timepoint's gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 folders = list.dirs()[-1]
-exp_details_path = list.files(path = paste0(folders[2]), pattern = "_experiment_details.csv", full.names = T)
+exp_details_path = list.files(path = paste0(folders[23]), pattern = "_experiment_details.csv", full.names = T)
 #exp_details_path = list.files(path = folder08, pattern = "_experiment_details.csv", full.names = T)
-timepoint_gating_set <- cyto_setup(path = paste0(folders[2]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+timepoint_gating_set <- cyto_setup(path = paste0(folders[23]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
 #use pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
@@ -102,10 +102,10 @@ transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
 
 
 #quickly check the transformation by plotting the data
-#cyto_plot_explore(transformed_timepoint_gating_set,
-#                  channels_x = "FSC-A",
-#                  channels_y = "GFP",
-#                  axes_limits = "data")
+cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
+                  channels_x = "FSC-A",
+                  channels_y = "GFP",
+                  axes_limits = "data")
 
 ##Gating using the entire timepoint dataset.
 #First we gate for the cells
@@ -324,7 +324,7 @@ list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number") %>%
 #Make plots
 #Author: Grace & Julie
 
-# read in frequency csv, median csvs for all timepoints
+# read in frequency csv, median csvs, cell numbers csvs for all timepoints
 freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
 medians = read_csv("01_02_04_v2_stats_median_overall_all_timepoints.csv")
 medians_bygate = read_csv("01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
@@ -334,37 +334,99 @@ cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
 freq = left_join(freq, cell_numbers) %>%
   select(-Marker)
 
+freq %>%
+  filter(Count>70000) %>%
+  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
+  filter(Description == "0 copy control", Gate == "one_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
+  ggplot(aes(Frequency)) + geom_boxplot()
+  #summarize(IQR(Frequency))
 
-fails = freq %>%
+#determine upper threshold for zero copy gate, aka False Negative Rate of Detecting One Copy
+##Everyone should be start as One Copy (atleast) except the Zero Copy Control
+freq %>%
+  filter(Count>70000) %>%
+  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
+  filter(Description == "1 copy control", Gate == "zero_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
+  #ggplot(aes(Frequency)) + #geom_histogram(bins = 50) #geom_boxplot()
+  summarize(IQR(Frequency))
+#One Copy FN Rate is  2.78% = (median+IQR)
+
+freq %>%
+  filter(Count>70000) %>%
+  filter(Description == "1 copy control", Gate == "two_or_more_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
+  #ggplot(aes(Frequency)) + geom_boxplot()
+  summarize(median(Frequency) + 1.5*IQR(Frequency)) #8.58
+
+#Determine CNV False Negative Rate. 2 copy control falling into 1copy or 0copy Gates: median + IQR
+freq %>%
+  filter(Count>70000) %>%
+  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
+  filter(Description == "2 copy control", Gate != "two_or_more_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
+  #ggplot(aes(Frequency)) + geom_boxplot()
+summarize(IQR(Frequency))
+# CNV FN Rate is 1.33% = median + IQR
+
+#Determine lower threshold for zero copy control gate
+freq %>%
+  filter(Count>70000) %>%
+  filter(Description == "0 copy control", Gate == "zero_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
+  #ggplot(aes(Frequency)) + geom_boxplot()
+  #summarize(min(Frequency))
+  summarize(median(Frequency)-1.5*IQR(Frequency))
+
+#Determine lower threshold for one copy control gate
+freq %>%
+  filter(Count>70000) %>%
+  filter(Description == "1 copy control", Gate == "one_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
+  #ggplot(aes(Frequency)) + geom_boxplot()
+  #summarize(min(Frequency))
+  summarize(median(Frequency)-1.5*IQR(Frequency)) #87.4, the left end of the lower whisker
+  #summarize(1.5*IQR(Frequency))
+
+#Determine lower threshold for two copy control gate
+freq %>%
+  filter(Count>70000) %>%
+  filter(Description == "2 copy control", Gate == "two_or_more_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
+  ggplot(aes(Frequency)) + geom_boxplot()
+  #summarize(min(Frequency))
+  summarize(median(Frequency)-1.5*IQR(Frequency)) #92.3, the left end of the lower whisker
+#summarize(1.5*IQR(Frequency))
+  fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
 # check controls are in their proper gates
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
-  mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 83 ~ "pass",
-                          Strain == "DGY1" & Gate == "zero_copy" & Frequency < 83 ~ "fail",
-                          Strain == "DGY1" & Gate == "one_copy" & Frequency >= 15 ~ "fail",
-                          Strain == "DGY1" & Gate == "two_or_more_copy" & Frequency >=15 ~ "fail",
-                          Strain == "DGY500" & Gate == "one_copy" & Frequency >= 83 ~ "pass",
-                          Strain == "DGY500" & Gate == "one_copy" & Frequency < 83 ~ "fail",
-                          Strain == "DGY500" & Gate == "zero_copy" & Frequency >= 15 ~ "fail",
-                          Strain == "DGY500" & Gate == "two_or_more_copy" & Frequency >=15 ~ "fail",
-                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency >= 83 ~ "pass",
-                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency < 83 ~ "fail",
-                          Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 15 ~ "fail",
-                          Strain == "DGY1315" & Gate == "one_copy" & Frequency >=15 ~ "fail"
+  mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 95 ~ "pass",
+                          Strain == "DGY1" & Gate == "zero_copy" & Frequency < 95 ~ "fail",
+                          Strain == "DGY1" & Gate == "one_copy" & Frequency >= 10 ~ "fail",
+                          Strain == "DGY1" & Gate == "two_or_more_copy" & Frequency >=10 ~ "fail",
+                          Strain == "DGY500" & Gate == "one_copy" & Frequency >= 79 ~ "pass",
+                          Strain == "DGY500" & Gate == "one_copy" & Frequency < 79 ~ "fail",
+                          Strain == "DGY500" & Gate == "zero_copy" & Frequency >= 10 ~ "fail",
+                          Strain == "DGY500" & Gate == "two_or_more_copy" & Frequency >= 10 ~ "fail",
+                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency >= 79 ~ "pass",
+                          Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency < 79 ~ "fail",
+                          Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 10 ~ "fail",
+                          Strain == "DGY1315" & Gate == "one_copy" & Frequency >= 10 ~ "fail"
                           ))%>%
   filter(flag == "fail") %>%
   arrange(Description)
   View(fails)
-  fails %>% write_csv("01_02_04_v2_83_fail.csv")
-
+  #fails %>% write_csv("01_02_04_v2_83_fail.csv")
+  #fails %>% write_csv("01_02_04_v2_fail_calc_thres_stringent_.csv")
+  #fails %>% write_csv("01_02_04_v2_79_10_fail_.csv")
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
   filter(str_detect(Description, "control")) %>%
-  #filter(sample == "gap1_all_5", generation >200) %>%
-  #select(Type, Strain, sample, Description, generation, Gate, Frequency, Count ) %>% View()
-  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>% #View()
+  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>%
   anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
   ggplot(aes(generation, Frequency, color = Gate)) +
   geom_line() +
@@ -375,7 +437,6 @@ filter(Count>70000) %>%
   theme(text = element_text(size=12))
 
 # plot proportion of population in each gate over time for all experimental
-#JULIE: edit to exclude the contaminated control timepoints
 plot_list = list()
 i=1
 for(exp in unique(freq$Description)) {
@@ -400,32 +461,61 @@ plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 LTR + ARS KO`
 
 # plot proportion of the population with a CNV over time
-#Julie: dont need controls
 freq %>%
   filter(Count>70000) %>%
-  group_by(sample, generation) %>% #View()
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
+  #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
   group_by(sample, generation) %>%
   mutate(prop_CNV = sum(Frequency)) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
   geom_line() +
+  geom_point()+
   facet_wrap(~Description) +
   ylab("Proportion of the population with GAP1 CNV") +
+  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
+"#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
+"#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #ARS,7,pink
+"#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #LTR,8,green
+   )) +
+  #scale_color_manual(values = c()
   theme_minimal() +
   scale_x_continuous(breaks=seq(0,250,50)) +
-  theme(text = element_text(size=12), legend.position = "none")
+  theme(text = element_text(size=12),legend.position = "none")
 
-#Quantify CNV dynamics
+#Plot proportion of the populations with a CNV over time (collapse the replicates)
+freq %>%
+  filter(Count>70000) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  #ggplot(aes(Frequency)) + geom_histogram(bins=50) #right skewed distribution
+  ggplot(aes(generation, Frequency, color = Description)) +
+  scale_color_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+
+  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+
+  #geom_point(alpha = 0.5, size =1) +
+  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill=Description), alpha=0.3) +
+  facet_wrap(~Description) +
+  theme_minimal() +
+  ggtitle("loess regression of the populations") +
+  ylab("Proportion of the population with GAP1 CNV") +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_y_continuous(breaks=seq(0,100,25))+
+  theme(text = element_text(size=14), legend.position = "none")
+
+##########
+# plot ridgeplots (histograms):
+  # normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
+  # aka not looking at the median GFP values per population per generation.
+  # We want to see the entire distribution of GFP cells per population per generation.
+ggridges::
+
+##############################################
+# STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
+# Author: Julie
   # 1) First, calculate Tup, the generation at which CNVs are initially detected, (Lang et al. 2011 and Lauer et al. 2018)
-  # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of one-copy control cells appearing in the two copy and multicopy gate across generations 8-260 plus the interquartile range (IQR. )
-  # In Lauer et al. 2018, the false positive for CNV detection is defined as the average plus one standard deviation.
-  # Since my distribution is not normal, I will use the median plus IQR instead as my false positive threshold.
-  # Like in Lauer et al. 2018, samples surpassing this threshold is considered to contain CNVs.
+  # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of 1 copy control cells appearing in the two_copy_or_more gate and gate across generations 8-260 plus the interquartile range (IQR) if the distribution of one copy controls appearing in the CNV gate as NOT normal. If the distribution is normal, then use the mean plus one standard deviation like in Lauer et al. 2018. Like in Lauer et al. 2018, samples surpassing this threshold is considered to contain CNVs.
 
-#CNV False Positive Rate is defined (in part) by frequency of the 1 Copy Control strain appearing in the CNV gate which is the Two_or_more Copy gate.
+#CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is the Two_or_more copy gate.
 CNV_false_pos_df = freq %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
@@ -433,95 +523,196 @@ CNV_false_pos_df = freq %>%
   filter(Gate %in% c("two_or_more_copy")) %>%
   select(Type, Strain, Description, generation, Gate, Frequency, Count)
 
-mean(CNV_false_pos_df$Frequency)
-sd(CNV_false_pos_df$Frequency)
-thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency)
-median(CNV_false_pos_df$Frequency)
-IQR(CNV_false_pos_df$Frequency)
-thres_median = median(CNV_false_pos_df$Frequency) + IQR(CNV_false_pos_df$Frequency)
-
 # draw a histogram, see distribution is normal by eye
-hist(CNV_false_pos_df$Frequency) #looks normal but possible could be left skewed
+hist(CNV_false_pos_df$Frequency) #looks normal but could be left skewed
   abline(v = median(CNV_false_pos_df$Frequency),col = "red",lwd = 1.5)
   abline(v = mean(CNV_false_pos_df$Frequency), col = "blue", lwd = 1.5)
 
 #Test for normality
-shapiro.test(CNV_false_pos_df$Frequency) #null hypothesis is that the distribution is normal. if p <0.05, then it rejects the null hypothesis and so the dsitribution is NOT normal.
+shapiro.test(CNV_false_pos_df$Frequency) #null hypothesis is that the distribution is normal. if p <0.05, then it rejects the null hypothesis and so the distribution is NOT normal.
+    #W = 0.95715, p-value = 0.4886
+# Our distribution is normal. Use the mean + 1SD as the threshold value.
+thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency) #6.615341
 
-#data:  CNV_false_pos_df$Frequency
-#W = 0.95715, p-value = 0.4886
+#Determine Tup for each population, the generation when CNVs first appear.
+Tup_per_pop = freq %>%
+  filter(Count>70000) %>%
+  anti_join(fails) %>%
+  filter(Type == "Experimental", Gate == "two_or_more_copy", Frequency >= thres_mean) %>%
+  select(Type, Strain, Description, sample, generation, Gate, Frequency) %>% #View()
+  group_by(sample) %>%
+  slice(which.min(generation))
 
-# Our distribution is considered normal. Use the mean + 1SD and the threshold value.
-
-#frequency of experimental sample cells in two_or_more_copy gate over generation
- # sooo this is the same as the propCNV plot
-
-#same as above but the median Frequencyuency of the populations
-
-
-# plot ridgeplots (histograms):
-# normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
-# aka not looking at the median GFP values per population per generation.
-  # We want to see the entire distribution of GFP cells per population per generation.
-
-
-# plot median proportion of the populations with a CNV over time (collapse the replicates)
-  freq %>%
-    filter(Count>70000) %>%
-    group_by(sample, generation) %>%
-    #filter(generation != 174, sample != "gap1_4") %>%
-    filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-    group_by(sample, generation) %>%
-    mutate(prop_CNV = sum(Frequency)) %>%
-    arrange(generation, Description) %>%
-    group_by(Description, generation) %>%
-    mutate(median_propCNV = median(prop_CNV),
-           mean_propCNV = mean(prop_CNV)) %>% #View()
-      filter(is.na(generation)) %>% View()
-  select(sample, generation, Description, median_propCNV) %>%
-    distinct() %>% #View()
-    ggplot(aes(generation, median_propCNV, color = Description)) +
-    geom_line() +
-    facet_wrap(~Description) +
-    theme_minimal() +
-    ylab("Median proportion of the population with GAP1 CNV") +
-    scale_x_continuous(breaks=seq(0,250,50)) +
-    theme(text = element_text(size=14), legend.position = "none")
-
-#plot median GFP fluorescence normalized over median FSC-A over time for experimental
-  #overlay 0,1,2 controls on same graph as experimental with gray lines
-norm_medians = medians %>%
-  pivot_wider(names_from = Marker, values_from = MedFl) %>%
-  mutate(NormMedGFP = GFP/`FSC-A`) %>% #normalization
-  arrange(Description) %>% View()
-  slice(rep(1:56, each = 4)) %>% #repeat each control row 4 times because was have 4 gates
-  mutate(Description = rep(c("GAP1 ARS KO", "GAP1 LTR + ARS KO", "GAP1 LTR KO","GAP1 WT architecture"), times=56)) %>% #Mutate Description of controls so we can graph them on experimental facet plots
-  merge(norm_medians %>% filter(Type == "Experimental"), all = TRUE) %>% #merge back to experimental rows
-  arrange(Description, generation) %>%
-  filter(is.na(generation)) %>% View()
-
-#graph experimental with along controls
-ggplot(norm_medians, aes(generation, NormMedGFP, color= sample)) +
-  geom_line(aes(linetype = Type)) +
-  scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
-  #scale_color_manual(values=c("gray", "gray", "gray", rep("orange", 5), rep("purple", 8),rep("blue", 7),rep("pink", 8) ))+
-  #scale_color_brewer(palette = "Set1")+
-  #scale_fill_brewer(value(-1, "black")+
-  facet_wrap(~Description) +
-  ylab("normalized median fluorescence") +
-  scale_x_continuous(breaks=seq(0,250,50)) +
+ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
+  geom_boxplot() +
+  xlab("genotype") +
+  #scale_fill_manual(values=c("#00B0F6", "#00BF7D", "#E76BF3", "#B79F00")) +  #c(ARS,LTR+ARS,LTR,WT)
+  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52")) +  #c(ARS,LTR+ARS,LTR,WT)
+  #scale_fill_manual(values=c("#AA2787", "#2745AA", "#26AA49", "#AA8C27")) +  #c(ARS,LTR+ARS,LTR,WT)
+  #scale_fill_manual(values=c(awtools::spalette))+
+  ylab("generation of first CNV appearance") +
+  scale_y_continuous(breaks=c(8,20, 30, 40, 50, 60, max(Tup_per_pop$generation)))+
   theme_classic() +
   theme(legend.position = "none",
         text = element_text(size=12))
 
-# plot median of the populations' median normalized fluorescence over time
-# aka collapse the populations - take the median across the populations
-norm_medians %>%
-  group_by(generation, Description) %>%
-    filter(Type == "Experimental" ) %>%
-    mutate(pops_median = median(NormMedGFP) ) %>%
-  filter(is.na(generation)) %>% View()
+# ANOVA to test for significance
+# One Way ANOVA because there is only 1 independent variable, genotype.
+# Anova Tut: https://www.scribbr.com/statistics/anova-in-r/
+Tup_anova = aov(generation~Description, data = Tup_per_pop)
+summary(Tup_anova)
+#              Df Sum Sq Mean Sq F value Pr(>F)
+# Description  3   2377   792.3   2.569  0.078 .
+# Residuals   24   7402   308.4
+# Conclusion: There is no difference in the means. Genotype has no significant impact on Tup.
+
+########### GFP over time plots
+#Using outputted `medians` .csv files, plot median GFP fluorescence normalized over median FSC-A over time for experimental
+  #overlay 0,1,2 controls on same graph as experimental with gray lines
+  norm_medians = medians %>%
+    pivot_wider(names_from = Marker, values_from = MedFI) %>%
+    mutate(NormMedGFP = GFP/`FSC-A`) #normalization
+
+  #Mutate description of controls so we can graph them on experimental facet plots
+  dups = norm_medians %>% arrange(Description) %>%
+  slice(rep(1:56, each = 4)) %>% #repeat each control row 4 times because was have 4 facetplots
+  mutate(Description = rep(c("GAP1 ARS KO", "GAP1 LTR + ARS KO", "GAP1 LTR KO","GAP1 WT architecture"), times=56))
+
+  #merge back to experimental rows from norm_medians df
+  adj_norm_medians = merge(norm_medians %>% filter(Type == "Experimental"), dups, all = TRUE) %>% #merge back to experimental rows
+  arrange(Description, generation)
+
+#Clean up data frame. Remove timepoints/controls that are abnormal.
+  #I don't think removal of timepoints is justified. Our data is very variable, so nothing is an outlier if you draw a boxplot of all GFP or Freq from ONE generation from ONE Genotype. Spikes that we see in one timepoint could be real since we sample every 8-10 generations. Lineages containing CNVs can indeed increase in that time frame, especially since we see CNVs starting at gen8.
+clean_adj_norm_medians = adj_norm_medians %>%
+  anti_join(adj_norm_medians %>% filter(generation == 182 & Type == "1_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 203 & Type == "1_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 231 & Type == "0_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 260 & Type == "1_copy_ctrl"))
+#anti_join() gap1_4 two copy gate samples at g79, 124, 231, 252
+
+#Graph experimental with along controls
+  ggplot(clean_adj_norm_medians, aes(generation, NormMedGFP, color= sample)) +
+  geom_line(aes(linetype = Type)) +
+  scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
+  scale_color_manual(values=c("gray", "gray", "gray", #controls
+                              rep("orange", 5),  #WT,5
+                              rep("purple", 8),  #ALL,8
+                              rep("blue", 7), #ARS, 7
+                              rep("pink", 8)  #LTR,8
+                              ))+
+  facet_wrap(~Description) +
+  ylab("normalized median fluorescence") +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  theme_classic()
+#  + theme(legend.position = "none",
+#        text = element_text(size=12))
+
+# Combine the replicates/populations and plot median normalized fluorescence over time
+# dashed gray controls lines on top of the experiment lineplot
+ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
+      mapping = aes(generation, NormMedGFP, color = Description)) +
+      stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = Description), alpha=0.3) + #experimentals loess regression with standard error cloud
+    geom_line(mapping = aes(generation, NormMedGFP, color = Type, linetype = Type),
+                data = clean_adj_norm_medians %>% filter(Type != "Experimental")) + #controls lineplot
+    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+ #dashed lines for controls
+    scale_color_manual(values=c("gray", "gray", "gray","#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #line color
+    scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #standard error cloud color
+    facet_wrap(~Description) +
+    theme_classic() +
+    ggtitle("loess regression of combined populations") + theme(plot.title = element_text(hjust = 0.5)) +
+    ylab("normalized median fluorescence") +
+    scale_x_continuous(breaks=seq(0,250,50)) +
+    theme(text = element_text(size=12),legend.position = "none") #I did it!
+
+  #raw - standalone.
+  adj_norm_medians %>%
+    filter(Type != "Experimental") %>%
+    ggplot(aes(generation, NormMedGFP, color = Type))+
+    geom_line(aes(linetype = Type)) +
+    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+
+    scale_color_manual(values = c("gray", "gray", "gray"))
+
+  #geom_line() without ggplot()
+  geom_line(mapping = aes(generation, NormMedGFP, color = Type, linetype = Type),
+            data = adj_norm_medians %>% filter(Type != "Experimental"))+
+    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+
+    scale_color_manual(values = c("gray", "gray", "gray"))
+
+#g231 0copy control looks abnormal. Investigate and see if whole timepoint should be thrown out
+  # GFP values are abnormally high, FSC-A values are abnormally low.
+  # I can do some hypothesis testing to see they are not part of the null GFP distribution or null FSC distribution.
+  adj_norm_medians %>% filter(Type == "0_copy_ctrl", generation >= 200) %>% View()
+
+#g203 1copy control look abnormal. GFP values are abnormally low. FSC-A values are normal.
+  adj_norm_medians %>% filter(Type == "1_copy_ctrl", generation >= 160 & generation <= 211) %>% View()
+
+#MY PALLETEE
+#GOLD - #DEBD52
+#Soft Blue - #54A2DE
+#Soft Blue Purple - #5474DE
+#Soft Purple - #6254DE
+#Hot Turquoise - #54DEBE
+# Hot Pink - #BE54DE
+# Light Green - #74DE54
+
+#Square
+#DEBD52 #gold
+#54DE79 #neon green
+#5474DE #purple or #Soft Blue Purple - #5474DE
+#DE54B9 #pink
+
+#Square
+#26AA49 #true green
+#2745AA #purple
+#AA2787 #magent
+#AA8C27 #golde
 
 
+#Gold Metallic (6)
+#DEBD52
+#DBB741
+#D7B02F
+#CAA426
+#D9BB59
+#B89523
 
+#Green Machalite (8)
+#54DE79
+#41DB6A
+#2FD75C
+#26CA52
+#23B84B
+#60E182
+#6CE38C
+#78E595
+
+#royal blue light (8)
+#5774E5
+#637EE7
+#6F88E9
+#7B92EA
+#4463E2
+#3053DF
+#2246D7
+#1E3FC3
+#5766E6
+
+#Pink (8)
+#DE54B9
+#E160BE
+#E36CC3
+#E578C8
+#E885CD
+#DB41B2
+#D72FAA
+#BE54DE #medium orchid
+#B741DB
+#B02FD7
+#A426CA
+
+  #ARS = BLUE  #00B0F6
+  # LTR = PINK  #E76BF3
+  # GREEN #00BF7D or #7CAE00
+  # GOLD = #B79F00 or #C49A00
 
