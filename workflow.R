@@ -13,6 +13,8 @@
 # Load required packages
 library(CytoExploreR)
 library(tidyverse)
+library(purrr)
+library(ggridges)
 
 # Set working directory and get list of subdirectories
 #setwd('../FCS files/') #Grace's working directory
@@ -56,9 +58,9 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs
 #Results in one timepoint's gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 folders = list.dirs()[-1]
-exp_details_path = list.files(path = paste0(folders[23]), pattern = "_experiment_details.csv", full.names = T)
+exp_details_path = list.files(path = paste0(folders[4]), pattern = "_experiment_details.csv", full.names = T)
 #exp_details_path = list.files(path = folder08, pattern = "_experiment_details.csv", full.names = T)
-timepoint_gating_set <- cyto_setup(path = paste0(folders[23]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+timepoint_gating_set <- cyto_setup(path = paste0(folders[4]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
 #use pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
@@ -169,6 +171,58 @@ stats_median_gatewise_01 <- cyto_stats_compute(transformed_timepoint_gating_set0
                                               stat="median",
                                               save_as = "stats_median_gatewise_01.csv")
 
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = T, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+sc_distributions <- map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add other metadata
+            mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(GFP_FSC = `B2-A`/`FSC-A`) #compute normalized GFP over forward scatter
+ # %>% write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
+
+#ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 1)
+sc_distributions %>%
+  mutate(name = factor(name, levels = unique(c("Experiment_042-Plate_001-Reference Group-B3 Unstained (Cells).fcs",
+                            "Experiment_042-Plate_001-1 copy control-D3 DGY500.fcs",
+                            "Experiment_042-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs",
+                            "Experiment_042-Plate_001-Experimental-H3 gap1_1.fcs",
+                            "Experiment_042-Plate_001-Experimental-G4 gap1_2.fcs",
+                            "Experiment_042-Plate_001-Experimental-H5 gap1_3.fcs",
+                            "Experiment_042-Plate_001-Experimental-G6 gap1_4.fcs",
+                            "Experiment_042-Plate_001-Experimental-H7 gap1_5.fcs",
+                            "Experiment_042-Plate_001-Experimental-C4 gap1_ltr_1.fcs",
+                            "Experiment_042-Plate_001-Experimental-D5 gap1_ltr_2.fcs",
+                            "Experiment_042-Plate_001-Experimental-C6 gap1_ltr_3.fcs",
+                            "Experiment_042-Plate_001-Experimental-D7 gap1_ltr_4.fcs",
+                            "Experiment_042-Plate_001-Experimental-C8 gap1_ltr_5.fcs",
+                            "Experiment_042-Plate_001-Experimental-B9 gap1_ltr_6.fcs",
+                            "Experiment_042-Plate_001-Experimental-H9 gap1_ltr_7.fcs",
+                            "Experiment_042-Plate_001-Experimental-E10 gap1_ltr_8.fcs",
+                            "Experiment_042-Plate_001-Experimental-D9 gap1_ars_6.fcs",
+                            "Experiment_042-Plate_001-Experimental-E4 gap1_ars_1.fcs",
+                            "Experiment_042-Plate_001-Experimental-E6 gap1_ars_3.fcs",
+                            "Experiment_042-Plate_001-Experimental-F7 gap1_ars_4.fcs",
+                            "Experiment_042-Plate_001-Experimental-E8 gap1_ars_5.fcs",
+                            "Experiment_042-Plate_001-Experimental-D9 gap1_ars_6.fcs",
+                            "Experiment_042-Plate_001-Experimental-A10 gap1_ars_7.fcs",
+                            "Experiment_042-Plate_001-Experimental-G10 gap1_ars_8.fcs",
+                            "Experiment_042-Plate_001-Experimental-A4 gap1_all_1.fcs",
+                            "Experiment_042-Plate_001-Experimental-A6 gap1_all_3.fcs",
+                            "Experiment_042-Plate_001-Experimental-B5 gap1_all_2.fcs",
+                            "Experiment_042-Plate_001-Experimental-B7 gap1_all_4.fcs",
+                            "Experiment_042-Plate_001-Experimental-A8 gap1_all_5.fcs",
+                            "Experiment_042-Plate_001-Experimental-G8 gap1_all_6.fcs",
+                            "Experiment_042-Plate_001-Experimental-F9 gap1_all_7.fcs",
+                            "Experiment_042-Plate_001-Experimental-C10 gap1_all_8.fcs"
+))))%>%
+ggplot(aes(x = GFP_FSC, y = name)) +
+  geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
+  xlab("GFP fluorescence over forward scatter") +
+  ylab("sample") +
+  ggtitle("generation 8 ridgeplots") +
+  theme_minimal()
+
+which(is.na(sc_distributions$name), arr.ind=TRUE)
+
 #STEP 5:  Use function to perform analysis
 #A function that will
 #1 Read in all the files in a folder
@@ -261,6 +315,13 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 
   #5. apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
+  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+
+  cyto_plot_profile(transformed_timepoint_gating_set[1:3],
+                    parent = "Single_cells",
+                    channels = c("FSC-A","GFP"),
+                    legend = TRUE,
+                    legend_text = 4)
 
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir
