@@ -181,7 +181,7 @@ sc_distributions <- map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %
 
 #ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 1)
 sc_distributions %>%
-  mutate(name = factor(name, levels = unique(c("Experiment_042-Plate_001-Reference Group-B3 Unstained (Cells).fcs",
+  mutate(name = factor(name, levels = unique(rev(c("Experiment_042-Plate_001-Reference Group-B3 Unstained (Cells).fcs",
                             "Experiment_042-Plate_001-1 copy control-D3 DGY500.fcs",
                             "Experiment_042-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs",
                             "Experiment_042-Plate_001-Experimental-H3 gap1_1.fcs",
@@ -213,13 +213,33 @@ sc_distributions %>%
                             "Experiment_042-Plate_001-Experimental-G8 gap1_all_6.fcs",
                             "Experiment_042-Plate_001-Experimental-F9 gap1_all_7.fcs",
                             "Experiment_042-Plate_001-Experimental-C10 gap1_all_8.fcs"
-))))%>%
-ggplot(aes(x = GFP_FSC, y = name)) +
+)))))%>%
+ggplot(aes(x = GFP_FSC, y = name, fill = Description)) +
+  geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
+  xlab("GFP fluorescence over forward scatter") +
+  ylab("sample") +
+  ggtitle("generation 8 ridgeplots") +
+  theme_minimal() +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) +
+  scale_fill_discrete(breaks=c("0 copy control",
+                               "1 copy control",
+                               "2 copy control",
+                               "GAP1 WT architecture",
+                               "GAP1 LTR KO",
+                               "GAP1 ARS KO",
+                               "GAP1 LTR + ARS KO"))+
+  theme(
+    legend.text = element_text(family="Arial", size = 12),  #edit legend text font and size
+    legend.title = element_blank() #remove legend title
+    )
+
+ggplot(aes(x = GFP_FSC, y = Description, fill = Description)) +
   geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
   xlab("GFP fluorescence over forward scatter") +
   ylab("sample") +
   ggtitle("generation 8 ridgeplots") +
   theme_minimal()
+
 
 which(is.na(sc_distributions$name), arr.ind=TRUE)
 
