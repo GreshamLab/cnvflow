@@ -64,14 +64,17 @@ timepoint_gating_set <- cyto_setup(path = paste0(folders[4]), restrict=TRUE, sel
 
 #use pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
-flowWorkspace::pData(timepoint_gating_set)$name<-experiment_details$name
-flowWorkspace::pData(timepoint_gating_set)$sample<-experiment_details$sample
-flowWorkspace::pData(timepoint_gating_set)$`Outflow Well`<-experiment_details$`Outflow well`
-flowWorkspace::pData(timepoint_gating_set)$Media<-experiment_details$Media
-flowWorkspace::pData(timepoint_gating_set)$Strain<-experiment_details$Strain
-flowWorkspace::pData(timepoint_gating_set)$Type<-experiment_details$Type
-flowWorkspace::pData(timepoint_gating_set)$Description<-experiment_details$Description
-flowWorkspace::pData(timepoint_gating_set)$generation<-experiment_details$generation
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+  }
+#flowWorkspace::pData(timepoint_gating_set)$name<-experiment_details$name
+#flowWorkspace::pData(timepoint_gating_set)$sample<-experiment_details$sample
+#flowWorkspace::pData(timepoint_gating_set)$`Outflow Well`<-experiment_details$`Outflow well`
+#flowWorkspace::pData(timepoint_gating_set)$Media<-experiment_details$Media
+#flowWorkspace::pData(timepoint_gating_set)$Strain<-experiment_details$Strain
+#flowWorkspace::pData(timepoint_gating_set)$Type<-experiment_details$Type
+#flowWorkspace::pData(timepoint_gating_set)$Description<-experiment_details$Description
+#flowWorkspace::pData(timepoint_gating_set)$generation<-experiment_details$generation
 
 #file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. Need to do once.
 
@@ -104,12 +107,16 @@ transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
 
 
 #quickly check the transformation by plotting the data
-cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
-                  channels_x = "FSC-A",
-                  channels_y = "GFP",
-                  axes_limits = "data")
+#cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
+#                  channels_x = "FSC-A",
+#                  channels_y = "GFP",
+#                  axes_limits = "data")
 
 ##Gating using the entire timepoint dataset.
+
+#if you already have a gating template and don't need to draw gates, then skip drawing and apply the gating template to your gating set
+cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+
 #First we gate for the cells
 cyto_gate_draw(transformed_timepoint_gating_set,
   #transformed_logicle_timept,
@@ -149,7 +156,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
 
 #STEP 4:  Generate statistics tables
 #Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies, a .csv file with overall median GFP and FSC-A, and a third .csv file with gate-wise median GFP and FSC-A.
-#Author: Titir
+#Author: Titir & Julie
 
 stats_freq_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
                                   parent = "Single_cells",
@@ -171,15 +178,21 @@ stats_median_gatewise_01 <- cyto_stats_compute(transformed_timepoint_gating_set0
                                               stat="median",
                                               save_as = "stats_median_gatewise_01.csv")
 
-timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = T, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
 sc_distributions <- map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
   mutate(name = as.factor(name)) %>% #convert `name` to factor
-  left_join(experiment_details %>% #join by name column to add other metadata
-            mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
-  mutate(GFP_FSC = `B2-A`/`FSC-A`) #compute normalized GFP over forward scatter
- # %>% write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
+  write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
 
-#ggplot(iris, aes(x = Sepal.Length, y = Species)) + geom_density_ridges(scale = 1)
+###################################################
+# plot ridgeplots (histograms):
+# normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
+# instead of looking at the MEDIAN GFP values per population per generation,
+# we want to see the ENTIRE DISTRIBUTION of GFP of the cells per population per generation.
+
 sc_distributions %>%
   mutate(name = factor(name, levels = unique(rev(c("Experiment_042-Plate_001-Reference Group-B3 Unstained (Cells).fcs",
                             "Experiment_042-Plate_001-1 copy control-D3 DGY500.fcs",
@@ -214,34 +227,120 @@ sc_distributions %>%
                             "Experiment_042-Plate_001-Experimental-F9 gap1_all_7.fcs",
                             "Experiment_042-Plate_001-Experimental-C10 gap1_all_8.fcs"
 )))))%>%
-ggplot(aes(x = GFP_FSC, y = name, fill = Description)) +
+ggplot(aes(x = B2A_FSC, y = name, fill = Description)) +
   geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
-  xlab("GFP fluorescence over forward scatter") +
+  xlab("mCitrine fluorescence/forward scatter") +
   ylab("sample") +
   ggtitle("generation 8 ridgeplots") +
   theme_minimal() +
-  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) + #expands the graph space or else the top is cut off
   scale_fill_discrete(breaks=c("0 copy control",
                                "1 copy control",
                                "2 copy control",
                                "GAP1 WT architecture",
                                "GAP1 LTR KO",
                                "GAP1 ARS KO",
-                               "GAP1 LTR + ARS KO"))+
+                               "GAP1 LTR + ARS KO"))+ #change order of legend items
   theme(
-    legend.text = element_text(family="Arial", size = 12),  #edit legend text font and size
-    legend.title = element_blank() #remove legend title
+    legend.text = element_text(family="Arial", size = 12),#edit legend text font and size
+    legend.title = element_blank(), #remove legend title
+    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+    axis.text.y = element_text(family="Arial", size = 10, color = "black")
     )
-
-ggplot(aes(x = GFP_FSC, y = Description, fill = Description)) +
-  geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
-  xlab("GFP fluorescence over forward scatter") +
+ggsave()
+#Ridgeplot - combine populations/replicates
+ggplot(aes(x = B2A_FSC, y = Description, fill = Description)) +
+  geom_density_ridges(scale=1.5) +
+  xlab("mCitrine fluorescence/forward scatter") +
   ylab("sample") +
   ggtitle("generation 8 ridgeplots") +
+  scale_fill_discrete(breaks=c("0 copy control", #change order of legend items
+                               "1 copy control",
+                               "2 copy control",
+                               "GAP1 WT architecture",
+                               "GAP1 LTR KO",
+                               "GAP1 ARS KO",
+                               "GAP1 LTR + ARS KO")) +
+  theme(axis.text.x = element_text(family="Arial", size = 10, color = "black"),
+        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
   theme_minimal()
 
+#Draw histograms of the stock strains to see if CNVs appeared at gen8 or not
+stock_folder_path = "/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/mCitrine CNV reporter test"
+all_files = list.files(paste0(stock_folder_path,"/FCS_files"))
+#files_pos <- match(sample_sheet$name, all_files) #find positions of files that match the sample_sheet names
+#all_files[files_pos] #subset of files to read in
+stocks_gs <- cyto_setup(path = paste0(stock_folder_path,"/FCS_files"), restrict = T, details = F) #must specify a folder, all fcs files will be read
 
-which(is.na(sc_distributions$name), arr.ind=TRUE)
+sample_sheet = read_csv(file = paste0(stock_folder_path,"/sample_sheet.csv"))
+sample_sheet = sample_sheet %>%
+  mutate(name = paste0(name, ".fcs"))
+
+#annotate experiment details using sample sheet
+for(i in 1:length(names(sample_sheet))){
+  flowWorkspace::pData(stocks_gs)[names(sample_sheet[i])]<-sample_sheet[i]
+}
+cyto_details(stocks_gs) %>% View()
+
+#transform stock strain gating set
+GFP_trans <- cyto_transformer_logicle(stocks_gs,
+                                      channels = c("B2-A", "B3-A"),
+                                      widthBasis = -10
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_log(stocks_gs,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(stocks_gs,
+                                                   trans = combined_trans)
+
+#apply gating template to stock strain gating set
+cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+
+#get raw single cell flow data of stock strains
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = T, channels = c("FSC-A", "B2-A", "B3-A")) #raw flow data of each single cell as a list of matrices
+sc_distributions <- map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name), #convert `name` to factor
+        B2A_FSC = `B2-A`/`FSC-A`,
+        B3A_FSC = `B3-A`/`FSC-A`) %>% #compute normalized GFP over forward scatter
+  left_join(sample_sheet) #join by name column to add other metadata to raw data
+
+
+##Plot ridgeplots of stock strains
+#B2-A channel ridgeplot of stock strains
+sc_distributions %>%
+  mutate(Strain = fct_reorder(Strain, desc(B2A_FSC))) %>% #reorder samples by y values low to high
+ggplot(aes(x = B2A_FSC, y = Strain, fill = `mCitrine copy number`)) +
+  geom_density_ridges(scale=1.5, quantile_lines = F, quantiles = 2) +
+  xlab("B2-A mCitrine fluorescence/forward scatter") +
+  ylab("Strain") +
+  ggtitle("Stock Strains Ridgeplots") +
+  theme_minimal() +
+  scale_x_continuous(limits=c(0,3))+
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) +
+  scale_fill_discrete(breaks=c("zero copy",
+                               "one copy",
+                               "two copy"
+                               )) + #change order of legend items
+  theme(axis.text.x = element_text(family="Arial", size = 10, color = "black"),
+        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
+ggsave("stock_strains_B2A_ridgeplot_noMedians.png")
+
+#B3-A channel ridgeplot of stock strains
+sc_distributions %>%
+  mutate(Strain = fct_reorder(Strain, desc(B3A_FSC))) %>% #reorder samples by y values low to high
+  ggplot(aes(x = B3A_FSC, y = Strain, fill = `mCitrine copy number`)) +
+  geom_density_ridges(scale=1.5, quantile_lines = F, quantiles = 2) +
+  xlab("B3-A mCitrine fluorescence/forward scatter") +
+  ylab("Strain") +
+  ggtitle("Stock Strains Ridgeplots") +
+  theme_minimal() +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) +
+  scale_fill_discrete(breaks=c("zero copy","one copy","two copy")) + #change order of legend items
+  theme(axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
+ggsave("stock_strains_ridgeplot_B3A_noMedians.png")
+
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -259,26 +358,23 @@ names(my_markers)<-channel
 
 analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gating.csv") {
 
-  my_path <- folder_name #gets relative path name for folder to be analyzed
+  path <- folder_name #gets relative path name for folder to be analyzed
 
   prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
 
-  my_expt_details_path <- paste0(my_path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
-  #my_expt_details_path <- list.files(path = paste0(my_path), pattern = "_experiment_details.csv", full.names = T)
+  exp_details_path <- paste0(path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
+  #exp_details_path <- list.files(path = paste0(path), pattern = "_experiment_details.csv", full.names = T)
   #1. read in files and make a gating set
-  print(my_path)
-  timepoint_gating_set <- cyto_setup(path=my_path, select="fcs", details=F, markers = F)
+  print(path)
+  timepoint_gating_set <- cyto_setup(path=path, select="fcs", details=F, markers = F)
 
   #2. read in experiment details for that gating set
-  my_experiment_details <- read_csv(my_expt_details_path, show_col_types = F) #import experiment-details.csv
-  flowWorkspace::pData(timepoint_gating_set)$name<-my_experiment_details$name
-  flowWorkspace::pData(timepoint_gating_set)$sample<-my_experiment_details$sample
-  flowWorkspace::pData(timepoint_gating_set)$`Outflow Well`<-my_experiment_details$`Outflow well`
-  flowWorkspace::pData(timepoint_gating_set)$Media<-my_experiment_details$Media
-  flowWorkspace::pData(timepoint_gating_set)$Strain<-my_experiment_details$Strain
-  flowWorkspace::pData(timepoint_gating_set)$Type<-my_experiment_details$Type
-  flowWorkspace::pData(timepoint_gating_set)$Description<-my_experiment_details$Description
-  flowWorkspace::pData(timepoint_gating_set)$generation<-my_experiment_details$generation
+  experiment_details <- read_csv(exp_details_path, show_col_types = F) #import experiment-details.csv
+  #Write For Loop: for column in exp_details_path, add that column to timepoint_gating_set's metadata
+  experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+  for(i in 1:length(names(experiment_details))){
+    flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+  }
 
   #3. specify markers for that gating set
   markernames(timepoint_gating_set)<-my_markers
@@ -335,42 +431,56 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 
   #5. apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
-  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+#  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
 
-  cyto_plot_profile(transformed_timepoint_gating_set[1:3],
-                    parent = "Single_cells",
-                    channels = c("FSC-A","GFP"),
-                    legend = TRUE,
-                    legend_text = 4)
+# cyto_plot_profile(transformed_timepoint_gating_set[1:3],
+#                    parent = "Single_cells",
+#                    channels = c("FSC-A","GFP"),
+#                    legend = TRUE,
+#                    legend_text = 4)
 
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
-  #Titir
-  stats_freq <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                      parent = c("Single_cells"),
-                                     alias = c("zero_copy", "one_copy", "two_or_more_copy"),
-                                      stat="freq",
-                                      save_as = paste0("01_02_04_v2_stats_freq_",prefix,".csv") #writes to working directory
-                                      )
- stats_median_overall <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                     parent = c("Single_cells"),
-                                     alias  = c("Single_cells"),
-                                     channels = c("FSC-A", "B2-A"),
-                                     stat="median",
-                                   save_as = paste0("01_02_04_v2_stats_median_overall_", prefix,".csv"))
+  #Titir & Julie
 
-  stats_cell_number <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                             parent = c("Single_cells"),
-                                             alias  = c("Single_cells"),
-                                             channels = c("FSC-A", "B2-A"),
-                                             stat="count",
-                                             save_as = paste0("01_02_04_v2_stats_cell_number_", prefix,".csv"))
+  #frequency of cells inside each gate
+#  cyto_stats_compute(transformed_timepoint_gating_set, #frequency of cells inside each gate
+#                                      parent = c("Single_cells"),
+#                                     alias = c("zero_copy", "one_copy", "two_or_more_copy"),
+#                                      stat="freq",
+#                                      save_as = paste0("01_02_04_v2_stats_freq_",prefix,".csv") #writes to working directory
+#                                      )
+  #median B2-A and FSC values under the single cell gate
+#  cyto_stats_compute(transformed_timepoint_gating_set,
+#                                     parent = c("Single_cells"),
+#                                     alias  = c("Single_cells"),
+#                                     channels = c("FSC-A", "B2-A"),
+#                                     stat="median",
+#                                    save_as = paste0("01_02_04_v2_stats_median_overall_", prefix,".csv"))
 
- stats_median_gatewise <- cyto_stats_compute(transformed_timepoint_gating_set,
-                                              parent = c("Single_cells"),
-                                              alias  = c("zero_copy", "one_copy", "two_or_more_copy"),
-                                              channels = c("FSC-A", "B2-A"),
-                                              stat="median",
-                                             save_as = paste0("01_02_04_v2_stats_median_gatewise_", prefix,".csv"))
+  #cell number
+#  cyto_stats_compute(transformed_timepoint_gating_set,
+#                                             parent = c("Single_cells"),
+#                                             alias  = c("Single_cells"),
+#                                             channels = c("FSC-A", "B2-A"),
+#                                             stat="count",
+#                                             save_as = paste0("01_02_04_v2_stats_cell_number_", prefix,".csv"))
+
+  #median B2-A and FSC values of cells in each gate
+#  cyto_stats_compute(transformed_timepoint_gating_set,
+#                                              parent = c("Single_cells"),
+#                                              alias  = c("zero_copy", "one_copy", "two_or_more_copy"),
+#                                              channels = c("FSC-A", "B2-A"),
+#                                              stat="median",
+#                                              save_as = paste0("01_02_04_v2_stats_median_gatewise_", prefix,".csv"))
+
+  #raw transformed B2-A and FSC values for each cell (not the median)
+  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+   mutate(name = as.factor(name)) %>% #convert `name` to factor
+   left_join(experiment_details %>% #join by name column to add metadata
+               mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
+   write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -378,27 +488,31 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Author: Julie
 
 #map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-try(map(folders[4:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
+try(map(folders[5:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 #STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
 
-list.files(path = ".", pattern = "01_02_04_v2_stats_freq") %>%
-  read_csv() %>%
-  write_csv(file = "01_02_04_v2_stats_freq_all_timepoints.csv")
+#list.files(path = ".", pattern = "01_02_04_v2_stats_freq") %>%
+#  read_csv() %>%
+#  write_csv(file = "01_02_04_v2_stats_freq_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_02_04_v2_stats_median_overall") %>%
-  read_csv() %>%
-  write_csv(file = "01_02_04_v2_stats_median_overall_all_timepoints.csv")
+#list.files(path = ".", pattern = "01_02_04_v2_stats_median_overall") %>%
+#  read_csv() %>%
+#  write_csv(file = "01_02_04_v2_stats_median_overall_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_02_04_v2_stats_median_gatewise") %>%
-  read_csv() %>%
-  write_csv(file = "01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
+#list.files(path = ".", pattern = "01_02_04_v2_stats_median_gatewise") %>%
+#  read_csv() %>%
+#  write_csv(file = "01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number") %>%
+#list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number") %>%
+#  read_csv() %>%
+#  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
+
+list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
   read_csv() %>%
-  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
+  write_csv(file = "01_02_04_v2_SingleCellDistributions_all_timepoints.csv")
 
 #STEP 8: Plot time series & assess gates
 #Determine whether =>83% of controls are in the correct gate
@@ -580,15 +694,11 @@ freq %>%
   ggtitle("loess regression of the populations") +
   ylab("Proportion of the population with GAP1 CNV") +
   scale_x_continuous(breaks=seq(0,250,50)) +
-  scale_y_continuous(breaks=seq(0,100,25))+
+  scale_y_continuous(breaks=seq(0,100,25))+f
   theme(text = element_text(size=14), legend.position = "none")
 
-##########
-# plot ridgeplots (histograms):
-  # normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
-  # aka not looking at the median GFP values per population per generation.
-  # We want to see the entire distribution of GFP cells per population per generation.
-ggridges::
+
+
 
 ##############################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
