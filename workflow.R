@@ -519,11 +519,12 @@ list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
 #Make plots
 #Author: Grace & Julie
 
-# read in frequency csv, median csvs, cell numbers csvs for all timepoints
+# read in frequency csv, median csvs, cell numbers csvs, single cell distributions for all timepoints
 freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
 medians = read_csv("01_02_04_v2_stats_median_overall_all_timepoints.csv")
 medians_bygate = read_csv("01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
 cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
+sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T)
 
 # add cell number column to freq table
 freq = left_join(freq, cell_numbers) %>%
@@ -697,8 +698,94 @@ freq %>%
   scale_y_continuous(breaks=seq(0,100,25))+f
   theme(text = element_text(size=14), legend.position = "none")
 
+#plot ridgeplots of controls over time
+  #sc_distr_alltimepoints %>%
+  #  mutate(generation = factor(generation, levels = unique(sc_distr_alltimepoints$generation)))
+  #zero <- sc_distr_alltimepoints %>% filter(Description == "0 copy control") %>%
+  #write_csv(file = "sc_distributions_0copyControl_all_timepoints.csv")
+  zero = read.csv("sc_distributions_0copyControl_all_timepoints.csv", stringsAsFactors = T)
+  zero = zero %>% mutate(generation = factor(generation, levels = unique(zero$generation))) #convert generation to factor
+  #one <- sc_distr_alltimepoints %>% filter(Description == "1 copy control") %>%
+  #write_csv(file = "sc_distributions_1copyControl_all_timepoints.csv")
+  one = read.csv("sc_distributions_1copyControl_all_timepoints.csv", stringsAsFactors = T)
+  one = one %>% mutate(generation = factor(generation, levels = unique(one$generation)))
+  #two <- sc_distr_alltimepoints %>% filter(Description == "2 copy control") %>%
+  # write_csv(file = "sc_distributions_2copyControl_all_timepoints.csv")
+  two = read.csv("sc_distributions_2copyControl_all_timepoints.csv", stringsAsFactors = T)
+  two = two %>% mutate(generation = factor(generation, levels = unique(two$generation)))
+zero_ridges = ggplot(zero, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+    geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
+    xlab("normalized fluorescence") +
+    ylab("generation") +
+    ggtitle("zero copy control") +
+    theme_classic() +
+    #scale_x_continuous("Normalized Fluorescence", limits=c(0.05,1.0), expand = c(0.01, 0), breaks = c(0.1, 0.55, 1.0)) +
+    scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
+    scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+    theme(
+      legend.text = element_text(family="Arial", size = 12),#edit legend text font and size
+      legend.title = element_blank(), #remove legend title
+      legend.position = 'none', #remove the legend
+      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+      axis.text.y = element_text(family="Arial", size = 10, color = "black")
+    )
+one_ridges = ggplot(one, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+  geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
+  #xlab("normalized fluorescence") +
+  ylab("generation") +
+  ggtitle("one copy control") +
+  theme_classic() +
+  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
+  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+  theme(
+    legend.position = 'none', #remove the legend
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+    axis.text.y = element_text(family="Arial", size = 10, color = "black")
+  )
+one_ridges
 
+two_ridges = ggplot(two, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+  geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
+  #xlab("normalized fluorescence") +
+  ylab("generation") +
+  ggtitle("two copy control") +
+  theme_classic() +
+  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
+  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+  theme(
+    legend.position = 'none', #remove the legend
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+    axis.text.y = element_text(family="Arial", size = 10, color = "black")
+  )
+two_ridges
 
+cowplot::plot_grid(zero_ridges, one_ridges, two_ridges,labels = c("A"), nrow=1, align = "h")
+
+controls = bind_rows(zero, one, two)
+
+#all Controls in one ggplot, and facet by Description
+ggplot(controls, aes(B2A_FSC, generation, fill = Description)) +
+  geom_density_ridges(scale = 1) +
+  facet_grid(~Description) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 1.0)))+
+  #scale_fill_brewer(type = "seq", palette = 5, direction = 1) +
+  scale_fill_manual(values=c(RColorBrewer::brewer.pal(4, "Greens")[-1])) +
+  scale_x_continuous("normalized fluorescence", limits=c(0, 2.5), breaks = c(0, 1, 2, 2.5), labels = c(0,1,2,2.5)) +
+  theme_classic() +
+  theme(
+      legend.position = 'none', #remove the legend
+      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+      axis.text.y = element_text(family="Arial", size = 10, color = "black"),
+      strip.background = element_blank(), #removed box around facet title
+      strip.text = element_text(size=12)
+  )
+ggsave("controls_generation_ridgeplot_Facet.png")
 
 ##############################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
