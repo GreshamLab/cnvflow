@@ -13,7 +13,6 @@
 # Load required packages
 library(CytoExploreR)
 library(tidyverse)
-library(purrr)
 library(ggridges)
 
 # Set working directory and get list of subdirectories
@@ -62,38 +61,21 @@ exp_details_path = list.files(path = paste0(folders[4]), pattern = "_experiment_
 #exp_details_path = list.files(path = folder08, pattern = "_experiment_details.csv", full.names = T)
 timepoint_gating_set <- cyto_setup(path = paste0(folders[4]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
-#use pData to annotate the experiment details file associated with the gating set
+#use flowWorkspace::pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
 for(i in 1:length(names(experiment_details))){
   flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
   }
-#flowWorkspace::pData(timepoint_gating_set)$name<-experiment_details$name
-#flowWorkspace::pData(timepoint_gating_set)$sample<-experiment_details$sample
-#flowWorkspace::pData(timepoint_gating_set)$`Outflow Well`<-experiment_details$`Outflow well`
-#flowWorkspace::pData(timepoint_gating_set)$Media<-experiment_details$Media
-#flowWorkspace::pData(timepoint_gating_set)$Strain<-experiment_details$Strain
-#flowWorkspace::pData(timepoint_gating_set)$Type<-experiment_details$Type
-#flowWorkspace::pData(timepoint_gating_set)$Description<-experiment_details$Description
-#flowWorkspace::pData(timepoint_gating_set)$generation<-experiment_details$generation
 
 #file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. Need to do once.
 
 #STEP 3:  Perform gating on gating set
 #Gate for 1) Cells, 2) Singlets, 3) CNVS
 #Results in a gating file, and gates applied to all samples in the gating set.
-#Author: Titir
+#Author: Titir & Julie
 
-#Log transform the data
+#transform the data
 # looks useful if I want to choose different transformation: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
-#timept_transformed <- cyto_transformer_log(timepoint_gating_set,
-#                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #returns it as a list
-#transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
-#                      trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
-#timept_transformed <- cyto_transformer_logicle(timepoint_gating_set,
-#                                           channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A"),
-#                                           widthBasis = -10) #returns it as a list
-#transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
-#                                     trans = timept_transformed) #applies the the transformation and returns it as a gatingSet
 GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
                                       channels = c("B2-A"),
                                       widthBasis = -10
@@ -105,7 +87,6 @@ combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
 transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
                                                    trans = combined_trans) #applies the the transformation and returns it as a gatingSet
 
-
 #quickly check the transformation by plotting the data
 #cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
 #                  channels_x = "FSC-A",
@@ -114,7 +95,7 @@ transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
 
 ##Gating using the entire timepoint dataset.
 
-#if you already have a gating template and don't need to draw gates, then skip drawing and apply the gating template to your gating set
+# note:if you already have a gating template and don't need to draw gates, then skip cyto_draw, use cyto_gatingTemplate_apply to apply the gating template.csv to your gating set
 cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
 
 #First we gate for the cells
@@ -154,8 +135,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
                point_col = c("gray", "green", "red", "blue")
 )
 
-#STEP 4:  Generate statistics tables
-#Results in a .csv file in tidy format that includes all metadata and specifies proportion of cells with 0, 1, 2, 3+ copies, a .csv file with overall median GFP and FSC-A, and a third .csv file with gate-wise median GFP and FSC-A.
+#STEP 4:  Generate statistics tables and single cell data tables
 #Author: Titir & Julie
 
 stats_freq_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
@@ -163,20 +143,6 @@ stats_freq_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
                                   alias = c("zero_copy", "one_copy", "two_or_more_copy"),
                                   stat="freq",
                                   save_as = "stats_freq_01.csv")
-
-stats_median_overall_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
-                                      parent = c("Single_cells"),
-                                      alias = c("Single_cells"),
-                                      channels = c("FSC-A", "B2-A"),
-                                      stat="median",
-                                      save_as = "stats_median_overall_01.csv")
-
-stats_median_gatewise_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
-                                              parent = c("Single_cells"),
-                                              alias = c("zero_copy", "one_copy", "two_or_more_copy"),
-                                              channels = c("FSC-A", "B2-A"),
-                                              stat="median",
-                                              save_as = "stats_median_gatewise_01.csv")
 
 timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
 
@@ -186,87 +152,6 @@ map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, p
   mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
   write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
-
-###################################################
-# plot ridgeplots (histograms):
-# normalized fluorescence histograms of controls at each generations like in Lauer et al. Fig 2A.
-# instead of looking at the MEDIAN GFP values per population per generation,
-# we want to see the ENTIRE DISTRIBUTION of GFP of the cells per population per generation.
-
-sc_distributions_g8 <- read.csv("01_02_04_v2_SingleCellDistributions_01_EE_GAP1_ArchMuts_2021.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(sc_distributions_g8$generation))) %>%
-  mutate(name = factor(name, levels = unique(rev(c("Experiment_042-Plate_001-Reference Group-B3 Unstained (Cells).fcs",
-                            "Experiment_042-Plate_001-1 copy control-D3 DGY500.fcs",
-                            "Experiment_042-Plate_001-Reference Group-F3 DGY1315 mCitrine (Cells).fcs",
-                            "Experiment_042-Plate_001-Experimental-H3 gap1_1.fcs",
-                            "Experiment_042-Plate_001-Experimental-G4 gap1_2.fcs",
-                            "Experiment_042-Plate_001-Experimental-H5 gap1_3.fcs",
-                            "Experiment_042-Plate_001-Experimental-G6 gap1_4.fcs",
-                            "Experiment_042-Plate_001-Experimental-H7 gap1_5.fcs",
-                            "Experiment_042-Plate_001-Experimental-C4 gap1_ltr_1.fcs",
-                            "Experiment_042-Plate_001-Experimental-D5 gap1_ltr_2.fcs",
-                            "Experiment_042-Plate_001-Experimental-C6 gap1_ltr_3.fcs",
-                            "Experiment_042-Plate_001-Experimental-D7 gap1_ltr_4.fcs",
-                            "Experiment_042-Plate_001-Experimental-C8 gap1_ltr_5.fcs",
-                            "Experiment_042-Plate_001-Experimental-B9 gap1_ltr_6.fcs",
-                            "Experiment_042-Plate_001-Experimental-H9 gap1_ltr_7.fcs",
-                            "Experiment_042-Plate_001-Experimental-E10 gap1_ltr_8.fcs",
-                            "Experiment_042-Plate_001-Experimental-D9 gap1_ars_6.fcs",
-                            "Experiment_042-Plate_001-Experimental-E4 gap1_ars_1.fcs",
-                            "Experiment_042-Plate_001-Experimental-E6 gap1_ars_3.fcs",
-                            "Experiment_042-Plate_001-Experimental-F7 gap1_ars_4.fcs",
-                            "Experiment_042-Plate_001-Experimental-E8 gap1_ars_5.fcs",
-                            "Experiment_042-Plate_001-Experimental-D9 gap1_ars_6.fcs",
-                            "Experiment_042-Plate_001-Experimental-A10 gap1_ars_7.fcs",
-                            "Experiment_042-Plate_001-Experimental-G10 gap1_ars_8.fcs",
-                            "Experiment_042-Plate_001-Experimental-A4 gap1_all_1.fcs",
-                            "Experiment_042-Plate_001-Experimental-A6 gap1_all_3.fcs",
-                            "Experiment_042-Plate_001-Experimental-B5 gap1_all_2.fcs",
-                            "Experiment_042-Plate_001-Experimental-B7 gap1_all_4.fcs",
-                            "Experiment_042-Plate_001-Experimental-A8 gap1_all_5.fcs",
-                            "Experiment_042-Plate_001-Experimental-G8 gap1_all_6.fcs",
-                            "Experiment_042-Plate_001-Experimental-F9 gap1_all_7.fcs",
-                            "Experiment_042-Plate_001-Experimental-C10 gap1_all_8.fcs"
-)))))%>%
-ggplot(aes(x = B2A_FSC, y = name, fill = Description)) +
-  geom_density_ridges(scale=1.5, quantile_lines = TRUE, quantiles = 2) +
-  xlab("mCitrine fluorescence/forward scatter") +
-  ylab("sample") +
-  ggtitle("generation 8 ridgeplots") +
-  theme_minimal() +
-  scale_y_discrete(expand = expansion(add = c(0.2, 1.5))) + #expands the graph space or else the top is cut off
-  scale_fill_discrete(breaks=c("0 copy control",
-                               "1 copy control",
-                               "2 copy control",
-                               "GAP1 WT architecture",
-                               "GAP1 LTR KO",
-                               "GAP1 ARS KO",
-                               "GAP1 LTR + ARS KO"))+ #change order of legend items
-  theme(
-    legend.text = element_text(family="Arial", size = 12),#edit legend text font and size
-    legend.title = element_blank(), #remove legend title
-    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-    axis.text.y = element_text(family="Arial", size = 10, color = "black")
-    )
-ggsave()
-#Ridgeplot - combine populations/replicates
-ggplot(aes(x = B2A_FSC, y = Description, fill = Description)) +
-  geom_density_ridges(scale=1.5) +
-  xlab("mCitrine fluorescence/forward scatter") +
-  ylab("sample") +
-  ggtitle("generation 8 ridgeplots") +
-  scale_fill_discrete(breaks=c("0 copy control", #change order of legend items
-                               "1 copy control",
-                               "2 copy control",
-                               "GAP1 WT architecture",
-                               "GAP1 LTR KO",
-                               "GAP1 ARS KO",
-                               "GAP1 LTR + ARS KO")) +
-  theme(axis.text.x = element_text(family="Arial", size = 10, color = "black"),
-        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
-  theme_minimal()
-
-
-
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -306,10 +191,6 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   markernames(timepoint_gating_set)<-my_markers
 
   #4. transform data
-#  timepoint_gating_set_transformed <- cyto_transformer_log(timepoint_gating_set,
-#                                                           channels =c("FSC-A", "FSC-H", "SSC-A", "SSC-H", "B2-A")) #transforms but returns the gating set as a list
-#  transformed_timepoint_gating_set<- cyto_transform(timepoint_gating_set,
-#                                                    trans = timepoint_gating_set_transformed)
   GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
                                                  channels = c("B2-A"),
                                                  widthBasis = -10
@@ -341,9 +222,9 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   #               axes_limits = "data",
   #               gatingTemplate = "cytek_gating_01_02_04.csv"
   #)
-#  zero_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61)] #DGY1
-#  one_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32)] #DGY500
-#  two_or_more_copy <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62)] #DGY1315
+#  DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61)] #DGY1
+#  DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32)] #DGY500
+#  DGY1315 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62)] #DGY1315
 #  cyto_gate_draw(transformed_timepoint_gating_set,
 #                 parent = "Single_cells", #first color
 #                 alias = c("zero_copy", "one_copy", "two_or_more_copy","multi_copy"), #defines gate names
@@ -375,13 +256,6 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #                                      stat="freq",
 #                                      save_as = paste0("01_02_04_v2_stats_freq_",prefix,".csv") #writes to working directory
 #                                      )
-  #median B2-A and FSC values under the single cell gate
-#  cyto_stats_compute(transformed_timepoint_gating_set,
-#                                     parent = c("Single_cells"),
-#                                     alias  = c("Single_cells"),
-#                                     channels = c("FSC-A", "B2-A"),
-#                                     stat="median",
-#                                    save_as = paste0("01_02_04_v2_stats_median_overall_", prefix,".csv"))
 
   #cell number
 #  cyto_stats_compute(transformed_timepoint_gating_set,
@@ -391,21 +265,13 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #                                             stat="count",
 #                                             save_as = paste0("01_02_04_v2_stats_cell_number_", prefix,".csv"))
 
-  #median B2-A and FSC values of cells in each gate
-#  cyto_stats_compute(transformed_timepoint_gating_set,
-#                                              parent = c("Single_cells"),
-#                                              alias  = c("zero_copy", "one_copy", "two_or_more_copy"),
-#                                              channels = c("FSC-A", "B2-A"),
-#                                              stat="median",
-#                                              save_as = paste0("01_02_04_v2_stats_median_gatewise_", prefix,".csv"))
-
   #raw transformed B2-A and FSC values for each cell (not the median)
   timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
   map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
    mutate(name = as.factor(name)) %>% #convert `name` to factor
    left_join(experiment_details %>% #join by name column to add metadata
                mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
-   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
+   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor for each cell
    write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
 }
 
@@ -424,14 +290,6 @@ try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating
 #  read_csv() %>%
 #  write_csv(file = "01_02_04_v2_stats_freq_all_timepoints.csv")
 
-#list.files(path = ".", pattern = "01_02_04_v2_stats_median_overall") %>%
-#  read_csv() %>%
-#  write_csv(file = "01_02_04_v2_stats_median_overall_all_timepoints.csv")
-
-#list.files(path = ".", pattern = "01_02_04_v2_stats_median_gatewise") %>%
-#  read_csv() %>%
-#  write_csv(file = "01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
-
 #list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number") %>%
 #  read_csv() %>%
 #  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
@@ -445,42 +303,36 @@ list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
 #Make plots
 #Author: Grace & Julie
 
-# read in frequency csv, median csvs, cell numbers csvs, single cell distributions for all timepoints
+# read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
 freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
-medians = read_csv("01_02_04_v2_stats_median_overall_all_timepoints.csv")
-medians_bygate = read_csv("01_02_04_v2_stats_median_gatewise_all_timepoints.csv")
 cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
-sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(sc_distr_alltimepoints$generation)))
+sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
 
 # add cell number column to freq table
 freq = left_join(freq, cell_numbers) %>%
   select(-Marker)
 
-freq %>%
-  filter(Count>70000) %>%
-  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
-  filter(Description == "0 copy control", Gate == "one_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
-  ggplot(aes(Frequency)) + geom_boxplot()
-  #summarize(IQR(Frequency))
 
 #determine upper threshold for zero copy gate, aka False Negative Rate of Detecting One Copy
 ##Everyone should be start as One Copy (atleast) except the Zero Copy Control
+# one copy control falling into the zero copy or two+ copy gates
 freq %>%
   filter(Count>70000) %>%
   #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
-  filter(Description == "1 copy control", Gate == "zero_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
-  #ggplot(aes(Frequency)) + #geom_histogram(bins = 50) #geom_boxplot()
-  summarize(IQR(Frequency))
-#One Copy FN Rate is  2.78% = (median+IQR)
+  filter(Description == "1 copy control" & Gate == "zero_copy" | Description == "1 copy control" & Gate == "two_or_more_copy") %>%
+  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
+  #ggplot(aes(Frequency)) +
+  #geom_histogram(bins = 50)
+  #  geom_boxplot()
+  summarize(IQR(Frequency)+median(Frequency)) #One Copy FN Rate is  6.86% = (median+IQR)
 
 freq %>%
   filter(Count>70000) %>%
   filter(Description == "1 copy control", Gate == "two_or_more_copy") %>%
   select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
   #ggplot(aes(Frequency)) + geom_boxplot()
-  summarize(median(Frequency) + 1.5*IQR(Frequency)) #8.58
+  #summarize(median(Frequency) + 1.5*IQR(Frequency)) #8.58
+  summarize(median(Frequency) + IQR(Frequency))
 
 #Determine CNV False Negative Rate. 2 copy control falling into 1copy or 0copy Gates: median + IQR
 freq %>%
@@ -520,9 +372,10 @@ freq %>%
   #summarize(min(Frequency))
   summarize(median(Frequency)-1.5*IQR(Frequency)) #92.3, the left end of the lower whisker
 #summarize(1.5*IQR(Frequency))
+
+## check controls are in their proper gates
   fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
-# check controls are in their proper gates
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
   mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 95 ~ "pass",
@@ -544,6 +397,7 @@ freq %>%
   #fails %>% write_csv("01_02_04_v2_83_fail.csv")
   #fails %>% write_csv("01_02_04_v2_fail_calc_thres_stringent_.csv")
   #fails %>% write_csv("01_02_04_v2_79_10_fail_.csv")
+
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
@@ -595,6 +449,7 @@ freq %>%
   geom_line() +
   geom_point()+
   facet_wrap(~Description) +
+  xlab("Generation") +
   ylab("Proportion of the population with GAP1 CNV") +
   scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
 "#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
@@ -602,9 +457,15 @@ freq %>%
 "#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #LTR,8,green
    )) +
   #scale_color_manual(values = c()
-  theme_minimal() +
+  theme_classic() +
   scale_x_continuous(breaks=seq(0,250,50)) +
-  theme(text = element_text(size=12),legend.position = "none")
+  theme(text = element_text(size=12),
+        legend.position = "none",
+        axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 10, color = "black"),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=12)
+        )
 
 #Plot proportion of the populations with a CNV over time (collapse the replicates)
 freq %>%
@@ -622,80 +483,34 @@ freq %>%
   ylab("Proportion of the population with GAP1 CNV") +
   scale_x_continuous(breaks=seq(0,250,50)) +
   scale_y_continuous(breaks=seq(0,100,25))+f
-  theme(text = element_text(size=14), legend.position = "none")
+  theme(text = element_text(size=12),
+        legend.position = "none",
+        axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
+
+
+###################################################
+# plot ridgeplots (histograms):
+# instead of looking at the MEDIAN GFP values per population per generation,
+# we want to see the ENTIRE DISTRIBUTION of GFP of the cells per population per generation.
 
 #plot ridgeplots of controls over time
-  #sc_distr_alltimepoints %>%
-  #  mutate(generation = factor(generation, levels = unique(sc_distr_alltimepoints$generation)))
-  #zero <- sc_distr_alltimepoints %>% filter(Description == "0 copy control") %>%
-  #write_csv(file = "sc_distributions_0copyControl_all_timepoints.csv")
-  zero = read.csv("sc_distributions_0copyControl_all_timepoints.csv", stringsAsFactors = T)
-  zero = zero %>% mutate(generation = factor(generation, levels = unique(zero$generation))) #convert generation to factor
-  #one <- sc_distr_alltimepoints %>% filter(Description == "1 copy control") %>%
+#sc_distr_alltimepoints %>%
+#mutate(generation = factor(generation, levels = unique(generation))) %>%
+#filter(Description == "0 copy control") %>%
+#write_csv(file = "sc_distributions_0copyControl_all_timepoints.csv")
+zero = read.csv("sc_distributions_0copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
+  mutate(generation = factor(generation, levels = unique(generation))) #convert generation to factor
+#one <- sc_distr_alltimepoints %>% filter(Description == "1 copy control") %>%
   #write_csv(file = "sc_distributions_1copyControl_all_timepoints.csv")
-  one = read.csv("sc_distributions_1copyControl_all_timepoints.csv", stringsAsFactors = T)
-  one = one %>% mutate(generation = factor(generation, levels = unique(one$generation)))
-  #two <- sc_distr_alltimepoints %>% filter(Description == "2 copy control") %>%
+one = read.csv("sc_distributions_1copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
+    mutate(generation = factor(generation, levels = unique(generation)))
+#two <- sc_distr_alltimepoints %>% filter(Description == "2 copy control") %>%
   # write_csv(file = "sc_distributions_2copyControl_all_timepoints.csv")
-  two = read.csv("sc_distributions_2copyControl_all_timepoints.csv", stringsAsFactors = T)
-  two = two %>% mutate(generation = factor(generation, levels = unique(two$generation)))
-zero_ridges = ggplot(zero, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-    geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
-    xlab("normalized fluorescence") +
-    ylab("generation") +
-    ggtitle("zero copy control") +
-    theme_classic() +
-    #scale_x_continuous("Normalized Fluorescence", limits=c(0.05,1.0), expand = c(0.01, 0), breaks = c(0.1, 0.55, 1.0)) +
-    scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
-    scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-    theme(
-      legend.text = element_text(family="Arial", size = 12),#edit legend text font and size
-      legend.title = element_blank(), #remove legend title
-      legend.position = 'none', #remove the legend
-      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-      axis.text.y = element_text(family="Arial", size = 10, color = "black")
-    )
-one_ridges = ggplot(one, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-  geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
-  #xlab("normalized fluorescence") +
-  ylab("generation") +
-  ggtitle("one copy control") +
-  theme_classic() +
-  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
-  scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
-  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-  theme(
-    legend.position = 'none', #remove the legend
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-    axis.text.y = element_text(family="Arial", size = 10, color = "black")
-  )
-one_ridges
+two = read.csv("sc_distributions_2copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
+    mutate(generation = factor(generation, levels = unique(generation)))
 
-two_ridges = ggplot(two, aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-  geom_density_ridges_gradient(scale = 1.0, rel_min_height = 0.01) +
-  #xlab("normalized fluorescence") +
-  ylab("generation") +
-  ggtitle("two copy control") +
-  theme_classic() +
-  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
-  scale_y_discrete(expand = expansion(add = c(0.2, 1.0))) + #expands the graph space or else the top is cut off
-  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-  theme(
-    legend.position = 'none', #remove the legend
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-    axis.text.y = element_text(family="Arial", size = 10, color = "black")
-  )
-two_ridges
-
-cowplot::plot_grid(zero_ridges, one_ridges, two_ridges,labels = c("A"), nrow=1, align = "h")
-
-controls = bind_rows(zero, one, two)
-
-#all Controls in one ggplot, and facet by Description
+  #all Controls in one ggplot, and facet by Description
 ggplot(controls, aes(B2A_FSC, generation, fill = Description)) +
   geom_density_ridges(scale = 1) +
   facet_grid(~Description) +
@@ -713,13 +528,207 @@ ggplot(controls, aes(B2A_FSC, generation, fill = Description)) +
   )
 ggsave("controls_generation_ridgeplot_Facet.png")
 
-##############################################
+
+###### Plot normalized median mCitrine fluorescence over time
+#overlay 0,1,2 controls on same graph as experimental with gray lines
+###### 01-05-22 It's not accurate to normalize after taking the median GFP and median FSC-A values.
+# In fact the graphs would look different. Instead use the single cell data, normalize first, then take the median of the normalized fluorescence for these line plots.
+# Lauer et al. 2018 did this, see Methods - Flow Cytometry Sampling & Analysis
+# For each unique `sample` calculate the median B2-A/FSC-A at each generation.
+
+# on hpc, do once
+sc_distr_alltimepoints %>%
+  group_by(sample, generation) %>%
+  mutate(Med_B2A_FSC = median(B2A_FSC)) %>%
+  distinct(Med_B2A_FSC, .keep_all = T) %>%
+  select(-FSC.A, -B2.A, -B2A_FSC) %>%
+  write_csv("medians_normalized_fluor_alltimepoints.csv")
+
+norm_medians = read_csv("medians_normalized_fluor_alltimepoints.csv") %>%
+  left_join(cell_numbers) %>%
+  select(-Marker) %>%
+  rename(Gate = Population)
+
+#Rename description of controls so we can graph them on experimental facet plots
+relabel_controls = norm_medians %>% arrange(Description) %>%
+  slice(rep(1:sum(str_detect(norm_medians$Type, "ctrl")), each = 4)) %>% #repeat each control row 4 times because was have 4 facetplots
+  mutate(Description = rep(c("GAP1 ARS KO", "GAP1 LTR + ARS KO", "GAP1 LTR KO","GAP1 WT architecture"), times=sum(str_detect(norm_medians$Type, "ctrl"))))
+
+#merge back to experimental rows from norm_medians df
+adj_norm_medians = merge(norm_medians %>% filter(Type == "Experimental"), relabel_controls, all = TRUE) %>% #merge back to experimental rows
+  arrange(Description, generation) %>%
+  filter(Count>70000) #exclude observations with <70,000 cells
+
+#Clean up data frame. Remove timepoints/controls that are abnormal.
+#I don't think removal of experimental timepoints is justified. Our data is very variable, so nothing is an outlier if you draw a boxplot of all GFP or Freq from ONE generation from ONE Genotype. Spikes that we see in one timepoint could be real since we sample every 8-10 generations. Lineages containing CNVs can indeed increase in that time frame, especially since we see CNVs starting at gen8.
+clean_adj_norm_medians = adj_norm_medians %>%
+  #remove select controls timepoints based on ridgeplots
+  anti_join(adj_norm_medians %>% filter(generation == 116 & Type == "2_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 182 & Type == "1_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 203 & Type == "1_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 231 & Type == "0_copy_ctrl")) %>%
+  anti_join(adj_norm_medians %>% filter(generation == 260 & Type == "1_copy_ctrl"))
+#anti_join() gap1_4 two copy gate samples at g79, 124, 231, 252 -- why, not justified.
+
+#Graph experimental with along controls
+clean_adj_norm_medians %>%
+  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%#filter out outliers (likely resulting from contamination)
+ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
+  geom_line(aes(linetype = Type)) +
+  scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
+  scale_color_manual(values=c("gray", "gray", "gray", #controls
+                              "#DEBD52", "#DBB741", "#D7B02F", "#CAA426","#D9BB59", #WT,5, golds
+                              #rep("#5474DE", 8),  #ALL,8, blue/purple "#5474DE"
+                              "#5774E5","#637EE7", "#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3", #ALL,8, blue/purple "#5474DE"
+                              "#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #rep("#DE54B9", 7), #ARS, 7,  pink "#DE54B9"
+                              "#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #rep("#54DE79", 8)  #LTR,8, green "#54DE79"
+  ))+
+  facet_wrap(~Description) +
+  xlab("Generation") +
+  ylab("Median normalized fluorescence (a.u.)") +
+  scale_x_continuous(breaks=seq(0,260,50)) +
+  #ylim(c(1.5,2.5))+
+  theme_classic() +
+  theme(legend.position = "none",
+        text = element_text(size=12),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=12),
+        axis.text.x = element_text(family="Arial", size = 12, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 12, color = "black"))
+ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
+ggsave("MedNormFluro_v2_010722.png")
+
+# Combine the replicates/populations and plot median normalized fluorescence over time
+      # dashed gray controls lines on top of the experiment lineplot
+ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
+       mapping = aes(generation, Med_B2A_FSC, color = Description)) +
+  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = Description), alpha=0.3) + #experimentals loess regression with standard error cloud
+  geom_line(mapping = aes(generation, Med_B2A_FSC, color = Type, linetype = Type),
+            data = clean_adj_norm_medians %>% filter(Type != "Experimental")) + #controls lineplot
+  scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+ #dashed lines for controls
+  scale_color_manual(values=c("gray", "gray", "gray","#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #line color
+  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #standard error cloud color
+  facet_wrap(~Description) +
+  theme_classic() +
+  ggtitle("loess regression of combined populations") + theme(plot.title = element_text(hjust = 0.5)) +
+  xlab("Generation") +
+  ylab("Median normalized fluorescence (a.u.)") +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  theme(legend.position = "none",
+        text = element_text(size=12),
+        strip.background = element_blank(), #remove box around facet title
+        strip.text = element_text(size=12),
+        axis.text.x = element_text(family="Arial", size = 12, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 12, color = "black")) #I did it!
+ggsave("loes_regression_MedNormFluo_010622.png")
+
+### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
+#for(pop in unique(sc_distr_alltimepoints$sample)) {
+#  print(pop)
+#  sc_distr_alltimepoints %>%
+#  filter(sample == pop) %>%
+#  write_csv(paste0("sc_distributions_",pop,"_all_timepoints.csv"))
+#}
+#### Investigate the zig zaggy timepoints by graphing the ridgeplots for those populations to see what the distribution is like. (Zigzaggy lines of any one population can seen in the plot_list plots)
+#my idea is maybe the distribution shape can tel whether it's CNV dynamics or contamination.
+sc_gap1_4 = read.csv(file = "sc_distributions_gap1_4_all_timepoints.csv", stringsAsFactors = T) %>%
+  mutate(generation = factor(generation, levels = unique(generation)))
+
+sc_gap1_4 %>%
+  ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+  geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
+  xlab("Normalized fluorescence (a.u.)") +
+  ylab("Generation") +
+  ggtitle("GAP1 WT 4") +
+  theme_classic() +
+  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
+  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+  theme(
+    legend.position = 'none', #remove the legend
+    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+    axis.text.y = element_text(family="Arial", size = 10, color = "black")
+  )
+ggsave("gap1_4_ridgeplot_scale2.png")
+
+sc_gap1_4 %>%
+  group_by(generation) %>%
+  mutate(norm_median = median(B2A_FSC)) %>%
+  distinct() %>%
+  ggplot(aes(generation, norm_median, group = 1)) +
+  geom_line()+
+  geom_point()+
+  ggtitle("gap1_4")+
+  ylab("normalized B2A/FSC then median")
+  theme_classic()
+ggsave("gap1_4_normalized_median_lineplot.png")
+
+sc_gap1_4 %>%
+  group_by(generation) %>%
+  mutate(med_B2A = median(B2.A)) %>% View()
+  ggplot(aes(generation, med_B2A, group = 1)) +
+  geom_line() +
+  geom_point()+
+  ggtitle("gap1_4") +
+  ylab("median B2-A fluorescence (a.u)") +
+  theme_classic()
+ggsave("gap1_4_raw-B2A_lineplot.png")
+
+sc_gap1_4 %>%
+  group_by(generation) %>%
+  mutate(med_FSC = median(FSC.A)) %>%
+ggplot(aes(generation, med_FSC, group = 1)) +
+  geom_line() +
+  geom_point()+
+  ggtitle("gap1_4") +
+  ylab("median FSC fluorescence (a.u)") +
+  theme_classic()
+ggsave("gap1_4_raw-FSC_lineplot.png")
+
+clean_adj_norm_medians %>% filter(sample == "gap1_4") %>%
+  ggplot(aes(generation, Med_B2A_FSC, group = 1))+
+  geom_line()+
+  geom_point()+
+  theme_classic()
+ggsave("gap1_4_median_then_norm_lineplot.png")
+
+clean_adj_norm_medians %>%
+  filter(sample == "gap1_4", generation > 120) %>%
+  select(sample, Description, generation, `FSC-A`, GFP, Med_B2A_FSC, Count) %>% View()
+
+#experimental populations that dip down, investigate.
+dips = clean_adj_norm_medians %>%
+  filter(Med_B2A_FSC < 1.5 & Type == "Experimental") %>%
+  write_csv("Med_B2A_FSC_dips.csv")
+
+#investigate sample gap1_all_3. Graph ridgeplots.
+gap1_all_3 <- read.csv(file = "sc_distributions_gap1_all_3_all_timepoints.csv", stringsAsFactors = T) %>%
+  mutate(generation = factor(generation, levels = unique(generation)))
+gap1_all_3 %>%
+ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+  geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
+  xlab("Normalized fluorescence (a.u.)") +
+  ylab("Generation") +
+  ggtitle("GAP1 LTR + ARS 3") +
+  theme_classic() +
+  #scale_x_continuous(limits=c(0.0,5), breaks = c(0, 1, 5, 0.5)) +
+  scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
+  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+  theme(
+    legend.position = 'none', #remove the legend
+    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+    axis.text.y = element_text(family="Arial", size = 10, color = "black")
+  )
+ggsave("gap1_all_3_ridgeplots.png")
+
+
+####################################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
 # Author: Julie
   # 1) First, calculate Tup, the generation at which CNVs are initially detected, (Lang et al. 2011 and Lauer et al. 2018)
   # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of 1 copy control cells appearing in the two_copy_or_more gate and gate across generations 8-260 plus the interquartile range (IQR) if the distribution of one copy controls appearing in the CNV gate as NOT normal. If the distribution is normal, then use the mean plus one standard deviation like in Lauer et al. 2018. Like in Lauer et al. 2018, samples surpassing this threshold is considered to contain CNVs.
 
-#CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is the Two_or_more copy gate.
+#CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is called the Two_or_more copy gate.
 CNV_false_pos_df = freq %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
@@ -770,88 +779,10 @@ summary(Tup_anova)
 # Residuals   24   7402   308.4
 # Conclusion: There is no difference in the means. Genotype has no significant impact on Tup.
 
-########### GFP over time plots
-#Using outputted `medians` .csv files, plot median GFP fluorescence normalized over median FSC-A over time for experimental
-  #overlay 0,1,2 controls on same graph as experimental with gray lines
-  norm_medians = medians %>%
-    pivot_wider(names_from = Marker, values_from = MedFI) %>%
-    mutate(NormMedGFP = GFP/`FSC-A`) #normalization
+#Calculate Sup
 
-  #Mutate description of controls so we can graph them on experimental facet plots
-  dups = norm_medians %>% arrange(Description) %>%
-  slice(rep(1:56, each = 4)) %>% #repeat each control row 4 times because was have 4 facetplots
-  mutate(Description = rep(c("GAP1 ARS KO", "GAP1 LTR + ARS KO", "GAP1 LTR KO","GAP1 WT architecture"), times=56))
 
-  #merge back to experimental rows from norm_medians df
-  adj_norm_medians = merge(norm_medians %>% filter(Type == "Experimental"), dups, all = TRUE) %>% #merge back to experimental rows
-  arrange(Description, generation)
-
-#Clean up data frame. Remove timepoints/controls that are abnormal.
-  #I don't think removal of timepoints is justified. Our data is very variable, so nothing is an outlier if you draw a boxplot of all GFP or Freq from ONE generation from ONE Genotype. Spikes that we see in one timepoint could be real since we sample every 8-10 generations. Lineages containing CNVs can indeed increase in that time frame, especially since we see CNVs starting at gen8.
-clean_adj_norm_medians = adj_norm_medians %>%
-  anti_join(adj_norm_medians %>% filter(generation == 182 & Type == "1_copy_ctrl")) %>%
-  anti_join(adj_norm_medians %>% filter(generation == 203 & Type == "1_copy_ctrl")) %>%
-  anti_join(adj_norm_medians %>% filter(generation == 231 & Type == "0_copy_ctrl")) %>%
-  anti_join(adj_norm_medians %>% filter(generation == 260 & Type == "1_copy_ctrl"))
-#anti_join() gap1_4 two copy gate samples at g79, 124, 231, 252
-
-#Graph experimental with along controls
-  ggplot(clean_adj_norm_medians, aes(generation, NormMedGFP, color= sample)) +
-  geom_line(aes(linetype = Type)) +
-  scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
-  scale_color_manual(values=c("gray", "gray", "gray", #controls
-                              rep("orange", 5),  #WT,5
-                              rep("purple", 8),  #ALL,8
-                              rep("blue", 7), #ARS, 7
-                              rep("pink", 8)  #LTR,8
-                              ))+
-  facet_wrap(~Description) +
-  ylab("normalized median fluorescence") +
-  scale_x_continuous(breaks=seq(0,250,50)) +
-  theme_classic()
-#  + theme(legend.position = "none",
-#        text = element_text(size=12))
-
-# Combine the replicates/populations and plot median normalized fluorescence over time
-# dashed gray controls lines on top of the experiment lineplot
-ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
-      mapping = aes(generation, NormMedGFP, color = Description)) +
-      stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = Description), alpha=0.3) + #experimentals loess regression with standard error cloud
-    geom_line(mapping = aes(generation, NormMedGFP, color = Type, linetype = Type),
-                data = clean_adj_norm_medians %>% filter(Type != "Experimental")) + #controls lineplot
-    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+ #dashed lines for controls
-    scale_color_manual(values=c("gray", "gray", "gray","#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #line color
-    scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #standard error cloud color
-    facet_wrap(~Description) +
-    theme_classic() +
-    ggtitle("loess regression of combined populations") + theme(plot.title = element_text(hjust = 0.5)) +
-    ylab("normalized median fluorescence") +
-    scale_x_continuous(breaks=seq(0,250,50)) +
-    theme(text = element_text(size=12),legend.position = "none") #I did it!
-
-  #raw - standalone.
-  adj_norm_medians %>%
-    filter(Type != "Experimental") %>%
-    ggplot(aes(generation, NormMedGFP, color = Type))+
-    geom_line(aes(linetype = Type)) +
-    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+
-    scale_color_manual(values = c("gray", "gray", "gray"))
-
-  #geom_line() without ggplot()
-  geom_line(mapping = aes(generation, NormMedGFP, color = Type, linetype = Type),
-            data = adj_norm_medians %>% filter(Type != "Experimental"))+
-    scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+
-    scale_color_manual(values = c("gray", "gray", "gray"))
-
-#g231 0copy control looks abnormal. Investigate and see if whole timepoint should be thrown out
-  # GFP values are abnormally high, FSC-A values are abnormally low.
-  # I can do some hypothesis testing to see they are not part of the null GFP distribution or null FSC distribution.
-  adj_norm_medians %>% filter(Type == "0_copy_ctrl", generation >= 200) %>% View()
-
-#g203 1copy control look abnormal. GFP values are abnormally low. FSC-A values are normal.
-  adj_norm_medians %>% filter(Type == "1_copy_ctrl", generation >= 160 & generation <= 211) %>% View()
-
-#MY PALLETEE
+####### MY PALLETEE
 #GOLD - #DEBD52
 #Soft Blue - #54A2DE
 #Soft Blue Purple - #5474DE
@@ -871,7 +802,6 @@ ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
 #2745AA #purple
 #AA2787 #magent
 #AA8C27 #golde
-
 
 #Gold Metallic (6)
 #DEBD52
