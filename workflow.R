@@ -201,50 +201,10 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
   transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
                                        trans = combined_trans) #applies the the transformation and returns it as a gatingSet
-  #cyto_plot_explore(transformed_timepoint_gating_set, #quick plot check that it looks okay
-  #                  channels_x = "FSC-A",
-  #                  channels_y = "GFP",
-  #                  axes_limits = "data")
-  #First we gate for the cells
-  #cyto_gate_draw(transformed_timepoint_gating_set,
-  #               parent = "root",
-  #               alias = "Cells",
-  #               channels = c("FSC-A","SSC-A"),
-  #               axes_limits = "data",
-  #               gatingTemplate = "cytek_gating_01_02_04.csv",
-  #)
-
-  #Then we define the singlets based on forward scatter height and width
-  #cyto_gate_draw(transformed_timepoint_gating_set,
-  #               parent = "Cells",
-  #               alias = "Single_cells",
-  #               channels = c("FSC-A","FSC-H"),
-  #               axes_limits = "data",
-  #               gatingTemplate = "cytek_gating_01_02_04.csv"
-  #)
-#  DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61)] #DGY1
-#  DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32)] #DGY500
-#  DGY1315 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62)] #DGY1315
-#  cyto_gate_draw(transformed_timepoint_gating_set,
-#                 parent = "Single_cells", #first color
-#                 alias = c("zero_copy", "one_copy", "two_or_more_copy","multi_copy"), #defines gate names
-#                 channels = c("FSC-A","B2-A"),
-#                 axes_limits = "data",
-#                 select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-#                 gatingTemplate = "cytek_gating_01_02_04.csv",
-#                 overlay = c(zero_copy, one_copy, two_or_more_copy),
-#                 point_col = c("black", "green", "red", "blue")
-#  )
 
   #5. apply gating-template.csv to transformed gating set
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
 #  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
-
-# cyto_plot_profile(transformed_timepoint_gating_set[1:3],
-#                    parent = "Single_cells",
-#                    channels = c("FSC-A","GFP"),
-#                    legend = TRUE,
-#                    legend_text = 4)
 
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir & Julie
@@ -282,7 +242,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
 try(map(folders[5:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
-#STEP 7:  Combine stats_freq.csv and stats_median.csv files into a single dataframe
+#STEP 7:  Combine stats_freq.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
 #Author: Julie
 
@@ -294,6 +254,7 @@ try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating
 #  read_csv() %>%
 #  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
 
+#do on hpc because large files
 list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
   read_csv() %>%
   write_csv(file = "01_02_04_v2_SingleCellDistributions_all_timepoints.csv")
@@ -376,20 +337,21 @@ freq %>%
 ## check controls are in their proper gates
   fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
+  #freq %>% filter(Count <7000) %>% View()
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
   mutate(flag = case_when(Strain == "DGY1" & Gate == "zero_copy" & Frequency >= 95 ~ "pass",
                           Strain == "DGY1" & Gate == "zero_copy" & Frequency < 95 ~ "fail",
                           Strain == "DGY1" & Gate == "one_copy" & Frequency >= 10 ~ "fail",
-                          Strain == "DGY1" & Gate == "two_or_more_copy" & Frequency >=10 ~ "fail",
+                          Strain == "DGY1" & Gate == "two_or_more_copy" & Frequency >=11 ~ "fail",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency >= 79 ~ "pass",
                           Strain == "DGY500" & Gate == "one_copy" & Frequency < 79 ~ "fail",
-                          Strain == "DGY500" & Gate == "zero_copy" & Frequency >= 10 ~ "fail",
-                          Strain == "DGY500" & Gate == "two_or_more_copy" & Frequency >= 10 ~ "fail",
+                          Strain == "DGY500" & Gate == "zero_copy" & Frequency >= 11 ~ "fail",
+                          Strain == "DGY500" & Gate == "two_or_more_copy" & Frequency >= 11 ~ "fail",
                           Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency >= 79 ~ "pass",
                           Strain == "DGY1315" & Gate == "two_or_more_copy" & Frequency < 79 ~ "fail",
-                          Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 10 ~ "fail",
-                          Strain == "DGY1315" & Gate == "one_copy" & Frequency >= 10 ~ "fail"
+                          Strain == "DGY1315" & Gate == "zero_copy" & Frequency >= 11 ~ "fail",
+                          Strain == "DGY1315" & Gate == "one_copy" & Frequency >= 11 ~ "fail"
                           ))%>%
   filter(flag == "fail") %>%
   arrange(Description)
@@ -502,16 +464,20 @@ freq %>%
 zero = read.csv("sc_distributions_0copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
   mutate(generation = factor(generation, levels = unique(generation))) #convert generation to factor
 #one <- sc_distr_alltimepoints %>% filter(Description == "1 copy control") %>%
-  #write_csv(file = "sc_distributions_1copyControl_all_timepoints.csv")
+  #write_csv(file = "sc_distributions_1copyControl_all_timepoints.csv") #do once
 one = read.csv("sc_distributions_1copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
     mutate(generation = factor(generation, levels = unique(generation)))
 #two <- sc_distr_alltimepoints %>% filter(Description == "2 copy control") %>%
-  # write_csv(file = "sc_distributions_2copyControl_all_timepoints.csv")
+  # write_csv(file = "sc_distributions_2copyControl_all_timepoints.csv") #do once
 two = read.csv("sc_distributions_2copyControl_all_timepoints.csv", stringsAsFactors = T) %>%
     mutate(generation = factor(generation, levels = unique(generation)))
 
-  #all Controls in one ggplot, and facet by Description
-ggplot(controls, aes(B2A_FSC, generation, fill = Description)) +
+#all Controls in one ggplot, and facet by Description
+controls = bind_rows(zero, one, two) #do once
+controls %>%
+  filter(!(Description == "1 copy control" & generation == 203 |
+         Description == "0 copy control" & generation == 231)) %>%
+ggplot(aes(B2A_FSC, generation, fill = Description)) +
   geom_density_ridges(scale = 1) +
   facet_grid(~Description) +
   scale_y_discrete(expand = expansion(add = c(0.2, 1.0)))+
@@ -526,13 +492,14 @@ ggplot(controls, aes(B2A_FSC, generation, fill = Description)) +
       strip.background = element_blank(), #removed box around facet title
       strip.text = element_text(size=12)
   )
+ggsave("controls_generation_ridgeplot_excludeLowCellSamples.png")
 ggsave("controls_generation_ridgeplot_Facet.png")
 
 
 ###### Plot normalized median mCitrine fluorescence over time
 #overlay 0,1,2 controls on same graph as experimental with gray lines
 ###### 01-05-22 It's not accurate to normalize after taking the median GFP and median FSC-A values.
-# In fact the graphs would look different. Instead use the single cell data, normalize first, then take the median of the normalized fluorescence for these line plots.
+# In fact the graphs would look different. Instead use the single cell data, normalize B2-A by FSC first, then take the median of the normalized fluorescence for these line plots.
 # Lauer et al. 2018 did this, see Methods - Flow Cytometry Sampling & Analysis
 # For each unique `sample` calculate the median B2-A/FSC-A at each generation.
 
