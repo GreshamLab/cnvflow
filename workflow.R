@@ -747,6 +747,14 @@ summary(Tup_anova)
 # Conclusion: There is no difference in the means. Genotype has no significant impact on Tup.
 
 #Calculate Sup
+#S1 Text. Calculation of CNV dynamics parameters.
+# Graphic representation of linear fit (and corresponding R2 values)
+# during initial population expansion of CNV alleles.
+# Slope of the lineear fit corresponds to the dynamics parameter Sup shown in
+# Table 1 and was calculated for the original evolution experiment and the
+# barcode experiment. Data and code used to generate these figures can be
+# accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
+
 
 
 ####### MY PALLETEE
