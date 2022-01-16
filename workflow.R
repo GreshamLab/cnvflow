@@ -567,8 +567,10 @@ ggsave("MedNormFluro_v2_010722.png")
 
 # Combine the replicates/populations and plot median normalized fluorescence over time
       # dashed gray controls lines on top of the experiment lineplot
-ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
-       mapping = aes(generation, Med_B2A_FSC, color = Description)) +
+clean_adj_norm_medians %>%
+  filter(Type == "Experimental") %>%
+  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>% #filter out outliers (likely resulting from contamination)
+ggplot(mapping = aes(generation, Med_B2A_FSC, color = Description)) +
   stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = Description), alpha=0.3) + #experimentals loess regression with standard error cloud
   geom_line(mapping = aes(generation, Med_B2A_FSC, color = Type, linetype = Type),
             data = clean_adj_norm_medians %>% filter(Type != "Experimental")) + #controls lineplot
@@ -587,7 +589,7 @@ ggplot(data = clean_adj_norm_medians %>% filter(Type == "Experimental"),
         strip.text = element_text(size=12),
         axis.text.x = element_text(family="Arial", size = 12, color = "black"), #edit x-tick labels
         axis.text.y = element_text(family="Arial", size = 12, color = "black")) #I did it!
-ggsave("loes_regression_MedNormFluo_010622.png")
+ggsave("loes_regression_MedNormFluo_011222.png")
 
 ### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
 #for(pop in unique(sc_distr_alltimepoints$sample)) {
