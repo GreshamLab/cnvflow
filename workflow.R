@@ -186,7 +186,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   for(i in 1:length(names(experiment_details))){
     flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
   }
-
+experiment_details
   #3. specify markers for that gating set
   markernames(timepoint_gating_set)<-my_markers
 
@@ -223,13 +223,24 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #                                             alias  = c("Single_cells"),
 #                                             stat="count",
 #                                             save_as = paste0("01_02_04_v2_stats_cell_number_", prefix,".csv"))
-  #get Cell count from each gate
-  cyto_stats_compute(transformed_timepoint_gating_set,
-                     parent = "Single_cells",
-                     alias = c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"),
-                     stat="count"
-                     save_as = paste0("01_02_04_v2_stats_cell_number_in_Gates", prefix,".csv"))
-  )
+  #get cell count from each gate
+  #cyto_stats_compute(transformed_timepoint_gating_set,
+  #                   parent = "Single_cells",
+  #                  alias = c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"),
+  #                   stat="count"
+  #                   save_as = paste0("01_02_04_v2_stats_cell_number_in_Gates", prefix,".csv"))
+  ##cyto_stat_compute() computes freq and count values that DO NOT match % in cyto_plot_gating_scheme. Instead, use gs_pop_get_stats()
+  #get cell count from each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
+    rename(Gate = pop, name = sample, Count = count) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0("01_02_04_v2_fw_counts_", prefix,".csv"))
+  #get frequency of cells inside each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
+    rename(Gate = pop, name = sample, Frequency = percent) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0("01_02_04_v2_fw_freq_", prefix,".csv"))
+
   #raw transformed B2-A and FSC values for each cell (not the median)
 #  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
 #  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
@@ -245,7 +256,7 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
 #Author: Julie
 
 #map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-try(map(folders[5:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
+try(map(folders[4:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 #STEP 7:  Combine stats_freq.csv files into a single dataframe
 #Pull in all stats_* files from directories and assemble into a single dataframe
@@ -259,9 +270,13 @@ try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating
 #  read_csv() %>%
 #  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
 
-list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number_in_Gates") %>%
+list.files(path = ".", pattern = "01_02_04_v2_fw_counts_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
   read_csv() %>%
-  write_csv(file = "01_02_04_v2_stats_cell_number_in_Gates_all_timepoints.csv")
+  write_csv(file = "01_02_04_v2_fw_counts_all_timepoints.csv")
+
+list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
+  read_csv() %>%
+  write_csv(file = "01_02_04_v2_fw_freq_all_timepoints.csv")
 
 #do on hpc because large files
 #list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
@@ -275,11 +290,20 @@ list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number_in_Gates") %>%
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
 freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
+fw_freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") %>% rename(Frequency = frequency)
 cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
-counts_byGates = read_csv("01_02_04_v2_stats_cell_number_in_Gates_all_timepoints.csv")
+fw_counts= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
 sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
 freq = left_join(freq, cell_numbers) %>% # add cell number column to freq table
   select(-Marker)
+
+fw_freq_and_counts =
+  fw_counts %>% filter(Gate == "Single_cells") %>%
+  rename(Parent = Gate) %>%
+  left_join(fw_freq) %>%
+  filter(!(Gate == "Single_cells")) %>%
+  mutate(Frequency = Frequency*100) %>%
+  relocate(2:3, .after = Gate)
 
 
 #determine upper threshold for zero copy gate, aka False Negative Rate of Detecting One Copy
@@ -348,11 +372,17 @@ lowcell = freq %>%
   filter(Count <7000) %>%
   mutate(generation = factor(generation, levels = unique(generation))) %>%
   select(-Count)
+lowcell = fw_freq_and_counts %>%
+  filter(Count <7000) %>%
+  mutate(generation = factor(generation, levels = unique(generation))) %>%
+  select(-Count)
+
 
 df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
 
 ## check controls are in their proper gates
-  fails = freq %>%
+  fails = fw_freq_and_counts %>%
+    fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
@@ -375,11 +405,26 @@ df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
   #fails %>% write_csv("01_02_04_v2_83_fail.csv")
   #fails %>% write_csv("01_02_04_v2_fail_calc_thres_stringent_.csv")
   #fails %>% write_csv("01_02_04_v2_79_10_fail_.csv")
+  fails %>% write_csv("01_02_04_v2_fw_79_11_fail.csv")
 
 # plot controls over time
 freq %>%
 filter(Count>70000) %>%
   filter(str_detect(Description, "control")) %>%
+  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>%
+  #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
+  ggplot(aes(generation, Frequency, color = Gate)) +
+  geom_line() +
+  facet_wrap(~Description) +
+  ylab("% of cells in gate") +
+  theme_minimal() +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  theme(text = element_text(size=12))
+
+# plot controls over time
+fw_freq_and_counts %>%
+  filter(Count>70000,
+          str_detect(Description, "control")) %>%
   select(Type, Strain, Description, generation, Gate, Frequency, Count) %>%
   anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
   ggplot(aes(generation, Frequency, color = Gate)) +
@@ -389,7 +434,6 @@ filter(Count>70000) %>%
   theme_minimal() +
   scale_x_continuous(breaks=seq(0,250,50)) +
   theme(text = element_text(size=12))
-
 # plot proportion of population in each gate over time for all experimental
 plot_list = list()
 i=1
@@ -414,19 +458,46 @@ plot_list$`GAP1 ARS KO`
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 LTR + ARS KO`
 
+#dev
+plot_list = list()
+i=1
+for(exp in unique(fw_freq_and_counts$Description)) {
+  #print(plot_dist(obs))
+  plot_list[[i]] = fw_freq_and_counts %>%
+    #filter(Gate == "Single_cells" & Count>70000) %>%
+    #filter(!(Gate == "Single_cells"))%>%
+    #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
+    filter(Description==exp) %>%
+    ggplot(aes(generation, Frequency, color = Gate)) +
+    geom_line() +
+    facet_wrap(~sample) +
+    ylab("% of cells in gate") +
+    theme_minimal()+
+    scale_x_continuous(breaks=seq(0,250,50))+
+    theme(text = element_text(size=12))
+  i = i+1
+}
+names(plot_list) = unique(fw_freq_and_counts$Description)
+plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+plot_list$`GAP1 ARS KO`
+plot_list$`GAP1 LTR KO`
+plot_list$`GAP1 LTR + ARS KO`
+
 #Plot ridgeplots of each population to catch contaminated timepoints/outlier values.
   #(Later will calculate Sup values for each population)
 #I could write a Function that plots ridgeplots. Then I can write use map() to apply this FUNCtion to all population.csv since I have 32 pops
 pop_files = list.files(pattern = "sc_distributions_")[-1:-3]
-file_name = pop_files[9] #dev
+#file_name = pop_files[9] #dev
 make_ridgeplots = function(file_name){
   pop_name = sub("sc_distributions_", "", sub("_all_timepoints.csv","", file_name))
+
   pop_data = read.csv(file_name, stringsAsFactors = T) %>%
     mutate(generation = factor(generation, levels = unique(generation)))
 
-  pop_data %>%
-    anti_join(lowcell) %>% View()
+  lowcell = count(pop_data, generation, sample) %>% filter(n < 70000)
 
+  pop_data %>%
+    anti_join(lowcell) %>%
     ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
     geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
     xlab("Normalized fluorescence (a.u.)") +
@@ -441,10 +512,10 @@ make_ridgeplots = function(file_name){
       axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
       axis.text.y = element_text(family="Arial", size = 10, color = "black")
     )
-  ggsave(paste0(pop_name,"ridgeplot_scale2.png"))
+  ggsave(paste0(pop_name,"_ridgeplot_scale2.png"))
 }
 
-#map(pop_files, make_ridgeplots)
+map(pop_files, make_ridgeplots)
 
 
 
