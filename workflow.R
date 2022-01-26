@@ -878,6 +878,15 @@ summary(Tup_anova)
 # accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
 
 #Use the "Generate S1 Text.Rmd" to calculate Sup
+#I made my own wokring version - Generate S1 Text_JC.Rmd inside the cnvflow folder
+# from current freq table, I need to add the following 4 columns:
+# propCNV, propNoCNV, propCNV_divided_by_propNoCNV, natural log of propCNV_divided_by_propNoCNV
+# not log base10, remember that natural log is ln base e. ln x= log base e of x.
+# log makes it linear -- and we are doing a linear fit
+# why use natural log? I don't think there's a biological reason. I think the reason is mathematical,
+# in that the derivative or slope of an natural log line y=ln(x) is simply 1/x. In other words dy/dx ln(x) = 1/x.
+
+# Step 1 - make a table like Steff's FlowAnalysisSumm_FINAL.csv. For me that's the
 
 ####### MY PALLETEE
 #GOLD - #DEBD52
