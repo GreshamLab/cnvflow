@@ -290,7 +290,7 @@ list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
 freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
-fw_freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") %>% rename(Frequency = frequency)
+fw_freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") #%>% rename(Frequency = frequency)
 cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
 fw_counts= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
 sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
@@ -304,7 +304,6 @@ fw_freq_and_counts =
   filter(!(Gate == "Single_cells")) %>%
   mutate(Frequency = Frequency*100) %>%
   relocate(2:3, .after = Gate)
-
 
 #determine upper threshold for zero copy gate, aka False Negative Rate of Detecting One Copy
 ##Everyone should be start as One Copy (atleast) except the Zero Copy Control
@@ -368,21 +367,22 @@ freq %>%
 
 #Table of low cell observations, convenient to have to anti_join() in further steps
 freq %>% filter(Count <7000) %>% View()
+
 lowcell = freq %>%
   filter(Count <7000) %>%
   mutate(generation = factor(generation, levels = unique(generation))) %>%
   select(-Count)
+
 lowcell = fw_freq_and_counts %>%
   filter(Count <7000) %>%
-  mutate(generation = factor(generation, levels = unique(generation))) %>%
+  mutate(generation = factor(generation, levels = unique(generation))) %>% #View()
   select(-Count)
 
-
-df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
+#df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
 
 ## check controls are in their proper gates
   fails = fw_freq_and_counts %>%
-    fails = freq %>%
+    #fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
@@ -520,17 +520,18 @@ map(pop_files, make_ridgeplots)
 
 
 # plot proportion of the population with a CNV over time
-freq %>%
+#freq %>%
+fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  #filter()  %>% #remove contaminated and outliers informed by population ridgeplots(above) and fluor lineplots (below)
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   group_by(sample, generation) %>%
   mutate(prop_CNV = sum(Frequency)) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
   geom_line() +
-  geom_point()+
+  #geom_point()+
   facet_wrap(~Description) +
   xlab("Generation") +
   ylab("Proportion of the population with GAP1 CNV") +
@@ -551,7 +552,8 @@ freq %>%
         )
 
 #Plot proportion of the populations with a CNV over time (collapse the replicates)
-freq %>%
+#freq %>%
+fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   #ggplot(aes(Frequency)) + geom_histogram(bins=50) #right skewed distribution
@@ -565,7 +567,7 @@ freq %>%
   ggtitle("loess regression of the populations") +
   ylab("Proportion of the population with GAP1 CNV") +
   scale_x_continuous(breaks=seq(0,250,50)) +
-  scale_y_continuous(breaks=seq(0,100,25))+f
+  scale_y_continuous(breaks=seq(0,100,25))+
   theme(text = element_text(size=12),
         legend.position = "none",
         axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
@@ -818,7 +820,8 @@ ggsave("gap1_all_3_ridgeplots.png")
   # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of 1 copy control cells appearing in the two_copy_or_more gate and gate across generations 8-260 plus the interquartile range (IQR) if the distribution of one copy controls appearing in the CNV gate as NOT normal. If the distribution is normal, then use the mean plus one standard deviation like in Lauer et al. 2018. Like in Lauer et al. 2018, samples surpassing this threshold is considered to contain CNVs.
 
 #CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is called the Two_or_more copy gate.
-CNV_false_pos_df = freq %>%
+CNV_false_pos_df = #freq %>%
+  fw_freq_and_counts %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
   filter(Type == "1_copy_ctrl") %>%
@@ -837,13 +840,15 @@ shapiro.test(CNV_false_pos_df$Frequency) #null hypothesis is that the distributi
 thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency) #6.615341
 
 #Determine Tup for each population, the generation when CNVs first appear.
-Tup_per_pop = freq %>%
+Tup_per_pop = #freq %>%
+  fw_freq_and_counts %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
   filter(Type == "Experimental", Gate == "two_or_more_copy", Frequency >= thres_mean) %>%
   select(Type, Strain, Description, sample, generation, Gate, Frequency) %>% #View()
   group_by(sample) %>%
   slice(which.min(generation))
+Tup_per_pop %>% write_csv("file = 01_02_04_v2_fw_Tup_per_pop.csv")
 
 ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
   geom_boxplot() +
@@ -857,16 +862,17 @@ ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Des
   theme_classic() +
   theme(legend.position = "none",
         text = element_text(size=12))
+ggsave("01_02_04_v2_fw_Tup_boxplot.png")
 
 # ANOVA to test for significance
 # One Way ANOVA because there is only 1 independent variable, genotype.
 # Anova Tut: https://www.scribbr.com/statistics/anova-in-r/
 Tup_anova = aov(generation~Description, data = Tup_per_pop)
 summary(Tup_anova)
-#              Df Sum Sq Mean Sq F value Pr(>F)
-# Description  3   2377   792.3   2.569  0.078 .
-# Residuals   24   7402   308.4
-# Conclusion: There is no difference in the means. Genotype has no significant impact on Tup.
+#            Df  Sum Sq Mean Sq F value  Pr(>F)
+#Description  3   4483  1494.3   6.772 0.00181 **
+#Residuals   24   5296   220.7
+# Conclusion: There IS a significant difference in the means. Genotype has has significant impact on Tup.
 
 #Calculate Sup
 #S1 Text. Calculation of CNV dynamics parameters.
