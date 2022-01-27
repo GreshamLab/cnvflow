@@ -894,6 +894,52 @@ summary(Tup_anova)
 
 # Step 1 - make a table like Steff's FlowAnalysisSumm_FINAL.csv. For me that's the
 
+equation = function(x) {
+  lm_coef <- list(a = round(coef(x)[1], digits = 2),
+                  b = round(coef(x)[2], digits = 2),
+                  r2 = round(summary(x)$r.squared, digits = 2));
+  lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
+  as.character(as.expression(lm_eq));
+}
+
+dynamics = fw_freq_and_counts %>%
+  filter(Count>70000) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  group_by(sample, generation) %>%
+  mutate(prop_CNV = sum(Frequency),
+         prop_NoCNV = 100-prop_CNV,
+         CNV_NoCNV = prop_CNV/prop_NoCNV,
+         logECNV_NoCNV = log(CNV_NoCNV)) #log() function is natural logarithm in R (even though  log() commonly thought as base10 )
+
+#write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
+#use map() to apply to all populations - I have 28
+pop_list = unique(dynamics$sample)
+
+pop_data <- subset(dynamics, sample %in% c(pop_list[[25]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
+fit <- lm(logECNV_NoCNV ~ generation, pop_data) #linear model, lm(y~x,data)
+fit
+ggplot(subset(dynamics, sample %in% c(pop_list[[25]])), aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
+  geom_point() +
+#  geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
+  geom_smooth(data=pop_data, method=lm, show.legend=FALSE) +
+ # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
+  scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
+  annotate("text", x = 130, y = 0.5, label = equation(fit), parse = TRUE) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
+  theme_classic() +
+  scale_color_manual(values = c('black')) +
+  guides(colour = guide_legend(override.aes = list(size=2))) +
+  theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
+
+summary(fit)$coef[[4]]
+
+confint(fit, 'Generation', level = 0.95)
+
+
+
+
+
 ####### MY PALLETEE
 #GOLD - #DEBD52
 #Soft Blue - #54A2DE
