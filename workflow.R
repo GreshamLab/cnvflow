@@ -896,12 +896,13 @@ summary(Tup_anova)
 
 equation = function(x) {
   lm_coef <- list(a = round(coef(x)[1], digits = 2),
-                  b = round(coef(x)[2], digits = 2),
+                  #b = round(coef(x)[2], digits = 2),
+                  b = unname(round(coef(fit)[2], digits = 2)),# get rid of it printing c()
                   r2 = round(summary(x)$r.squared, digits = 2));
   lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
   as.character(as.expression(lm_eq));
 }
-
+#format(unname(coef(m))[1], digits = 2)
 dynamics = fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
@@ -913,13 +914,15 @@ dynamics = fw_freq_and_counts %>%
          logECNV_NoCNV = log(CNV_NoCNV)) #log() function is natural logarithm in R (even though  log() commonly thought as base10 )
 
 #write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
-#use map() to apply to all populations - I have 28
+#then, use map() to apply function to all populations - I have 28
+#the tricky thing is the generations bounds can be different for each population
 pop_list = unique(dynamics$sample)
-
-pop_data <- subset(dynamics, sample %in% c(pop_list[[25]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
+wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
+pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
 fit <- lm(logECNV_NoCNV ~ generation, pop_data) #linear model, lm(y~x,data)
 fit
-ggplot(subset(dynamics, sample %in% c(pop_list[[25]])), aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
+#summary(fit) #to see the full model
+ggplot(subset(dynamics, sample %in% c(pop_list[[27]])), aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
   geom_point() +
 #  geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
   geom_smooth(data=pop_data, method=lm, show.legend=FALSE) +
