@@ -918,22 +918,25 @@ dynamics = fw_freq_and_counts %>%
 #the tricky thing is the generations bounds can be different for each population
 pop_list = unique(dynamics$sample)
 wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
-pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
+#pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
+pop_data <- subset(dynamics, sample %in% c(wt_pops[2]) & generation >=29 & generation <=124)
 fit <- lm(logECNV_NoCNV ~ generation, pop_data) #linear model, lm(y~x,data)
 fit
 #summary(fit) #to see the full model
-ggplot(subset(dynamics, sample %in% c(pop_list[[27]])), aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
+ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
   geom_point() +
 #  geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
   geom_smooth(data=pop_data, method=lm, show.legend=FALSE) +
  # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
   scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
-  annotate("text", x = 130, y = 0.5, label = equation(fit), parse = TRUE) +
+  annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
   theme_classic() +
   scale_color_manual(values = c('black')) +
   guides(colour = guide_legend(override.aes = list(size=2))) +
   theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
+
+ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
 
 summary(fit)$coef[[4]]
 
