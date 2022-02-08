@@ -872,19 +872,19 @@ summary(Tup_anova)
 #            Df  Sum Sq Mean Sq F value  Pr(>F)
 #Description  3   4483  1494.3   6.772 0.00181 **
 #Residuals   24   5296   220.7
-# Conclusion: There IS a significant difference in the means. Genotype has has significant impact on Tup.
+# Conclusion: There IS a significant difference in the means. Genotype has has significant effect on Tup.
 
 #Calculate Sup
 #S1 Text. Calculation of CNV dynamics parameters.
 # Graphic representation of linear fit (and corresponding R2 values)
 # during initial population expansion of CNV alleles.
-# Slope of the lineear fit corresponds to the dynamics parameter Sup shown in
+# Slope of the linear fit corresponds to the dynamics parameter Sup shown in
 # Table 1 and was calculated for the original evolution experiment and the
 # barcode experiment. Data and code used to generate these figures can be
 # accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
 
 #Use the "Generate S1 Text.Rmd" to calculate Sup
-#I made my own wokring version - Generate S1 Text_JC.Rmd inside the cnvflow folder
+#I made my own working version - Generate S1 Text_JC.Rmd inside the cnvflow folder
 # from current freq table, I need to add the following 4 columns:
 # propCNV, propNoCNV, propCNV_divided_by_propNoCNV, natural log of propCNV_divided_by_propNoCNV
 # not log base10, remember that natural log is ln base e. ln x= log base e of x.
@@ -902,7 +902,7 @@ equation = function(x) {
   lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
   as.character(as.expression(lm_eq));
 }
-#format(unname(coef(m))[1], digits = 2)
+
 dynamics = fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
@@ -913,13 +913,17 @@ dynamics = fw_freq_and_counts %>%
          CNV_NoCNV = prop_CNV/prop_NoCNV,
          logECNV_NoCNV = log(CNV_NoCNV)) #log() function is natural logarithm in R (even though  log() commonly thought as base10 )
 
-#write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
+#To do: write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
 #then, use map() to apply function to all populations - I have 28
-#the tricky thing is the generations bounds can be different for each population
+#the tricky thing is the generations bounds can be different for each population - write a function for a
+# sliding window of every 5 points to do the fit?  Do it again buy with every 6 points.
 pop_list = unique(dynamics$sample)
 wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
-#pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124?
-pop_data <- subset(dynamics, sample %in% c(wt_pops[2]) & generation >=29 & generation <=124)
+gens = unique(dynamics$generation)
+#pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124? prob because it made the best fit line
+start = 1
+end = 5
+pop_data <- subset(dynamics, sample %in% c(wt_pops[2]) & generation >= gens[start] & generation <= gens[end]) #dev
 fit <- lm(logECNV_NoCNV ~ generation, pop_data) #linear model, lm(y~x,data)
 fit
 #summary(fit) #to see the full model
@@ -936,9 +940,12 @@ ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample))
   guides(colour = guide_legend(override.aes = list(size=2))) +
   theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
 
+
+
+
 ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
 
-summary(fit)$coef[[4]]
+summary(fit)$coef[[4]] #fourth residual
 
 confint(fit, 'Generation', level = 0.95)
 
