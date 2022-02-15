@@ -305,66 +305,6 @@ fw_freq_and_counts =
   mutate(Frequency = Frequency*100) %>%
   relocate(2:3, .after = Gate)
 
-#determine upper threshold for zero copy gate, aka False Negative Rate of Detecting One Copy
-##Everyone should be start as One Copy (atleast) except the Zero Copy Control
-# one copy control falling into the zero copy or two+ copy gates
-freq %>%
-  filter(Count>70000) %>%
-  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
-  filter(Description == "1 copy control" & Gate == "zero_copy" | Description == "1 copy control" & Gate == "two_or_more_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
-  #ggplot(aes(Frequency)) +
-  #geom_histogram(bins = 50)
-  #  geom_boxplot()
-  summarize(IQR(Frequency)+median(Frequency)) #One Copy FN Rate is  6.86% = (median+IQR)
-
-freq %>%
-  filter(Count>70000) %>%
-  filter(Description == "1 copy control", Gate == "two_or_more_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
-  #ggplot(aes(Frequency)) + geom_boxplot()
-  #summarize(median(Frequency) + 1.5*IQR(Frequency)) #8.58
-  summarize(median(Frequency) + IQR(Frequency))
-
-#Determine CNV False Negative Rate. 2 copy control falling into 1copy or 0copy Gates: median + IQR
-freq %>%
-  filter(Count>70000) %>%
-  #filter(str_detect(Description, "control"), Gate == "zero_copy") %>%
-  filter(Description == "2 copy control", Gate != "two_or_more_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
-  #ggplot(aes(Frequency)) + geom_boxplot()
-summarize(IQR(Frequency))
-# CNV FN Rate is 1.33% = median + IQR
-
-#Determine lower threshold for zero copy control gate
-freq %>%
-  filter(Count>70000) %>%
-  filter(Description == "0 copy control", Gate == "zero_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
-  #ggplot(aes(Frequency)) + geom_boxplot()
-  #summarize(min(Frequency))
-  summarize(median(Frequency)-1.5*IQR(Frequency))
-
-#Determine lower threshold for one copy control gate
-freq %>%
-  filter(Count>70000) %>%
-  filter(Description == "1 copy control", Gate == "one_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>% #View()
-  #ggplot(aes(Frequency)) + geom_boxplot()
-  #summarize(min(Frequency))
-  summarize(median(Frequency)-1.5*IQR(Frequency)) #87.4, the left end of the lower whisker
-  #summarize(1.5*IQR(Frequency))
-
-#Determine lower threshold for two copy control gate
-freq %>%
-  filter(Count>70000) %>%
-  filter(Description == "2 copy control", Gate == "two_or_more_copy") %>%
-  select(Type, Strain, Description, sample,generation, Gate, Frequency, Count) %>%
-  ggplot(aes(Frequency)) + geom_boxplot()
-  #summarize(min(Frequency))
-  summarize(median(Frequency)-1.5*IQR(Frequency)) #92.3, the left end of the lower whisker
-#summarize(1.5*IQR(Frequency))
-
 #Table of low cell observations, convenient to have to anti_join() in further steps
 freq %>% filter(Count <7000) %>% View()
 
@@ -837,6 +777,7 @@ hist(CNV_false_pos_df$Frequency) #looks normal but could be left skewed
 shapiro.test(CNV_false_pos_df$Frequency) #null hypothesis is that the distribution is normal. if p <0.05, then it rejects the null hypothesis and so the distribution is NOT normal.
     #W = 0.95715, p-value = 0.4886
 # Our distribution is normal. Use the mean + 1SD as the threshold value.
+# mean = 4.29, sd = 2.32
 thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency) #6.615341
 
 #Determine Tup for each population, the generation when CNVs first appear.
@@ -848,8 +789,8 @@ Tup_per_pop = #freq %>%
   select(Type, Strain, Description, sample, generation, Gate, Frequency) %>% #View()
   group_by(sample) %>%
   slice(which.min(generation))
-Tup_per_pop %>% write_csv("file = 01_02_04_v2_fw_Tup_per_pop.csv")
-
+Tup_per_pop %>% write_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
+Tup_per_pop = read_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
 ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
   geom_boxplot() +
   xlab("genotype") +
@@ -862,7 +803,7 @@ ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Des
   theme_classic() +
   theme(legend.position = "none",
         text = element_text(size=12))
-ggsave("01_02_04_v2_fw_Tup_boxplot.png")
+#ggsave("01_02_04_v2_fw_Tup_boxplot.png")
 
 # ANOVA to test for significance
 # One Way ANOVA because there is only 1 independent variable, genotype.
@@ -916,7 +857,7 @@ dynamics = fw_freq_and_counts %>%
 #To do: write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
 #then, use map() to apply function to all populations - I have 28
 #the tricky thing is the generations bounds can be different for each population - write a function for a
-# sliding window of every 5 points to do the fit?  Do it again buy with every 6 points.
+# sliding window of every 5 points to do the fit?  Do it again but with every 6 points.
 pop_list = unique(dynamics$sample)
 wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
 gens = unique(dynamics$generation)
