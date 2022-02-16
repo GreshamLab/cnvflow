@@ -862,65 +862,53 @@ pop_list = unique(dynamics$sample)
 wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
 gens = unique(dynamics$generation)
 #pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124? prob because it made the best fit line
+paste0(pop_list)
+paste0(pop_list[1])
+#start for loop here
 
-
-#naming a matrix
-m <- matrix(ncol = 5, nrow = 16)
-colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
-
-output <- matrix(ncol=5, nrow=16 #example
-for(i in 1:16) {
-  output[i,] <- runif(2)
-}
-output
-
-
-m <- matrix(ncol = 5, nrow = 16)
+function(){
+m <- matrix(ncol = 5, nrow = 20)
 colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
 start = 1
 end = 5
-for (i in 1:3){
+for (i in 1:17){
   print(i)
   pop_data <- subset(dynamics, sample %in% c(wt_pops[2]))
   fit_points <- subset(dynamics, sample %in% c(wt_pops[2]) & generation >= gens[start] & generation <= gens[end])
   fit <- lm(logECNV_NoCNV ~ generation, fit_points) #linear model, lm(y~x, by the data)
-  fit
+  #fit
   #summary(fit) #to see the full model
   ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
   geom_point() +
   # geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
-  geom_smooth(data=fit_points, method=lm, show.legend=FALSE) +
+    geom_smooth(data=fit_points, method=lm, show.legend=FALSE) +
   # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
-  scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
-  annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
-  theme_classic() +
-  scale_color_manual(values = c('black')) +
-  guides(colour = guide_legend(override.aes = list(size=2))) +
-  theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
+    scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
+    annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
+    theme_classic() +
+    scale_color_manual(values = c('black')) +
+    guides(colour = guide_legend(override.aes = list(size=2))) +
+    theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
 
-print(paste0(start,":", end, " generations ", gens[start], " to ", gens[end], ". Rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
+  #ggsave(paste0(wt_pops[2],"_Sup_x",gens[start],"-",gens[end],".png"))
 
-#vec <-numeric(16*5)
-#  for (j in gens) {  #2nd for loop, nested
+  print(paste0(start,":", end, " generations ", gens[start], " to ", gens[end], ". Rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
+
     m[i,1] <- start
     m[i, 2]<- end
     m[i, 3] <- gens[start]
     m[i,4] <- gens[end]
     m[i,5] <- as.numeric(summary(fit)[8]) %>% round(2)
-     #df = cbind(df, data.frame(start,end,gen_start,gen_end,rsquared))
-     #assign values to vec
-#}
-  #ggsave(paste0(wt_pops[2],"_Sup_x"gens[start],"-"gens[end],".png"))
+
   start = start + 1
   end = end + 1
-#df = cbind(df, data.frame(start,end,gen_start,gen_end,rsquared))
 }
-#m <- matrix(ncol = 5, nrow = 16)
-#colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
-#df = do.call("rbind",mylist) #fill the matrix using the vector
-
-ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
+m = m %>% na.omit()
+assign(paste0(wt_pops[2],"_mat"), m)
+#return(m)
+}
+#ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
 summary(fit)$coef[[4]] #fourth residual
 
 confint(fit, 'Generation', level = 0.95)
@@ -992,8 +980,8 @@ confint(fit, 'Generation', level = 0.95)
 #B02FD7
 #A426CA
 
-  #ARS = BLUE  #00B0F6
-  # LTR = PINK  #E76BF3
-  # GREEN #00BF7D or #7CAE00
-  # GOLD = #B79F00 or #C49A00
+#ARS = BLUE  #00B0F6
+# LTR = PINK  #E76BF3
+# GREEN #00BF7D or #7CAE00
+# GOLD = #B79F00 or #C49A00
 
