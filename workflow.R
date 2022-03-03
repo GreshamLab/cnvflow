@@ -23,6 +23,9 @@ library(ggridges)
 setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
 folders = list.dirs()[-1]
 
+# Choose a name to be used for all output files including the gating template and associated flow data and graphs.
+version_name = "jc_v3"
+
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
 #Author: Grace
@@ -258,21 +261,12 @@ experiment_details
 #map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
 try(map(folders[4:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
 try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
-#STEP 7:  Combine stats_freq.csv files into a single dataframe
-#Pull in all stats_* files from directories and assemble into a single dataframe
+#STEP 7: Pull in all counts or freq or single cell distribution files from directory and combine into a single dataframe
 #Author: Julie
-
-#list.files(path = ".", pattern = "01_02_04_v2_stats_freq") %>%
-#  read_csv() %>%
-#  write_csv(file = "01_02_04_v2_stats_freq_all_timepoints.csv")
-
-#list.files(path = ".", pattern = "01_02_04_v2_stats_cell_number") %>%
-#  read_csv() %>%
-#  write_csv(file = "01_02_04_v2_stats_cell_number_all_timepoints.csv")
 
 list.files(path = ".", pattern = "01_02_04_v2_fw_counts_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
   read_csv() %>%
-  write_csv(file = "01_02_04_v2_fw_counts_all_timepoints.csv")
+  write_csv(file = "01_02_04_v2_fw_counts_all_timepoints.csv") #write a function to establish/customize the version file name then can paste0(version_filename)
 
 list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
   read_csv() %>%
@@ -289,14 +283,9 @@ list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_
 #Author: Grace & Julie
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
-freq = read_csv("01_02_04_v2_stats_freq_all_timepoints.csv") %>% rename(Gate = Population)
 fw_freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") #%>% rename(Frequency = frequency)
-cell_numbers = read_csv("01_02_04_v2_stats_cell_number_all_timepoints.csv")
 fw_counts= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
 sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
-freq = left_join(freq, cell_numbers) %>% # add cell number column to freq table
-  select(-Marker)
-
 fw_freq_and_counts =
   fw_counts %>% filter(Gate == "Single_cells") %>%
   rename(Parent = Gate) %>%
@@ -306,13 +295,6 @@ fw_freq_and_counts =
   relocate(2:3, .after = Gate)
 
 #Table of low cell observations, convenient to have to anti_join() in further steps
-freq %>% filter(Count <7000) %>% View()
-
-lowcell = freq %>%
-  filter(Count <7000) %>%
-  mutate(generation = factor(generation, levels = unique(generation))) %>%
-  select(-Count)
-
 lowcell = fw_freq_and_counts %>%
   filter(Count <7000) %>%
   mutate(generation = factor(generation, levels = unique(generation))) %>% #View()
@@ -824,27 +806,15 @@ summary(Tup_anova)
 # barcode experiment. Data and code used to generate these figures can be
 # accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
 
-#Use the "Generate S1 Text.Rmd" to calculate Sup
-#I made my own working version - Generate S1 Text_JC.Rmd inside the cnvflow folder
-# from current freq table, I need to add the following 4 columns:
-# propCNV, propNoCNV, propCNV_divided_by_propNoCNV, natural log of propCNV_divided_by_propNoCNV
-# not log base10, remember that natural log is ln base e. ln x= log base e of x.
-# log makes it linear -- and we are doing a linear fit
-# why use natural log? I don't think there's a biological reason. I think the reason is mathematical,
-# in that the derivative or slope of an natural log line y=ln(x) is simply 1/x. In other words dy/dx ln(x) = 1/x.
-
-# Step 1 - make a table like Steff's FlowAnalysisSumm_FINAL.csv. For me that's the
-
 equation = function(x) {
   lm_coef <- list(a = round(coef(x)[1], digits = 2),
-                  #b = round(coef(x)[2], digits = 2),
                   b = unname(round(coef(fit)[2], digits = 2)),# get rid of it printing c()
                   r2 = round(summary(x)$r.squared, digits = 2));
   lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
   as.character(as.expression(lm_eq));
 }
 
-dynamics = fw_freq_and_counts %>%
+ln_table = fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
@@ -856,58 +826,60 @@ dynamics = fw_freq_and_counts %>%
 
 #To do: write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
 #then, use map() to apply function to all populations - I have 28
-#the tricky thing is the generations bounds can be different for each population - write a function for a
-# sliding window of every 5 points to do the fit?  Do it again but with every 6 points.
-pop_list = unique(dynamics$sample)
-wt_pops = pop_list[c(25,21,26,22,27)] #subset the list
-gens = unique(dynamics$generation)
-#pop_data <- subset(dynamics, sample %in% c(pop_list[[27]]) & generation >=29 & generation <=124) #why did steff choose gen 41 - gen124? prob because it made the best fit line
-paste0(pop_list)
-paste0(pop_list[1])
-#start for loop here
+# as part of the function, include a variable that changes number of fit points (window width)
+pop_list = unique(ln_table$sample)
+gens = unique(ln_table$generation)
+#function(num_fitpoints, population){
+sliding_fit = function(num_fitpoints, population){ #function to do what? to apply for loop to each of 28 populations
+  rounds = nrow(subset(ln_table, sample %in% c(population)))
+  m <- matrix(ncol = 5, nrow = rounds) # nrow = number of iterations . number of iterations depend on the number of generations and the number and fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
+  colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
+  start = 1
+  end = num_fitpoints
+    for (i in 1:rounds){
+      print(i)
+      pop_data <- subset(ln_table, sample %in% c(population))
+      fit_points_df <- subset(ln_table, sample %in% c(population) & generation >= gens[start] & generation <= gens[end])
+      try(fit <- lm(logECNV_NoCNV ~ generation, fit_points_df)) #linear model, lm(y~x, by the data)
+      #fit
+      #summary(fit) #to see the full model
 
-function(){
-m <- matrix(ncol = 5, nrow = 20)
-colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
-start = 1
-end = 5
-for (i in 1:17){
-  print(i)
-  pop_data <- subset(dynamics, sample %in% c(wt_pops[2]))
-  fit_points <- subset(dynamics, sample %in% c(wt_pops[2]) & generation >= gens[start] & generation <= gens[end])
-  fit <- lm(logECNV_NoCNV ~ generation, fit_points) #linear model, lm(y~x, by the data)
-  #fit
-  #summary(fit) #to see the full model
-  ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
-  geom_point() +
-  # geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
-    geom_smooth(data=fit_points, method=lm, show.legend=FALSE) +
-  # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
-    scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
-    annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
-    scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
-    theme_classic() +
-    scale_color_manual(values = c('black')) +
-    guides(colour = guide_legend(override.aes = list(size=2))) +
-    theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
+      ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
+      geom_point() +
+      # geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
+      geom_smooth(data=fit_points_df, method=lm, show.legend=FALSE) +
+      # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
+      scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
+      annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
+      scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
+      theme_classic() +
+      scale_color_manual(values = c('black')) +
+      guides(colour = guide_legend(override.aes = list(size=2))) +
+      theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
 
-  #ggsave(paste0(wt_pops[2],"_Sup_x",gens[start],"-",gens[end],".png"))
+      ggsave(paste0(population,"_Sup_x",gens[start],"-",gens[end],"_",num_fitpoints,"pts.png"))
 
-  print(paste0(start,":", end, " generations ", gens[start], " to ", gens[end], ". Rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
+      print(paste0("from timepoints",start,"to", end, ", generations ", gens[start], " to ", gens[end], ", Rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
 
-    m[i,1] <- start
-    m[i, 2]<- end
-    m[i, 3] <- gens[start]
-    m[i,4] <- gens[end]
-    m[i,5] <- as.numeric(summary(fit)[8]) %>% round(2)
+        m[i,1] <- start
+        m[i, 2]<- end
+        m[i, 3] <- gens[start]
+        m[i,4] <- gens[end]
+        m[i,5] <- as.numeric(summary(fit)[8]) %>% round(2)
 
-  start = start + 1
-  end = end + 1
+        start = start + 1
+        end = end + 1
+        }
+    m = m %>% na.omit() #remove NAs
+    write_csv(as.data.frame(m), paste0(population,"_fits","_",num_fitpoints,"pts.csv"))
+    return(m)
 }
-m = m %>% na.omit()
-assign(paste0(wt_pops[2],"_mat"), m)
-#return(m)
-}
+
+#call the function and assign matrix to a variable
+result <- sliding_fit(4, pop_list[25])
+assign(paste0(pop_list[25],"_fits","_",10,"pts"), result) #rename and save to environment
+# write_csv(as.data.frame(result), paste0(population,"_fits","_",num_fitpoints,"pts.csv")) #save a csv file to wd
+
 #ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
 summary(fit)$coef[[4]] #fourth residual
 
