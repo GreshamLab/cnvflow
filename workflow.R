@@ -409,7 +409,6 @@ plot_list$`GAP1 LTR + ARS KO`
   #(Later will calculate Sup values for each population)
 #I could write a Function that plots ridgeplots. Then I can write use map() to apply this FUNCtion to all population.csv since I have 32 pops
 pop_files = list.files(pattern = "sc_distributions_")[-1:-3]
-#file_name = pop_files[9] #dev
 make_ridgeplots = function(file_name){
   pop_name = sub("sc_distributions_", "", sub("_all_timepoints.csv","", file_name))
 
@@ -830,8 +829,10 @@ ln_table = fw_freq_and_counts %>%
 pop_list = unique(ln_table$sample)
 gens = unique(ln_table$generation)
 #function(num_fitpoints, population){
-sliding_fit = function(num_fitpoints, population){ #function to do what? to apply for loop to each of 28 populations
-  rounds = nrow(subset(ln_table, sample %in% c(population)))
+sliding_fit = function(num_fitpoints, population){ #function to apply for loop to each of 28 populations
+  timepoints = nrow(subset(ln_table, sample %in% c(population)))
+  #timepoints = subset(ln_table, sample %in% c(population)) %>% distinct(generation) %>% nrow()
+  rounds = timepoints- (timepoints/num_fitpoints) - 1
   m <- matrix(ncol = 5, nrow = rounds) # nrow = number of iterations . number of iterations depend on the number of generations and the number and fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
   colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
   start = 1
@@ -840,15 +841,14 @@ sliding_fit = function(num_fitpoints, population){ #function to do what? to appl
       print(i)
       pop_data <- subset(ln_table, sample %in% c(population))
       fit_points_df <- subset(ln_table, sample %in% c(population) & generation >= gens[start] & generation <= gens[end])
-      try(fit <- lm(logECNV_NoCNV ~ generation, fit_points_df)) #linear model, lm(y~x, by the data)
-      #fit
-      #summary(fit) #to see the full model
-
+      if (is.na(gens[end]) == TRUE ){
+        break
+      }
+      fit <- lm(logECNV_NoCNV ~ generation, fit_points_df) #linear model, lm(y~x, by the data)
+      print(summary(fit))
       ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
       geom_point() +
-      # geom_smooth(data=subset(pop_data, generation >=41 & generation <=124), method=lm, show.legend=FALSE) +
       geom_smooth(data=fit_points_df, method=lm, show.legend=FALSE) +
-      # scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits=c(-5,3)) +
       scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
       annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
       scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
@@ -857,9 +857,9 @@ sliding_fit = function(num_fitpoints, population){ #function to do what? to appl
       guides(colour = guide_legend(override.aes = list(size=2))) +
       theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
 
-      ggsave(paste0(population,"_Sup_x",gens[start],"-",gens[end],"_",num_fitpoints,"pts.png"))
+      ggsave(paste0(population,"_Sup_g",gens[start],"-",gens[end],"_",num_fitpoints,"pts.png"))
 
-      print(paste0("from timepoints",start,"to", end, ", generations ", gens[start], " to ", gens[end], ", Rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
+      print(paste0("From timepoints ",start," to ", end, ", generations ", gens[start], " to ", gens[end], ", rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
 
         m[i,1] <- start
         m[i, 2]<- end
@@ -878,10 +878,18 @@ sliding_fit = function(num_fitpoints, population){ #function to do what? to appl
 #call the function and assign matrix to a variable
 result <- sliding_fit(4, pop_list[25])
 assign(paste0(pop_list[25],"_fits","_",10,"pts"), result) #rename and save to environment
-# write_csv(as.data.frame(result), paste0(population,"_fits","_",num_fitpoints,"pts.csv")) #save a csv file to wd
+result <- sliding_fit(5, pop_list[21])
 
-#ggsave(paste0(wt_pops[2],"_Sup_x29-124.png"))
-summary(fit)$coef[[4]] #fourth residual
+sliding_fit(4, population = pop_list[1])
+lapply(pop_list, sliding_fit(4, pop_list))
+
+map(.x = pop_list[21], ~sliding_fit(4, .x))
+map(pop_list[1:3], sliding_fit(num_fitpoints =4))
+sliding_fit(4, pop)
+sliding_fit(4, pop_list[3])
+sliding_fit(5, pop_list[3])
+
+summary(fit)$coef[[4]] #fourth coefficient is the standard error
 
 confint(fit, 'Generation', level = 0.95)
 
