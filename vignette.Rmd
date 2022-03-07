@@ -43,9 +43,9 @@ version_name = "julie_v1"
 
 STEP 1: Generate experiment details file.
 A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample.
-A universal? sample sheet is imported to the function. 
-This function uses regex to extract column names from the sample sheet
-to generate an experiment details file and places it inside each corresponedong subdirecotry. 
+
+A custom sample sheet is imported to the function. 
+This function uses regex (regular expressions) to extract metadata from the subdirectory name and sample sheet to generate an experiment details file for each timepoint subdirectory and places the file inside the corresponding subdirectory. 
 ```{r}
 make_exp_details = function(folder_name, samplesheet) {
   pref = folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021")
@@ -70,8 +70,15 @@ make_exp_details = function(folder_name, samplesheet) {
   write_csv(all, file = paste0(folder_name,"/",pref,"_experiment_details.csv"))
 
 }
+```
 
-map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
+Run the function on all subdirectroes. Only needs to be run once. 
+
+```{r}
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") 
+```
+
+
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
