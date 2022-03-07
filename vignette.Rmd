@@ -1,0 +1,86 @@
+---
+title: "CytoexploreR Vignette for Gresham Lab"
+author: "Julie Chuong"
+output: html_notebook
+---
+
+This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. 
+
+Install CytoExplorer package and requirements (Skip if already installed)
+```{r}
+library(BiocManager)
+install.packages("cytolib", "flowCore", "flowWorkspace", "openCyto")
+```
+
+Install CytoExploreR from GitHub (Skip is already installed)
+```{r}
+library(devtools)
+devtools::install_github("DillonHammill/CytoExploreR")
+```
+
+Load required packages
+```{r}
+library(CytoExploreR)
+library(tidyverse)
+library(ggridges)
+```
+
+Set working directory and get list of subdirectories
+Place your FCS files in a folder. Subdirectories containing FCS files are OK. 
+
+Note 1. You can only load one folder's worth of FCS files at a time. In our case, we have organized one timepoint's worth of FCS files in one folder. 
+
+Note 2. You should not manually rename your FCS files after exporting it from the Cytek. In other words, files should have their original names  from the machine. "Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files" (Source: https://github.com/DillonHammill/CytoExploreR/issues/85). If files need to renamed, do so on on the Cytek software and re-export the FCS files.  
+```{r}
+setwd("./FCS_files")
+folders = list.dirs()[-1]
+```
+
+Choose a name to be used for all output files including the gating template and associated flow data and graphs.
+```{r}
+version_name = "julie_v1"
+```
+
+STEP 1: Generate experiment details file.
+A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample.
+A universal? sample sheet is imported to the function. 
+This function uses regex to extract column names from the sample sheet
+to generate an experiment details file and places it inside each corresponedong subdirecotry. 
+```{r}
+make_exp_details = function(folder_name, samplesheet) {
+  pref = folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021")
+  generation = folder_name %>% str_extract("[g]\\d+") %>% str_remove("g")
+
+  files = as_tibble(list.files(paste0(folder_name))) %>%
+    separate(value, into = c("well", "samp"), sep = " ", remove = F) %>%
+    mutate(well = str_extract(well, "([A-Z])([0-9]){1,2}$")) %>%
+    mutate(samp = str_remove(samp, ".fcs")) %>%
+    mutate(sample = case_when(str_detect(value, "Unstained") ~ "ctrl0",
+                              str_detect(value, "DGY500") ~ "ctrl1",
+                              str_detect(value, "DGY1315") ~ "ctrl2",
+                              TRUE ~ samp)) %>%
+    select(value,sample) %>%
+    rename(name = value) %>%
+    filter(!is.na(sample))
+
+  all = files %>%
+    left_join(read_csv(paste0("./",samplesheet)), by = c("sample" = "Sample name")) %>%
+    mutate(generation = as.numeric(generation))
+
+  write_csv(all, file = paste0(folder_name,"/",pref,"_experiment_details.csv"))
+
+}
+
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+```{r}
+load
+```
+
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
