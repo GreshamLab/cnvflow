@@ -330,20 +330,6 @@ lowcell = fw_freq_and_counts %>%
   fails %>% write_csv("01_02_04_v2_fw_79_11_fail.csv")
 
 # plot controls over time
-freq %>%
-filter(Count>70000) %>%
-  filter(str_detect(Description, "control")) %>%
-  select(Type, Strain, Description, generation, Gate, Frequency, Count) %>%
-  #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
-  ggplot(aes(generation, Frequency, color = Gate)) +
-  geom_line() +
-  facet_wrap(~Description) +
-  ylab("% of cells in gate") +
-  theme_minimal() +
-  scale_x_continuous(breaks=seq(0,250,50)) +
-  theme(text = element_text(size=12))
-
-# plot controls over time
 fw_freq_and_counts %>%
   filter(Count>70000,
           str_detect(Description, "control")) %>%
@@ -356,6 +342,7 @@ fw_freq_and_counts %>%
   theme_minimal() +
   scale_x_continuous(breaks=seq(0,250,50)) +
   theme(text = element_text(size=12))
+
 # plot proportion of population in each gate over time for all experimental
 plot_list = list()
 i=1

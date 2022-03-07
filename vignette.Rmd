@@ -25,27 +25,35 @@ library(tidyverse)
 library(ggridges)
 ```
 
-Set working directory and get list of subdirectories
-Place your FCS files in a folder. Subdirectories containing FCS files are OK. 
 
-Note 1. You can only load one folder's worth of FCS files at a time. In our case, we have organized one timepoint's worth of FCS files in one folder. 
+## Vignette Dataset
 
-Note 2. You should not manually rename your FCS files after exporting it from the Cytek. In other words, files should have their original names  from the machine. "Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files" (Source: https://github.com/DillonHammill/CytoExploreR/issues/85). If files need to renamed, do so on on the Cytek software and re-export the FCS files.  
+Three replicate populations of the GAP1 CNV reporter strain, in which a mCitrine gene was inserted upstream of the GAP1 promoter and coding sequence, was experimentally evolved in chemostats in glutamine-limited media for 200 generations. Additionally, there was 1 population each of 3 control strains: zero copy 'unstrained' control (DGY1) that has no mCitrine, one copy control (DGY500) in which the mCitrine gene was inserted in neutral locus, *WHAT LOCUS?* that doesn't undergo copy number variation under glutamine-limited growth, and two copy control (DGY1315) containing two copies of mCitrine in neutral loci. Samples of every population were taken every 8, 13, 8 generations (M, W, F). In each sample, 100,000 events were measured for mCitrine fluorescence (excitiaton wavelength = 516, emission wavelength = 529 ) via the B2-A channel, forward scatter, and side scatter. 
+gap1_1, gap1_3, gap1_4 
+gen 8 - 200
+
+### Set working directory and get list of subdirectories
+Place your FCS files in a folder. Multiple subdirectories containing FCS files are OK. 
+
+*Note 1* You can only load one folder's worth of FCS files at a time. In our case, we have organized one timepoint's worth of FCS files in one folder. 
+
+*Note 2* You should not manually rename your FCS files after exporting it from the Cytek. In other words, files should have their original names  from the machine. "Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files" (Source: https://github.com/DillonHammill/CytoExploreR/issues/85). If files need to renamed, do so on on the Cytek software and re-export the FCS files.  
 ```{r}
 setwd("./FCS_files")
 folders = list.dirs()[-1]
 ```
 
-Choose a name to be used for all output files including the gating template and associated flow data and graphs.
+### Version name
+Choose a name to be used for all output files including the gating template and associated flow data and graphs. We will be using data from timepoints 1, 2, and 4 to draw gates. 
 ```{r}
-version_name = "julie_v1"
+version_name = "timepoints-1-2-4_v1"
 ```
 
-STEP 1: Generate experiment details file.
+### STEP 1: Generate experiment details file.
 A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample.
 
 A custom sample sheet is imported to the function. 
-This function uses regex (regular expressions) to extract metadata from the subdirectory name and sample sheet to generate an experiment details file for each timepoint subdirectory and places the file inside the corresponding subdirectory. 
+This function uses regex (regular expressions) to extract metadata from the subdirectory name and sample sheet to generate an experiment details file for each timepoint subdirectory and places the file inside the corresponding subdirectory. We sampled cells from a 96 well plate so our metadata contains well number. 
 ```{r}
 make_exp_details = function(folder_name, samplesheet) {
   pref = folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021")
@@ -72,8 +80,7 @@ make_exp_details = function(folder_name, samplesheet) {
 }
 ```
 
-Run the function on all subdirectroes. Only needs to be run once. 
-
+Run the function on all subdirectories. Only needs to be run once to create the experimental details .csv files. 
 ```{r}
 map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") 
 ```
