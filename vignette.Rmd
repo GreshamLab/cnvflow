@@ -34,7 +34,7 @@ Place your FCS files in a directory. Multiple subdirectories containing FCS file
 
 *Note 1* You can only load in one folder's worth of FCS files at a time. In this vignette, we have organized one timepoint's worth of FCS files per subdirectory. There is one FSC file per population. Additionally, we have one subdirectory with three timepoints' worth of FCS files inside for drawing gates (because timepoint one data were not sufficient to draw good gates, see STEP __). In total, there are 20 subdirectories, with an FSC file per population, for which there are six. 
 
-*Note 2* The subdirectories are uniquely named like this TimepointNumber_ExperimentName_SampleDate_generation_Initials. Therefore out subdirectory names contain important  metadata. 
+*Note 2* The subdirectories are uniquely named like this TimepointNumber_ExperimentName_SampleDate_generation_Initials. Therefore our subdirectory names contain important  metadata. 
 
 *Note 3* You should not manually rename your FCS files after exporting it from the Cytek. In other words, files should have their original names from the machine. "Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files" (Source: https://github.com/DillonHammill/CytoExploreR/issues/85). If files need to renamed, do so on on the Cytek software and re-export the FCS files.  
 
@@ -48,7 +48,7 @@ folders = list.dirs()[-1]
 ```
 
 ### Version name
-Choose a name to be used for all output files including the gating template and associated flow data and graphs. Since we will be using data from timepoints 1, 2, and 4 to draw gates, we choose a name to reflect that 
+Choose a name to be used for all output files including the gating template and associated flow data and graphs. Since we will be using data from timepoints 1, 2, and 4 to draw gates, we choose a name to reflect that. 
 ```{r}
 version_name = "timepoints-01-02-04_v1"
 getwd()
@@ -85,12 +85,12 @@ make_exp_details = function(folder_name, samplesheet) {
 }
 ```
 
-Run the function on all subdirectories except the subdirectory we will use for gating which is the first directory. Only needs to be run once to create the experimental details .csv files. The samplesheet should be sitting in the working directory, not the subdirectories. 
+Run the function on all subdirectories except the gating subdirectory (subdirectory we will use for gating, which is the first directory). Only needs to be run once to create the experimental details .csv files. The samplesheet should be sitting in the working directory, not in the subdirectories. 
 ```{r}
 map(folders[-1], make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 ```
 
-Next, copy the experiment details files from timepoints 1, 2, 4 and place them in the gating subdirectory. Only needs to be run once. You can do this in the terminal or manually using your file GUI/Finder
+Next, copy the experiment details files from timepoints 1, 2, 4 and place them in the gating subdirectory. Only needs to be run once. You can do this in the terminal or manually using your file GUI/Finder in Mac.
 ```{bash}
 cd ~/Google\ Drive/My\ Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_data_workingcopy
 
@@ -100,6 +100,99 @@ scp ./02_EE_GAP1_ArchMuts_2021_062121_g21_TD/02_EE_GAP1_ArchMuts_2021_experiment
 
 scp ./04_EE_GAP1_ArchMuts_2021_062521_g37_IS/04_EE_GAP1_ArchMuts_2021_experiment_details.csv 01_02_04_EE_GAP1_ArchMuts_2021/
 ```
+
+STEP 2: Read in all files in the *gating subdirectory* and rename the channels.
+Results in one timepoint's gating set containing all .fcs files, associated experiment details, and marker details
+
+```{r}
+exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
+```
+
+Edit Markers on Viewer pane. Type in B2-A in the marker column of the B2-A channel. FSC and SSC are included markers by default so we don't need to edit them. Click 'Save & Close' button at the bottom of the Viewer pane.
+```{r}
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F)
+```
+
+Add the experiment details file to the gating set
+```{r}
+experiment_details <- read_csv(exp_details_path, show_col_types = FALSE)
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+  }
+```
+
+By default the Experiment-Markers.csv file is named with the date created. Rename the experiment-markers.csv file. Need to do only once.
+```{r}
+file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv")
+```
+
+### STEP 3:  Perform gating on gating set
+Gate for 1) Cells, 2) Singlets, 3) CNVS
+Results in a gating file, and gates applied to all samples in the gating set.
+
+*Transform the data*
+Transforming the data makes it easier to interpret visually and well as to draw gates. The untransformed data when plotted, the zero copy strains take up most of the coordinate plane while the one copy and two copy are very close together. 
+Useful article if you I want to choose different transformations: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
+
+In our case, it was necessary to use a logical transformation for the B2-A values and a second transformation log for the other values. I could not use logical transformation for all nor could I use the log transformation for all values. 
+GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
+                                      channels = c("B2-A"),
+                                      widthBasis = -10
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                                   trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+#quickly check the transformation by plotting the data
+#cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
+#                  channels_x = "FSC-A",
+#                  channels_y = "GFP",
+#                  axes_limits = "data")
+
+##Gating using the entire timepoint dataset.
+
+# note:if you already have a gating template and don't need to draw gates, then skip cyto_draw, use cyto_gatingTemplate_apply to apply the gating template.csv to your gating set
+cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+
+#First we gate for the cells
+cyto_gate_draw(transformed_timepoint_gating_set,
+  #transformed_logicle_timept,
+               parent = "root",
+               alias = "Cells",
+               channels = c("FSC-A","SSC-A"),
+               axes_limits = "data",
+               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
+)
+
+#Then we define the singlets based on forward scatter height and width
+cyto_gate_draw(transformed_timepoint_gating_set,
+               parent = "Cells",
+               alias = "Single_cells",
+               channels = c("FSC-A","FSC-H"),
+               axes_limits = "data",
+               gatingTemplate = "cytek_gating_01_02_04_v2.csv"
+)
+
+#Gating for CNVs using the 0,1 and 2 copy controls:
+DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61,92)] #DGY1
+
+DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32,63)] #DGY500
+
+DGY1315 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62,93)] #DGY1315
+
+cyto_gate_draw(transformed_timepoint_gating_set,
+               parent = "Single_cells", #first color
+               alias = c("zero_copy", "one_copy", "two_or_more_copy"), #defines gate names
+               channels = c("FSC-A","B2-A"),
+               axes_limits = "data",
+               #select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
+               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
+               overlay = c(DGY1, DGY500, DGY1315),
+               point_col = c("gray", "green", "red", "blue")
+)
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 ```{r}

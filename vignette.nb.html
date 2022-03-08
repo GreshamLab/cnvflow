@@ -221,87 +221,28 @@ pre code {
 <p>Install CytoExplorer package and requirements (Skip if already installed)</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubGlicmFyeShCaW9jTWFuYWdlcilcbmluc3RhbGwucGFja2FnZXMoXFxjeXRvbGliXFwsIFxcZmxvd0NvcmVcXCwgXFxmbG93V29ya3NwYWNlXFwsIFxcb3BlbkN5dG9cXClcbmBgYFxuYGBgIn0= -->
-<pre class="r"><code>```r
-library(BiocManager)
-install.packages(\cytolib\, \flowCore\, \flowWorkspace\, \openCyto\)</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-Install CytoExploreR from GitHub (Skip is already installed)
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYGBgclxubGlicmFyeShkZXZ0b29scylcbmRldnRvb2xzOjppbnN0YWxsX2dpdGh1YihcXERpbGxvbkhhbW1pbGwvQ3l0b0V4cGxvcmVSXFwpXG5gYGBcbmBgYCJ9 --&gt;
-
-```r
-```r
-library(devtools)
-devtools::install_github(\DillonHammill/CytoExploreR\)</code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
-
-&lt;!-- rnb-chunk-end --&gt;
-
-
-&lt;!-- rnb-text-begin --&gt;
-
-
-Load required packages
-
-&lt;!-- rnb-text-end --&gt;
-
-
-&lt;!-- rnb-chunk-begin --&gt;
-
-
-&lt;!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShDeXRvRXhwbG9yZVIpXG5gYGAifQ== --&gt;
-
-```r
-library(CytoExploreR)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShCaW9jTWFuYWdlcilcbmluc3RhbGwucGFja2FnZXMoXCJjeXRvbGliXCIsIFwiZmxvd0NvcmVcIiwgXCJmbG93V29ya3NwYWNlXCIsIFwib3BlbkN5dG9cIilcbmBgYCJ9 -->
+<pre class="r"><code>library(BiocManager)
+install.packages(&quot;cytolib&quot;, &quot;flowCore&quot;, &quot;flowWorkspace&quot;, &quot;openCyto&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBmbG93Q29yZVxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBmbG93V29ya3NwYWNlXG5BcyBwYXJ0IG9mIGltcHJvdmVtZW50cyB0byBmbG93V29ya3NwYWNlLCBzb21lIGJlaGF2aW9yIG9mXG5HYXRpbmdTZXQgb2JqZWN0cyBoYXMgY2hhbmdlZC4gRm9yIGRldGFpbHMsIHBsZWFzZSByZWFkIHRoZSBzZWN0aW9uXG50aXRsZWQgXCJUaGUgY3l0b2ZyYW1lIGFuZCBjeXRvc2V0IGNsYXNzZXNcIiBpbiB0aGUgcGFja2FnZSB2aWduZXR0ZTpcblxuICB2aWduZXR0ZShcImZsb3dXb3Jrc3BhY2UtSW50cm9kdWN0aW9uXCIsIFwiZmxvd1dvcmtzcGFjZVwiKVxuTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBvcGVuQ3l0b1xuUmVnaXN0ZXJlZCBTMyBtZXRob2Qgb3ZlcndyaXR0ZW4gYnkgJ2h0bWx3aWRnZXRzJzpcbiAgbWV0aG9kICAgICAgICAgICBmcm9tICAgICAgICAgXG4gIHByaW50Lmh0bWx3aWRnZXQgdG9vbHM6cnN0dWRpb1xuIn0= -->
-<pre><code>Loading required package: flowCore
-Loading required package: flowWorkspace
-As part of improvements to flowWorkspace, some behavior of
-GatingSet objects has changed. For details, please read the section
-titled &quot;The cytoframe and cytoset classes&quot; in the package vignette:
-
-  vignette(&quot;flowWorkspace-Introduction&quot;, &quot;flowWorkspace&quot;)
-Loading required package: openCyto
-Registered S3 method overwritten by &#39;htmlwidgets&#39;:
-  method           from         
-  print.htmlwidget tools:rstudio</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5gYGAifQ== -->
-<pre class="r"><code>library(tidyverse)</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Install CytoExploreR from GitHub (Skip is already installed)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkZXZ0b29scylcbmRldnRvb2xzOjppbnN0YWxsX2dpdGh1YihcIkRpbGxvbkhhbW1pbGwvQ3l0b0V4cGxvcmVSXCIpXG5gYGAifQ== -->
+<pre class="r"><code>library(devtools)
+devtools::install_github(&quot;DillonHammill/CytoExploreR&quot;)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxu4pSA4pSAIEF0dGFjaGluZyBwYWNrYWdlcyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlIDEuMy4xIOKUgOKUgFxu4pyTIGdncGxvdDIgMy4zLjUgICAgIOKckyBkcGx5ciAgIDEuMC43XG7inJMgdGliYmxlICAzLjEuNiAgICAg4pyTIHN0cmluZ3IgMS40LjBcbuKckyB0aWR5ciAgIDEuMS40ICAgICDinJMgZm9yY2F0cyAwLjUuMVxu4pyTIHJlYWRyICAgMi4wLjIgICAgIFxu4pSA4pSAIENvbmZsaWN0cyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlX2NvbmZsaWN0cygpIOKUgOKUgFxueCBkcGx5cjo6ZmlsdGVyKCkgbWFza3MgZmxvd0NvcmU6OmZpbHRlcigpLCBzdGF0czo6ZmlsdGVyKClcbnggZHBseXI6OmxhZygpICAgIG1hc2tzIHN0YXRzOjpsYWcoKVxuIn0= -->
-<pre><code>Registered S3 methods overwritten by &#39;dbplyr&#39;:
-  method         from
-  print.tbl_lazy     
-  print.tbl_sql      
-── Attaching packages ────────────────────────────────────────────────── tidyverse 1.3.1 ──
-✓ ggplot2 3.3.5     ✓ dplyr   1.0.7
-✓ tibble  3.1.6     ✓ stringr 1.4.0
-✓ tidyr   1.1.4     ✓ forcats 0.5.1
-✓ readr   2.0.2     
-── Conflicts ───────────────────────────────────────────────────── tidyverse_conflicts() ──
-x dplyr::filter() masks flowCore::filter(), stats::filter()
-x dplyr::lag()    masks stats::lag()</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShnZ3JpZGdlcylcbmBgYCJ9 -->
-<pre class="r"><code>library(ggridges)</code></pre>
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Load required packages</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShDeXRvRXhwbG9yZVIpXG5saWJyYXJ5KHRpZHl2ZXJzZSlcbmxpYnJhcnkoZ2dyaWRnZXMpXG5gYGAifQ== -->
+<pre class="r"><code>library(CytoExploreR)
+library(tidyverse)
+library(ggridges)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -312,7 +253,7 @@ x dplyr::lag()    masks stats::lag()</code></pre>
 <h3>Set working directory and get list of subdirectories</h3>
 <p>Place your FCS files in a directory. Multiple subdirectories containing FCS files are OK.</p>
 <p><em>Note 1</em> You can only load in one folder’s worth of FCS files at a time. In this vignette, we have organized one timepoint’s worth of FCS files per subdirectory. There is one FSC file per population. Additionally, we have one subdirectory with three timepoints’ worth of FCS files inside for drawing gates (because timepoint one data were not sufficient to draw good gates, see STEP __). In total, there are 20 subdirectories, with an FSC file per population, for which there are six.</p>
-<p><em>Note 2</em> The subdirectories are uniquely named like this TimepointNumber_ExperimentName_SampleDate_generation_Initials. Therefore out subdirectory names contain important metadata.</p>
+<p><em>Note 2</em> The subdirectories are uniquely named like this TimepointNumber_ExperimentName_SampleDate_generation_Initials. Therefore our subdirectory names contain important metadata.</p>
 <p><em>Note 3</em> You should not manually rename your FCS files after exporting it from the Cytek. In other words, files should have their original names from the machine. “Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files” (Source: <a href="https://github.com/DillonHammill/CytoExploreR/issues/85" class="uri">https://github.com/DillonHammill/CytoExploreR/issues/85</a>). If files need to renamed, do so on on the Cytek software and re-export the FCS files.</p>
 <!-- rnb-text-end -->
 <!-- rnb-text-begin -->
@@ -326,7 +267,7 @@ x dplyr::lag()    masks stats::lag()</code></pre>
 </div>
 <div id="version-name" class="section level3">
 <h3>Version name</h3>
-<p>Choose a name to be used for all output files including the gating template and associated flow data and graphs. Since we will be using data from timepoints 1, 2, and 4 to draw gates, we choose a name to reflect that</p>
+<p>Choose a name to be used for all output files including the gating template and associated flow data and graphs. Since we will be using data from timepoints 1, 2, and 4 to draw gates, we choose a name to reflect that.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudmVyc2lvbl9uYW1lID0gXCJ0aW1lcG9pbnRzLTAxLTAyLTA0X3YxXCJcbmdldHdkKClcbmBgYCJ9 -->
@@ -369,7 +310,7 @@ getwd()</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>Run the function on all subdirectories except the subdirectory we will use for gating which is the first directory. Only needs to be run once to create the experimental details .csv files. The samplesheet should be sitting in the working directory, not the subdirectories.</p>
+<p>Run the function on all subdirectories except the gating subdirectory (subdirectory we will use for gating, which is the first directory). Only needs to be run once to create the experimental details .csv files. The samplesheet should be sitting in the working directory, not in the subdirectories.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
 <!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubWFwKGZvbGRlcnNbLTFdLCBtYWtlX2V4cF9kZXRhaWxzLCBzYW1wbGVzaGVldCA9IFwiRUVfR0FQMV9BcmNoTXV0c18yMDIxLmNzdlwiKVxuYGBgIn0= -->
@@ -377,21 +318,81 @@ getwd()</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>Next, copy the experiment details files from timepoints 1, 2, 4 and place them in the gating subdirectory. Only needs to be run once. You can do this in the terminal or manually using your file GUI/Finder</p>
+<p>Next, copy the experiment details files from timepoints 1, 2, 4 and place them in the gating subdirectory. Only needs to be run once. You can do this in the terminal or manually using your file GUI/Finder in Mac.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgYmFzaFxuY2Qgfi9Hb29nbGVcXCBEcml2ZS9NeVxcIERyaXZlL2dyZXNoYW1sYWIvcHJvamVjdHMvRUVfR0FQMV9BcmNoTXV0c19TdW1tZXIyMDIxL2RhdGEvdmlnbmV0dGVfZGF0YV93b3JraW5nY29weVxuXG5zY3AgLi8wMV9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfMDYxNjIxX2c4X0dBLzAxX0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8gXG5cbnNjcCAuLzAyX0VFX0dBUDFfQXJjaE11dHNfMjAyMV8wNjIxMjFfZzIxX1RELzAyX0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8gXG5cbnNjcCAuLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV8wNjI1MjFfZzM3X0lTLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS9cblxuXG5gYGAifQ== -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgYmFzaFxuY2Qgfi9Hb29nbGVcXCBEcml2ZS9NeVxcIERyaXZlL2dyZXNoYW1sYWIvcHJvamVjdHMvRUVfR0FQMV9BcmNoTXV0c19TdW1tZXIyMDIxL2RhdGEvdmlnbmV0dGVfZGF0YV93b3JraW5nY29weVxuXG5zY3AgLi8wMV9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfMDYxNjIxX2c4X0dBLzAxX0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8gXG5cbnNjcCAuLzAyX0VFX0dBUDFfQXJjaE11dHNfMjAyMV8wNjIxMjFfZzIxX1RELzAyX0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8gXG5cbnNjcCAuLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV8wNjI1MjFfZzM3X0lTLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS9cbmBgYCJ9 -->
 <pre class="bash"><code>cd ~/Google\ Drive/My\ Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_data_workingcopy
 
 scp ./01_EE_GAP1_ArchMuts_2021_061621_g8_GA/01_EE_GAP1_ArchMuts_2021_experiment_details.csv 01_02_04_EE_GAP1_ArchMuts_2021/ 
 
 scp ./02_EE_GAP1_ArchMuts_2021_062121_g21_TD/02_EE_GAP1_ArchMuts_2021_experiment_details.csv 01_02_04_EE_GAP1_ArchMuts_2021/ 
 
-scp ./04_EE_GAP1_ArchMuts_2021_062521_g37_IS/04_EE_GAP1_ArchMuts_2021_experiment_details.csv 01_02_04_EE_GAP1_ArchMuts_2021/
-</code></pre>
+scp ./04_EE_GAP1_ArchMuts_2021_062521_g37_IS/04_EE_GAP1_ArchMuts_2021_experiment_details.csv 01_02_04_EE_GAP1_ArchMuts_2021/</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
+<p>STEP 2: Read in all files in the <em>gating subdirectory</em> and rename the channels. Results in one timepoint’s gating set containing all .fcs files, associated experiment details, and marker details</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZXhwX2RldGFpbHNfcGF0aCA9IGxpc3QuZmlsZXMocGF0aCA9IHBhc3RlMChmb2xkZXJzWzFdKSwgcGF0dGVybiA9IFwiX2V4cGVyaW1lbnRfZGV0YWlscy5jc3ZcIiwgZnVsbC5uYW1lcyA9IFQpXG5gYGAifQ== -->
+<pre class="r"><code>exp_details_path = list.files(path = paste0(folders[1]), pattern = &quot;_experiment_details.csv&quot;, full.names = T)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Edit Markers on Viewer pane. Type in B2-A in the marker column of the B2-A channel. FSC and SSC are included markers by default so we don’t need to edit them. Click ‘Save &amp; Close’ button at the bottom of the Viewer pane.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxudGltZXBvaW50X2dhdGluZ19zZXQgPC0gY3l0b19zZXR1cChwYXRoID0gcGFzdGUwKGZvbGRlcnNbMV0pLCByZXN0cmljdD1UUlVFLCBzZWxlY3Q9XCJmY3NcIiwgZGV0YWlscz1GKVxuYGBgIn0= -->
+<pre class="r"><code>timepoint_gating_set &lt;- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select=&quot;fcs&quot;, details=F)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyBGQ1MgZmlsZXMgaW50byBhIEdhdGluZ1NldC4uLlxuQXNzaWduaW5nIG1hcmtlcnMgdG8gY2hhbm5lbHMuLi5cbkxvYWRpbmcgcmVxdWlyZWQgcGFja2FnZTogc2hpbnlcblJlbW92aW5nIHVuYXNzaWduZWQgY2hhbm5lbHMuLi5cbkRvbmUhXG4ifQ== -->
+<pre><code>Loading FCS files into a GatingSet...
+Assigning markers to channels...
+Loading required package: shiny
+Removing unassigned channels...
+Done!</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Add the experiment details file to the gating set</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZXhwZXJpbWVudF9kZXRhaWxzIDwtIHJlYWRfY3N2KGV4cF9kZXRhaWxzX3BhdGgsIHNob3dfY29sX3R5cGVzID0gRkFMU0UpXG5mb3IoaSBpbiAxOmxlbmd0aChuYW1lcyhleHBlcmltZW50X2RldGFpbHMpKSl7XG4gIGZsb3dXb3Jrc3BhY2U6OnBEYXRhKHRpbWVwb2ludF9nYXRpbmdfc2V0KVtuYW1lcyhleHBlcmltZW50X2RldGFpbHNbaV0pXTwtZXhwZXJpbWVudF9kZXRhaWxzW2ldXG4gIH1cbmBgYCJ9 -->
+<pre class="r"><code>experiment_details &lt;- read_csv(exp_details_path, show_col_types = FALSE)
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]&lt;-experiment_details[i]
+  }</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>By default the Experiment-Markers.csv file is named with the date created. Rename the experiment-markers.csv file. Need to do only once.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZmlsZS5yZW5hbWUoZGlyKHBhdHRlcm4gPSBcIkV4cGVyaW1lbnQtTWFya2Vycy5jc3ZcIiksXCJFRV9HQVAxX0FyY2hNdXRzXzIwMjEtRXhwZXJpbWVudC1NYXJrZXJzLmNzdlwiKVxuYGBgIn0= -->
+<pre class="r"><code>file.rename(dir(pattern = &quot;Experiment-Markers.csv&quot;),&quot;EE_GAP1_ArchMuts_2021-Experiment-Markers.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="step-3-perform-gating-on-gating-set" class="section level3">
+<h3>STEP 3: Perform gating on gating set</h3>
+<p>Gate for 1) Cells, 2) Singlets, 3) CNVS Results in a gating file, and gates applied to all samples in the gating set.</p>
+<p><em>Transform the data</em> Transforming the data makes it easier to interpret visually and well as to draw gates. The untransformed data when plotted, the zero copy strains take up most of the coordinate plane while the one copy and two copy are very close together. Useful article if you I want to choose different transformations: <a href="https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html" class="uri">https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html</a></p>
+<p>In our case, it was necessary to use a logical transformation for the B2-A values and a second transformation log for the other values. I could not use logical transformation for all nor could I use the log transformation for all values. GFP_trans &lt;- cyto_transformer_logicle(timepoint_gating_set, channels = c(“B2-A”), widthBasis = -10 )#returns it as a list FSC_SSC_trans &lt;- cyto_transformer_log(timepoint_gating_set, channels = c(“FSC-A”, “FSC-H”, “SSC-A”, “SSC-H”) ) combined_trans &lt;- cyto_transformer_combine(GFP_trans,FSC_SSC_trans) transformed_timepoint_gating_set &lt;- cyto_transform(timepoint_gating_set, trans = combined_trans) #applies the the transformation and returns it as a gatingSet</p>
+<p>#quickly check the transformation by plotting the data #cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)], # channels_x = “FSC-A”, # channels_y = “GFP”, # axes_limits = “data”)</p>
+<p>##Gating using the entire timepoint dataset.</p>
+</div>
+</div>
+<div id="noteif-you-already-have-a-gating-template-and-dont-need-to-draw-gates-then-skip-cyto_draw-use-cyto_gatingtemplate_apply-to-apply-the-gating-template.csv-to-your-gating-set" class="section level1">
+<h1>note:if you already have a gating template and don’t need to draw gates, then skip cyto_draw, use cyto_gatingTemplate_apply to apply the gating template.csv to your gating set</h1>
+<p>cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= “cytek_gating_01_02_04_v2.csv”)</p>
+<p>#First we gate for the cells cyto_gate_draw(transformed_timepoint_gating_set, #transformed_logicle_timept, parent = “root”, alias = “Cells”, channels = c(“FSC-A”,“SSC-A”), axes_limits = “data”, gatingTemplate = “cytek_gating_01_02_04_v2.csv”, )</p>
+<p>#Then we define the singlets based on forward scatter height and width cyto_gate_draw(transformed_timepoint_gating_set, parent = “Cells”, alias = “Single_cells”, channels = c(“FSC-A”,“FSC-H”), axes_limits = “data”, gatingTemplate = “cytek_gating_01_02_04_v2.csv” )</p>
+<p>#Gating for CNVs using the 0,1 and 2 copy controls: DGY1 &lt;- cyto_extract(transformed_timepoint_gating_set, “Single_cells”)[c(30,61,92)] #DGY1</p>
+<p>DGY500 &lt;- cyto_extract(transformed_timepoint_gating_set, “Single_cells”)[c(1,32,63)] #DGY500</p>
+<p>DGY1315 &lt;- cyto_extract(transformed_timepoint_gating_set, “Single_cells”)[c(31,62,93)] #DGY1315</p>
+<p>cyto_gate_draw(transformed_timepoint_gating_set, parent = “Single_cells”, #first color alias = c(“zero_copy”, “one_copy”, “two_or_more_copy”), #defines gate names channels = c(“FSC-A”,“B2-A”), axes_limits = “data”, #select = list(Strain = c(“DGY1”,“DGY500”,“DGY1315”)), #control strains gatingTemplate = “cytek_gating_01_02_04_v2.csv”, overlay = c(DGY1, DGY500, DGY1315), point_col = c(“gray”, “green”, “red”, “blue”) )</p>
 <p>Add a new chunk by clicking the <em>Insert Chunk</em> button on the toolbar or by pressing <em>Cmd+Option+I</em>.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
@@ -404,9 +405,8 @@ scp ./04_EE_GAP1_ArchMuts_2021_062521_g37_IS/04_EE_GAP1_ArchMuts_2021_experiment
 <p>The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike <em>Knit</em>, <em>Preview</em> does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.</p>
 <!-- rnb-text-end -->
 </div>
-</div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiQ3l0b2V4cGxvcmVSIFZpZ25ldHRlIGZvciBHcmVzaGFtIExhYiIKYXV0aG9yOiAiSnVsaWUgQ2h1b25nIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpUaGlzIGlzIG5vdGVib29rIGlzIHRvIHNob3cgeW91IGhvdyB0byB1c2UgdGhlIHBhY2thZ2UgQ3l0b2V4cGxvcmVSIHRvIGFuYWx5emUgZmxvdyBjeXRvbWV0cnkgZGF0YSBmcm9tIHRoZSBDeXRlayBBdXJvcmEuIAoKSW5zdGFsbCBDeXRvRXhwbG9yZXIgcGFja2FnZSBhbmQgcmVxdWlyZW1lbnRzIChTa2lwIGlmIGFscmVhZHkgaW5zdGFsbGVkKQpgYGB7cn0KbGlicmFyeShCaW9jTWFuYWdlcikKaW5zdGFsbC5wYWNrYWdlcygiY3l0b2xpYiIsICJmbG93Q29yZSIsICJmbG93V29ya3NwYWNlIiwgIm9wZW5DeXRvIikKYGBgCgpJbnN0YWxsIEN5dG9FeHBsb3JlUiBmcm9tIEdpdEh1YiAoU2tpcCBpcyBhbHJlYWR5IGluc3RhbGxlZCkKYGBge3J9CmxpYnJhcnkoZGV2dG9vbHMpCmRldnRvb2xzOjppbnN0YWxsX2dpdGh1YigiRGlsbG9uSGFtbWlsbC9DeXRvRXhwbG9yZVIiKQpgYGAKCkxvYWQgcmVxdWlyZWQgcGFja2FnZXMKYGBge3J9CmxpYnJhcnkoQ3l0b0V4cGxvcmVSKQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShnZ3JpZGdlcykKYGBgCgojIyBWaWduZXR0ZSBEYXRhc2V0CgpUaHJlZSByZXBsaWNhdGUgcG9wdWxhdGlvbnMgb2YgdGhlIEdBUDEgQ05WIHJlcG9ydGVyIHN0cmFpbiwgaW4gd2hpY2ggYSBtQ2l0cmluZSBnZW5lIHdhcyBpbnNlcnRlZCB1cHN0cmVhbSBvZiB0aGUgR0FQMSBwcm9tb3RlciBhbmQgY29kaW5nIHNlcXVlbmNlLCB3YXMgZXhwZXJpbWVudGFsbHkgZXZvbHZlZCBpbiBjaGVtb3N0YXRzIGluIGdsdXRhbWluZS1saW1pdGVkIG1lZGlhIGZvciAyMDAgZ2VuZXJhdGlvbnMuIEFkZGl0aW9uYWxseSwgdGhlcmUgd2FzIG9uZSBwb3B1bGF0aW9uIGVhY2ggb2YgMyBjb250cm9sIHN0cmFpbnM6IHplcm8gY29weSAndW5zdGFpbmVkJyBjb250cm9sIChER1kxKSB0aGF0IGhhcyBubyBtQ2l0cmluZSwgb25lIGNvcHkgY29udHJvbCAoREdZNTAwKSBpbiB3aGljaCB0aGUgbUNpdHJpbmUgZ2VuZSB3YXMgaW5zZXJ0ZWQgaW4gbmV1dHJhbCBsb2N1cyAqV0hBVCBMT0NVUz8qIHRoYXQgZG9lc24ndCB1bmRlcmdvIGNvcHkgbnVtYmVyIHZhcmlhdGlvbiB1bmRlciBnbHV0YW1pbmUtbGltaXRlZCBncm93dGgsIGFuZCB0d28gY29weSBjb250cm9sIChER1kxMzE1KSBjb250YWluaW5nIHR3byBpbnNlcnRlZCBjb3BpZXMgb2YgbUNpdHJpbmUgaW4gbmV1dHJhbCBsb2NpLiBTYW1wbGVzIG9mIGV2ZXJ5IHBvcHVsYXRpb24gd2VyZSB0YWtlbiBldmVyeSA4LCAxMywgOCBnZW5lcmF0aW9ucyAoTW9uLCBXZWQsIEZyaSkuIEluIGVhY2ggc2FtcGxlLCAxMDAsMDAwIGV2ZW50cyB3ZXJlIG1lYXN1cmVkIGZvciBtQ2l0cmluZSBmbHVvcmVzY2VuY2UgKGV4Y2l0YXRpb24gd2F2ZWxlbmd0aCA9IDUxNiwgZW1pc3Npb24gd2F2ZWxlbmd0aCA9IDUyOSApIHZpYSB0aGUgQjItQSBjaGFubmVsLCBmb3J3YXJkIHNjYXR0ZXIsIGFuZCBzaWRlIHNjYXR0ZXIuIEluIHRvdGFsLCB0aGVyZSBhcmUgc2l4IHBvcHVsYXRpb25zIGFuZCAxOSB0aW1lcG9pbnRzLiAKCiMjIyBTZXQgd29ya2luZyBkaXJlY3RvcnkgYW5kIGdldCBsaXN0IG9mIHN1YmRpcmVjdG9yaWVzClBsYWNlIHlvdXIgRkNTIGZpbGVzIGluIGEgZGlyZWN0b3J5LiBNdWx0aXBsZSBzdWJkaXJlY3RvcmllcyBjb250YWluaW5nIEZDUyBmaWxlcyBhcmUgT0suIAoKKk5vdGUgMSogWW91IGNhbiBvbmx5IGxvYWQgaW4gb25lIGZvbGRlcidzIHdvcnRoIG9mIEZDUyBmaWxlcyBhdCBhIHRpbWUuIEluIHRoaXMgdmlnbmV0dGUsIHdlIGhhdmUgb3JnYW5pemVkIG9uZSB0aW1lcG9pbnQncyB3b3J0aCBvZiBGQ1MgZmlsZXMgcGVyIHN1YmRpcmVjdG9yeS4gVGhlcmUgaXMgb25lIEZTQyBmaWxlIHBlciBwb3B1bGF0aW9uLiBBZGRpdGlvbmFsbHksIHdlIGhhdmUgb25lIHN1YmRpcmVjdG9yeSB3aXRoIHRocmVlIHRpbWVwb2ludHMnIHdvcnRoIG9mIEZDUyBmaWxlcyBpbnNpZGUgZm9yIGRyYXdpbmcgZ2F0ZXMgKGJlY2F1c2UgdGltZXBvaW50IG9uZSBkYXRhIHdlcmUgbm90IHN1ZmZpY2llbnQgdG8gZHJhdyBnb29kIGdhdGVzLCBzZWUgU1RFUCBfXykuIEluIHRvdGFsLCB0aGVyZSBhcmUgMjAgc3ViZGlyZWN0b3JpZXMsIHdpdGggYW4gRlNDIGZpbGUgcGVyIHBvcHVsYXRpb24sIGZvciB3aGljaCB0aGVyZSBhcmUgc2l4LiAKCipOb3RlIDIqIFRoZSBzdWJkaXJlY3RvcmllcyBhcmUgdW5pcXVlbHkgbmFtZWQgbGlrZSB0aGlzIFRpbWVwb2ludE51bWJlcl9FeHBlcmltZW50TmFtZV9TYW1wbGVEYXRlX2dlbmVyYXRpb25fSW5pdGlhbHMuIFRoZXJlZm9yZSBvdXQgc3ViZGlyZWN0b3J5IG5hbWVzIGNvbnRhaW4gaW1wb3J0YW50ICBtZXRhZGF0YS4gCgoqTm90ZSAzKiBZb3Ugc2hvdWxkIG5vdCBtYW51YWxseSByZW5hbWUgeW91ciBGQ1MgZmlsZXMgYWZ0ZXIgZXhwb3J0aW5nIGl0IGZyb20gdGhlIEN5dGVrLiBJbiBvdGhlciB3b3JkcywgZmlsZXMgc2hvdWxkIGhhdmUgdGhlaXIgb3JpZ2luYWwgbmFtZXMgZnJvbSB0aGUgbWFjaGluZS4gIlJlbmFtaW5nIHRoZSBmaWxlcyBtYW51YWxseSBpcyBub3QgcmVjb21tZW5kZWQgYXMgaXQgZG9lcyBub3QgdXBkYXRlIHRoZSBhc3NvY2lhdGVkIGtleXdvcmRzIGNvbnRhaW5lZCBpbiB0aGUgRkNTIGZpbGVzIiAoU291cmNlOiBodHRwczovL2dpdGh1Yi5jb20vRGlsbG9uSGFtbWlsbC9DeXRvRXhwbG9yZVIvaXNzdWVzLzg1KS4gSWYgZmlsZXMgbmVlZCB0byByZW5hbWVkLCBkbyBzbyBvbiBvbiB0aGUgQ3l0ZWsgc29mdHdhcmUgYW5kIHJlLWV4cG9ydCB0aGUgRkNTIGZpbGVzLiAgCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRSwgZWNobz1GQUxTRX0KcmVxdWlyZSgia25pdHIiKQpvcHRzX2tuaXQkc2V0KHJvb3QuZGlyID0gIi9Wb2x1bWVzL0dvb2dsZURyaXZlL015IERyaXZlL2dyZXNoYW1sYWIvcHJvamVjdHMvRUVfR0FQMV9BcmNoTXV0c19TdW1tZXIyMDIxL2RhdGEvdmlnbmV0dGVfZGF0YV93b3JraW5nY29weSIpCmBgYAoKYGBge3J9CmZvbGRlcnMgPSBsaXN0LmRpcnMoKVstMV0KYGBgCgojIyMgVmVyc2lvbiBuYW1lCkNob29zZSBhIG5hbWUgdG8gYmUgdXNlZCBmb3IgYWxsIG91dHB1dCBmaWxlcyBpbmNsdWRpbmcgdGhlIGdhdGluZyB0ZW1wbGF0ZSBhbmQgYXNzb2NpYXRlZCBmbG93IGRhdGEgYW5kIGdyYXBocy4gU2luY2Ugd2Ugd2lsbCBiZSB1c2luZyBkYXRhIGZyb20gdGltZXBvaW50cyAxLCAyLCBhbmQgNCB0byBkcmF3IGdhdGVzLCB3ZSBjaG9vc2UgYSBuYW1lIHRvIHJlZmxlY3QgdGhhdCAKYGBge3J9CnZlcnNpb25fbmFtZSA9ICJ0aW1lcG9pbnRzLTAxLTAyLTA0X3YxIgpnZXR3ZCgpCmBgYAoKIyMjIFNURVAgMTogR2VuZXJhdGUgZXhwZXJpbWVudCBkZXRhaWxzIGZpbGUuCkEgLmNzdiBmaWxlIHRoYXQgY29udGFpbnMgdGhlIGxpc3Qgb2YgLmZjcyBmaWxlcyBpbiB0aGUgZGlyZWN0b3J5IGFuZCB0aGUgYXNzb2NpYXRlZCBtZXRhZGF0YSBmb3IgZWFjaCBzYW1wbGUuCgpBIGN1c3RvbSBzYW1wbGUgc2hlZXQgaXMgaW1wb3J0ZWQgdG8gdGhlIGZ1bmN0aW9uLiAKVGhpcyBmdW5jdGlvbiB1c2VzIHJlZ2V4IChyZWd1bGFyIGV4cHJlc3Npb25zKSB0byBleHRyYWN0IG1ldGFkYXRhIGZyb20gdGhlIHN1YmRpcmVjdG9yeSBuYW1lIGFuZCBzYW1wbGUgc2hlZXQgdG8gZ2VuZXJhdGUgYW4gZXhwZXJpbWVudCBkZXRhaWxzIGZpbGUgZm9yIGVhY2ggdGltZXBvaW50IHN1YmRpcmVjdG9yeSBhbmQgcGxhY2VzIHRoZSBmaWxlIGluc2lkZSB0aGUgY29ycmVzcG9uZGluZyBzdWJkaXJlY3RvcnkuIFdlIHNhbXBsZWQgY2VsbHMgZnJvbSBhIDk2IHdlbGwgcGxhdGUgc28gb3VyIG1ldGFkYXRhIGNvbnRhaW5zIHdlbGwgbnVtYmVyLiAKYGBge3J9Cm1ha2VfZXhwX2RldGFpbHMgPSBmdW5jdGlvbihmb2xkZXJfbmFtZSwgc2FtcGxlc2hlZXQpIHsKICBwcmVmID0gZm9sZGVyX25hbWUgJT4lIHN0cl9leHRyYWN0KCIoWzAtOV0pK19FRV9HQVAxX0FyY2hNdXRzXzIwMjEiKQogIGdlbmVyYXRpb24gPSBmb2xkZXJfbmFtZSAlPiUgc3RyX2V4dHJhY3QoIltnXVxcZCsiKSAlPiUgc3RyX3JlbW92ZSgiZyIpCgogIGZpbGVzID0gYXNfdGliYmxlKGxpc3QuZmlsZXMocGFzdGUwKGZvbGRlcl9uYW1lKSkpICU+JQogICAgc2VwYXJhdGUodmFsdWUsIGludG8gPSBjKCJ3ZWxsIiwgInNhbXAiKSwgc2VwID0gIiAiLCByZW1vdmUgPSBGKSAlPiUKICAgIG11dGF0ZSh3ZWxsID0gc3RyX2V4dHJhY3Qod2VsbCwgIihbQS1aXSkoWzAtOV0pezEsMn0kIikpICU+JQogICAgbXV0YXRlKHNhbXAgPSBzdHJfcmVtb3ZlKHNhbXAsICIuZmNzIikpICU+JQogICAgbXV0YXRlKHNhbXBsZSA9IGNhc2Vfd2hlbihzdHJfZGV0ZWN0KHZhbHVlLCAiVW5zdGFpbmVkIikgfiAiY3RybDAiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJfZGV0ZWN0KHZhbHVlLCAiREdZNTAwIikgfiAiY3RybDEiLAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJfZGV0ZWN0KHZhbHVlLCAiREdZMTMxNSIpIH4gImN0cmwyIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgVFJVRSB+IHNhbXApKSAlPiUKICAgIHNlbGVjdCh2YWx1ZSxzYW1wbGUpICU+JQogICAgcmVuYW1lKG5hbWUgPSB2YWx1ZSkgJT4lCiAgICBmaWx0ZXIoIWlzLm5hKHNhbXBsZSkpCgogIGFsbCA9IGZpbGVzICU+JQogICAgbGVmdF9qb2luKHJlYWRfY3N2KHBhc3RlMCgiLi8iLHNhbXBsZXNoZWV0KSksIGJ5ID0gYygic2FtcGxlIiA9ICJTYW1wbGUgbmFtZSIpKSAlPiUKICAgIG11dGF0ZShnZW5lcmF0aW9uID0gYXMubnVtZXJpYyhnZW5lcmF0aW9uKSkKCiAgd3JpdGVfY3N2KGFsbCwgZmlsZSA9IHBhc3RlMChmb2xkZXJfbmFtZSwiLyIscHJlZiwiX2V4cGVyaW1lbnRfZGV0YWlscy5jc3YiKSkKCn0KYGBgCgpSdW4gdGhlIGZ1bmN0aW9uIG9uIGFsbCBzdWJkaXJlY3RvcmllcyBleGNlcHQgdGhlIHN1YmRpcmVjdG9yeSB3ZSB3aWxsIHVzZSBmb3IgZ2F0aW5nIHdoaWNoIGlzIHRoZSBmaXJzdCBkaXJlY3RvcnkuIE9ubHkgbmVlZHMgdG8gYmUgcnVuIG9uY2UgdG8gY3JlYXRlIHRoZSBleHBlcmltZW50YWwgZGV0YWlscyAuY3N2IGZpbGVzLiBUaGUgc2FtcGxlc2hlZXQgc2hvdWxkIGJlIHNpdHRpbmcgaW4gdGhlIHdvcmtpbmcgZGlyZWN0b3J5LCBub3QgdGhlIHN1YmRpcmVjdG9yaWVzLiAKYGBge3J9Cm1hcChmb2xkZXJzWy0xXSwgbWFrZV9leHBfZGV0YWlscywgc2FtcGxlc2hlZXQgPSAiRUVfR0FQMV9BcmNoTXV0c18yMDIxLmNzdiIpCmBgYAoKTmV4dCwgY29weSB0aGUgZXhwZXJpbWVudCBkZXRhaWxzIGZpbGVzIGZyb20gdGltZXBvaW50cyAxLCAyLCA0IGFuZCBwbGFjZSB0aGVtIGluIHRoZSBnYXRpbmcgc3ViZGlyZWN0b3J5LiBPbmx5IG5lZWRzIHRvIGJlIHJ1biBvbmNlLiBZb3UgY2FuIGRvIHRoaXMgaW4gdGhlIHRlcm1pbmFsIG9yIG1hbnVhbGx5IHVzaW5nIHlvdXIgZmlsZSBHVUkvRmluZGVyCmBgYHtiYXNofQpjZCB+L0dvb2dsZVwgRHJpdmUvTXlcIERyaXZlL2dyZXNoYW1sYWIvcHJvamVjdHMvRUVfR0FQMV9BcmNoTXV0c19TdW1tZXIyMDIxL2RhdGEvdmlnbmV0dGVfZGF0YV93b3JraW5nY29weQoKc2NwIC4vMDFfRUVfR0FQMV9BcmNoTXV0c18yMDIxXzA2MTYyMV9nOF9HQS8wMV9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfZXhwZXJpbWVudF9kZXRhaWxzLmNzdiAwMV8wMl8wNF9FRV9HQVAxX0FyY2hNdXRzXzIwMjEvIAoKc2NwIC4vMDJfRUVfR0FQMV9BcmNoTXV0c18yMDIxXzA2MjEyMV9nMjFfVEQvMDJfRUVfR0FQMV9BcmNoTXV0c18yMDIxX2V4cGVyaW1lbnRfZGV0YWlscy5jc3YgMDFfMDJfMDRfRUVfR0FQMV9BcmNoTXV0c18yMDIxLyAKCnNjcCAuLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV8wNjI1MjFfZzM3X0lTLzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8KYGBgCgpBZGQgYSBuZXcgY2h1bmsgYnkgY2xpY2tpbmcgdGhlICpJbnNlcnQgQ2h1bmsqIGJ1dHRvbiBvbiB0aGUgdG9vbGJhciBvciBieSBwcmVzc2luZyAqQ21kK09wdGlvbitJKi4KYGBge3J9CmxvYWQKYGBgCgoKV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDbWQrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4gCgpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuCgo=</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiQ3l0b2V4cGxvcmVSIFZpZ25ldHRlIGZvciBHcmVzaGFtIExhYiIKYXV0aG9yOiAiSnVsaWUgQ2h1b25nIgpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sKLS0tCgpUaGlzIGlzIG5vdGVib29rIGlzIHRvIHNob3cgeW91IGhvdyB0byB1c2UgdGhlIHBhY2thZ2UgQ3l0b2V4cGxvcmVSIHRvIGFuYWx5emUgZmxvdyBjeXRvbWV0cnkgZGF0YSBmcm9tIHRoZSBDeXRlayBBdXJvcmEuIAoKSW5zdGFsbCBDeXRvRXhwbG9yZXIgcGFja2FnZSBhbmQgcmVxdWlyZW1lbnRzIChTa2lwIGlmIGFscmVhZHkgaW5zdGFsbGVkKQpgYGB7cn0KbGlicmFyeShCaW9jTWFuYWdlcikKaW5zdGFsbC5wYWNrYWdlcygiY3l0b2xpYiIsICJmbG93Q29yZSIsICJmbG93V29ya3NwYWNlIiwgIm9wZW5DeXRvIikKYGBgCgpJbnN0YWxsIEN5dG9FeHBsb3JlUiBmcm9tIEdpdEh1YiAoU2tpcCBpcyBhbHJlYWR5IGluc3RhbGxlZCkKYGBge3J9CmxpYnJhcnkoZGV2dG9vbHMpCmRldnRvb2xzOjppbnN0YWxsX2dpdGh1YigiRGlsbG9uSGFtbWlsbC9DeXRvRXhwbG9yZVIiKQpgYGAKCkxvYWQgcmVxdWlyZWQgcGFja2FnZXMKYGBge3J9CmxpYnJhcnkoQ3l0b0V4cGxvcmVSKQpsaWJyYXJ5KHRpZHl2ZXJzZSkKbGlicmFyeShnZ3JpZGdlcykKYGBgCgojIyBWaWduZXR0ZSBEYXRhc2V0CgpUaHJlZSByZXBsaWNhdGUgcG9wdWxhdGlvbnMgb2YgdGhlIEdBUDEgQ05WIHJlcG9ydGVyIHN0cmFpbiwgaW4gd2hpY2ggYSBtQ2l0cmluZSBnZW5lIHdhcyBpbnNlcnRlZCB1cHN0cmVhbSBvZiB0aGUgR0FQMSBwcm9tb3RlciBhbmQgY29kaW5nIHNlcXVlbmNlLCB3YXMgZXhwZXJpbWVudGFsbHkgZXZvbHZlZCBpbiBjaGVtb3N0YXRzIGluIGdsdXRhbWluZS1saW1pdGVkIG1lZGlhIGZvciAyMDAgZ2VuZXJhdGlvbnMuIEFkZGl0aW9uYWxseSwgdGhlcmUgd2FzIG9uZSBwb3B1bGF0aW9uIGVhY2ggb2YgMyBjb250cm9sIHN0cmFpbnM6IHplcm8gY29weSAndW5zdGFpbmVkJyBjb250cm9sIChER1kxKSB0aGF0IGhhcyBubyBtQ2l0cmluZSwgb25lIGNvcHkgY29udHJvbCAoREdZNTAwKSBpbiB3aGljaCB0aGUgbUNpdHJpbmUgZ2VuZSB3YXMgaW5zZXJ0ZWQgaW4gbmV1dHJhbCBsb2N1cyAqV0hBVCBMT0NVUz8qIHRoYXQgZG9lc24ndCB1bmRlcmdvIGNvcHkgbnVtYmVyIHZhcmlhdGlvbiB1bmRlciBnbHV0YW1pbmUtbGltaXRlZCBncm93dGgsIGFuZCB0d28gY29weSBjb250cm9sIChER1kxMzE1KSBjb250YWluaW5nIHR3byBpbnNlcnRlZCBjb3BpZXMgb2YgbUNpdHJpbmUgaW4gbmV1dHJhbCBsb2NpLiBTYW1wbGVzIG9mIGV2ZXJ5IHBvcHVsYXRpb24gd2VyZSB0YWtlbiBldmVyeSA4LCAxMywgOCBnZW5lcmF0aW9ucyAoTW9uLCBXZWQsIEZyaSkuIEluIGVhY2ggc2FtcGxlLCAxMDAsMDAwIGV2ZW50cyB3ZXJlIG1lYXN1cmVkIGZvciBtQ2l0cmluZSBmbHVvcmVzY2VuY2UgKGV4Y2l0YXRpb24gd2F2ZWxlbmd0aCA9IDUxNiwgZW1pc3Npb24gd2F2ZWxlbmd0aCA9IDUyOSApIHZpYSB0aGUgQjItQSBjaGFubmVsLCBmb3J3YXJkIHNjYXR0ZXIsIGFuZCBzaWRlIHNjYXR0ZXIuIEluIHRvdGFsLCB0aGVyZSBhcmUgc2l4IHBvcHVsYXRpb25zIGFuZCAxOSB0aW1lcG9pbnRzLiAKCiMjIyBTZXQgd29ya2luZyBkaXJlY3RvcnkgYW5kIGdldCBsaXN0IG9mIHN1YmRpcmVjdG9yaWVzClBsYWNlIHlvdXIgRkNTIGZpbGVzIGluIGEgZGlyZWN0b3J5LiBNdWx0aXBsZSBzdWJkaXJlY3RvcmllcyBjb250YWluaW5nIEZDUyBmaWxlcyBhcmUgT0suIAoKKk5vdGUgMSogWW91IGNhbiBvbmx5IGxvYWQgaW4gb25lIGZvbGRlcidzIHdvcnRoIG9mIEZDUyBmaWxlcyBhdCBhIHRpbWUuIEluIHRoaXMgdmlnbmV0dGUsIHdlIGhhdmUgb3JnYW5pemVkIG9uZSB0aW1lcG9pbnQncyB3b3J0aCBvZiBGQ1MgZmlsZXMgcGVyIHN1YmRpcmVjdG9yeS4gVGhlcmUgaXMgb25lIEZTQyBmaWxlIHBlciBwb3B1bGF0aW9uLiBBZGRpdGlvbmFsbHksIHdlIGhhdmUgb25lIHN1YmRpcmVjdG9yeSB3aXRoIHRocmVlIHRpbWVwb2ludHMnIHdvcnRoIG9mIEZDUyBmaWxlcyBpbnNpZGUgZm9yIGRyYXdpbmcgZ2F0ZXMgKGJlY2F1c2UgdGltZXBvaW50IG9uZSBkYXRhIHdlcmUgbm90IHN1ZmZpY2llbnQgdG8gZHJhdyBnb29kIGdhdGVzLCBzZWUgU1RFUCBfXykuIEluIHRvdGFsLCB0aGVyZSBhcmUgMjAgc3ViZGlyZWN0b3JpZXMsIHdpdGggYW4gRlNDIGZpbGUgcGVyIHBvcHVsYXRpb24sIGZvciB3aGljaCB0aGVyZSBhcmUgc2l4LiAKCipOb3RlIDIqIFRoZSBzdWJkaXJlY3RvcmllcyBhcmUgdW5pcXVlbHkgbmFtZWQgbGlrZSB0aGlzIFRpbWVwb2ludE51bWJlcl9FeHBlcmltZW50TmFtZV9TYW1wbGVEYXRlX2dlbmVyYXRpb25fSW5pdGlhbHMuIFRoZXJlZm9yZSBvdXIgc3ViZGlyZWN0b3J5IG5hbWVzIGNvbnRhaW4gaW1wb3J0YW50ICBtZXRhZGF0YS4gCgoqTm90ZSAzKiBZb3Ugc2hvdWxkIG5vdCBtYW51YWxseSByZW5hbWUgeW91ciBGQ1MgZmlsZXMgYWZ0ZXIgZXhwb3J0aW5nIGl0IGZyb20gdGhlIEN5dGVrLiBJbiBvdGhlciB3b3JkcywgZmlsZXMgc2hvdWxkIGhhdmUgdGhlaXIgb3JpZ2luYWwgbmFtZXMgZnJvbSB0aGUgbWFjaGluZS4gIlJlbmFtaW5nIHRoZSBmaWxlcyBtYW51YWxseSBpcyBub3QgcmVjb21tZW5kZWQgYXMgaXQgZG9lcyBub3QgdXBkYXRlIHRoZSBhc3NvY2lhdGVkIGtleXdvcmRzIGNvbnRhaW5lZCBpbiB0aGUgRkNTIGZpbGVzIiAoU291cmNlOiBodHRwczovL2dpdGh1Yi5jb20vRGlsbG9uSGFtbWlsbC9DeXRvRXhwbG9yZVIvaXNzdWVzLzg1KS4gSWYgZmlsZXMgbmVlZCB0byByZW5hbWVkLCBkbyBzbyBvbiBvbiB0aGUgQ3l0ZWsgc29mdHdhcmUgYW5kIHJlLWV4cG9ydCB0aGUgRkNTIGZpbGVzLiAgCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRSwgZWNobz1GQUxTRX0KcmVxdWlyZSgia25pdHIiKQpvcHRzX2tuaXQkc2V0KHJvb3QuZGlyID0gIi9Wb2x1bWVzL0dvb2dsZURyaXZlL015IERyaXZlL2dyZXNoYW1sYWIvcHJvamVjdHMvRUVfR0FQMV9BcmNoTXV0c19TdW1tZXIyMDIxL2RhdGEvdmlnbmV0dGVfZGF0YV93b3JraW5nY29weSIpCmBgYAoKYGBge3J9CmZvbGRlcnMgPSBsaXN0LmRpcnMoKVstMV0KYGBgCgojIyMgVmVyc2lvbiBuYW1lCkNob29zZSBhIG5hbWUgdG8gYmUgdXNlZCBmb3IgYWxsIG91dHB1dCBmaWxlcyBpbmNsdWRpbmcgdGhlIGdhdGluZyB0ZW1wbGF0ZSBhbmQgYXNzb2NpYXRlZCBmbG93IGRhdGEgYW5kIGdyYXBocy4gU2luY2Ugd2Ugd2lsbCBiZSB1c2luZyBkYXRhIGZyb20gdGltZXBvaW50cyAxLCAyLCBhbmQgNCB0byBkcmF3IGdhdGVzLCB3ZSBjaG9vc2UgYSBuYW1lIHRvIHJlZmxlY3QgdGhhdC4gCmBgYHtyfQp2ZXJzaW9uX25hbWUgPSAidGltZXBvaW50cy0wMS0wMi0wNF92MSIKZ2V0d2QoKQpgYGAKCiMjIyBTVEVQIDE6IEdlbmVyYXRlIGV4cGVyaW1lbnQgZGV0YWlscyBmaWxlLgpBIC5jc3YgZmlsZSB0aGF0IGNvbnRhaW5zIHRoZSBsaXN0IG9mIC5mY3MgZmlsZXMgaW4gdGhlIGRpcmVjdG9yeSBhbmQgdGhlIGFzc29jaWF0ZWQgbWV0YWRhdGEgZm9yIGVhY2ggc2FtcGxlLgoKQSBjdXN0b20gc2FtcGxlIHNoZWV0IGlzIGltcG9ydGVkIHRvIHRoZSBmdW5jdGlvbi4gClRoaXMgZnVuY3Rpb24gdXNlcyByZWdleCAocmVndWxhciBleHByZXNzaW9ucykgdG8gZXh0cmFjdCBtZXRhZGF0YSBmcm9tIHRoZSBzdWJkaXJlY3RvcnkgbmFtZSBhbmQgc2FtcGxlIHNoZWV0IHRvIGdlbmVyYXRlIGFuIGV4cGVyaW1lbnQgZGV0YWlscyBmaWxlIGZvciBlYWNoIHRpbWVwb2ludCBzdWJkaXJlY3RvcnkgYW5kIHBsYWNlcyB0aGUgZmlsZSBpbnNpZGUgdGhlIGNvcnJlc3BvbmRpbmcgc3ViZGlyZWN0b3J5LiBXZSBzYW1wbGVkIGNlbGxzIGZyb20gYSA5NiB3ZWxsIHBsYXRlIHNvIG91ciBtZXRhZGF0YSBjb250YWlucyB3ZWxsIG51bWJlci4gCmBgYHtyfQptYWtlX2V4cF9kZXRhaWxzID0gZnVuY3Rpb24oZm9sZGVyX25hbWUsIHNhbXBsZXNoZWV0KSB7CiAgcHJlZiA9IGZvbGRlcl9uYW1lICU+JSBzdHJfZXh0cmFjdCgiKFswLTldKStfRUVfR0FQMV9BcmNoTXV0c18yMDIxIikKICBnZW5lcmF0aW9uID0gZm9sZGVyX25hbWUgJT4lIHN0cl9leHRyYWN0KCJbZ11cXGQrIikgJT4lIHN0cl9yZW1vdmUoImciKQoKICBmaWxlcyA9IGFzX3RpYmJsZShsaXN0LmZpbGVzKHBhc3RlMChmb2xkZXJfbmFtZSkpKSAlPiUKICAgIHNlcGFyYXRlKHZhbHVlLCBpbnRvID0gYygid2VsbCIsICJzYW1wIiksIHNlcCA9ICIgIiwgcmVtb3ZlID0gRikgJT4lCiAgICBtdXRhdGUod2VsbCA9IHN0cl9leHRyYWN0KHdlbGwsICIoW0EtWl0pKFswLTldKXsxLDJ9JCIpKSAlPiUKICAgIG11dGF0ZShzYW1wID0gc3RyX3JlbW92ZShzYW1wLCAiLmZjcyIpKSAlPiUKICAgIG11dGF0ZShzYW1wbGUgPSBjYXNlX3doZW4oc3RyX2RldGVjdCh2YWx1ZSwgIlVuc3RhaW5lZCIpIH4gImN0cmwwIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyX2RldGVjdCh2YWx1ZSwgIkRHWTUwMCIpIH4gImN0cmwxIiwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RyX2RldGVjdCh2YWx1ZSwgIkRHWTEzMTUiKSB+ICJjdHJsMiIsCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFRSVUUgfiBzYW1wKSkgJT4lCiAgICBzZWxlY3QodmFsdWUsc2FtcGxlKSAlPiUKICAgIHJlbmFtZShuYW1lID0gdmFsdWUpICU+JQogICAgZmlsdGVyKCFpcy5uYShzYW1wbGUpKQoKICBhbGwgPSBmaWxlcyAlPiUKICAgIGxlZnRfam9pbihyZWFkX2NzdihwYXN0ZTAoIi4vIixzYW1wbGVzaGVldCkpLCBieSA9IGMoInNhbXBsZSIgPSAiU2FtcGxlIG5hbWUiKSkgJT4lCiAgICBtdXRhdGUoZ2VuZXJhdGlvbiA9IGFzLm51bWVyaWMoZ2VuZXJhdGlvbikpCgogIHdyaXRlX2NzdihhbGwsIGZpbGUgPSBwYXN0ZTAoZm9sZGVyX25hbWUsIi8iLHByZWYsIl9leHBlcmltZW50X2RldGFpbHMuY3N2IikpCgp9CmBgYAoKUnVuIHRoZSBmdW5jdGlvbiBvbiBhbGwgc3ViZGlyZWN0b3JpZXMgZXhjZXB0IHRoZSBnYXRpbmcgc3ViZGlyZWN0b3J5IChzdWJkaXJlY3Rvcnkgd2Ugd2lsbCB1c2UgZm9yIGdhdGluZywgd2hpY2ggaXMgdGhlIGZpcnN0IGRpcmVjdG9yeSkuIE9ubHkgbmVlZHMgdG8gYmUgcnVuIG9uY2UgdG8gY3JlYXRlIHRoZSBleHBlcmltZW50YWwgZGV0YWlscyAuY3N2IGZpbGVzLiBUaGUgc2FtcGxlc2hlZXQgc2hvdWxkIGJlIHNpdHRpbmcgaW4gdGhlIHdvcmtpbmcgZGlyZWN0b3J5LCBub3QgaW4gdGhlIHN1YmRpcmVjdG9yaWVzLiAKYGBge3J9Cm1hcChmb2xkZXJzWy0xXSwgbWFrZV9leHBfZGV0YWlscywgc2FtcGxlc2hlZXQgPSAiRUVfR0FQMV9BcmNoTXV0c18yMDIxLmNzdiIpCmBgYAoKTmV4dCwgY29weSB0aGUgZXhwZXJpbWVudCBkZXRhaWxzIGZpbGVzIGZyb20gdGltZXBvaW50cyAxLCAyLCA0IGFuZCBwbGFjZSB0aGVtIGluIHRoZSBnYXRpbmcgc3ViZGlyZWN0b3J5LiBPbmx5IG5lZWRzIHRvIGJlIHJ1biBvbmNlLiBZb3UgY2FuIGRvIHRoaXMgaW4gdGhlIHRlcm1pbmFsIG9yIG1hbnVhbGx5IHVzaW5nIHlvdXIgZmlsZSBHVUkvRmluZGVyIGluIE1hYy4KYGBge2Jhc2h9CmNkIH4vR29vZ2xlXCBEcml2ZS9NeVwgRHJpdmUvZ3Jlc2hhbWxhYi9wcm9qZWN0cy9FRV9HQVAxX0FyY2hNdXRzX1N1bW1lcjIwMjEvZGF0YS92aWduZXR0ZV9kYXRhX3dvcmtpbmdjb3B5CgpzY3AgLi8wMV9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfMDYxNjIxX2c4X0dBLzAxX0VFX0dBUDFfQXJjaE11dHNfMjAyMV9leHBlcmltZW50X2RldGFpbHMuY3N2IDAxXzAyXzA0X0VFX0dBUDFfQXJjaE11dHNfMjAyMS8gCgpzY3AgLi8wMl9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfMDYyMTIxX2cyMV9URC8wMl9FRV9HQVAxX0FyY2hNdXRzXzIwMjFfZXhwZXJpbWVudF9kZXRhaWxzLmNzdiAwMV8wMl8wNF9FRV9HQVAxX0FyY2hNdXRzXzIwMjEvIAoKc2NwIC4vMDRfRUVfR0FQMV9BcmNoTXV0c18yMDIxXzA2MjUyMV9nMzdfSVMvMDRfRUVfR0FQMV9BcmNoTXV0c18yMDIxX2V4cGVyaW1lbnRfZGV0YWlscy5jc3YgMDFfMDJfMDRfRUVfR0FQMV9BcmNoTXV0c18yMDIxLwpgYGAKClNURVAgMjogUmVhZCBpbiBhbGwgZmlsZXMgaW4gdGhlICpnYXRpbmcgc3ViZGlyZWN0b3J5KiBhbmQgcmVuYW1lIHRoZSBjaGFubmVscy4KUmVzdWx0cyBpbiBvbmUgdGltZXBvaW50J3MgZ2F0aW5nIHNldCBjb250YWluaW5nIGFsbCAuZmNzIGZpbGVzLCBhc3NvY2lhdGVkIGV4cGVyaW1lbnQgZGV0YWlscywgYW5kIG1hcmtlciBkZXRhaWxzCgpgYGB7cn0KZXhwX2RldGFpbHNfcGF0aCA9IGxpc3QuZmlsZXMocGF0aCA9IHBhc3RlMChmb2xkZXJzWzFdKSwgcGF0dGVybiA9ICJfZXhwZXJpbWVudF9kZXRhaWxzLmNzdiIsIGZ1bGwubmFtZXMgPSBUKQpgYGAKCkVkaXQgTWFya2VycyBvbiBWaWV3ZXIgcGFuZS4gVHlwZSBpbiBCMi1BIGluIHRoZSBtYXJrZXIgY29sdW1uIG9mIHRoZSBCMi1BIGNoYW5uZWwuIEZTQyBhbmQgU1NDIGFyZSBpbmNsdWRlZCBtYXJrZXJzIGJ5IGRlZmF1bHQgc28gd2UgZG9uJ3QgbmVlZCB0byBlZGl0IHRoZW0uIENsaWNrICdTYXZlICYgQ2xvc2UnIGJ1dHRvbiBhdCB0aGUgYm90dG9tIG9mIHRoZSBWaWV3ZXIgcGFuZS4KYGBge3J9CnRpbWVwb2ludF9nYXRpbmdfc2V0IDwtIGN5dG9fc2V0dXAocGF0aCA9IHBhc3RlMChmb2xkZXJzWzFdKSwgcmVzdHJpY3Q9VFJVRSwgc2VsZWN0PSJmY3MiLCBkZXRhaWxzPUYpCmBgYAoKQWRkIHRoZSBleHBlcmltZW50IGRldGFpbHMgZmlsZSB0byB0aGUgZ2F0aW5nIHNldApgYGB7cn0KZXhwZXJpbWVudF9kZXRhaWxzIDwtIHJlYWRfY3N2KGV4cF9kZXRhaWxzX3BhdGgsIHNob3dfY29sX3R5cGVzID0gRkFMU0UpCmZvcihpIGluIDE6bGVuZ3RoKG5hbWVzKGV4cGVyaW1lbnRfZGV0YWlscykpKXsKICBmbG93V29ya3NwYWNlOjpwRGF0YSh0aW1lcG9pbnRfZ2F0aW5nX3NldClbbmFtZXMoZXhwZXJpbWVudF9kZXRhaWxzW2ldKV08LWV4cGVyaW1lbnRfZGV0YWlsc1tpXQogIH0KYGBgCgpCeSBkZWZhdWx0IHRoZSBFeHBlcmltZW50LU1hcmtlcnMuY3N2IGZpbGUgaXMgbmFtZWQgd2l0aCB0aGUgZGF0ZSBjcmVhdGVkLiBSZW5hbWUgdGhlIGV4cGVyaW1lbnQtbWFya2Vycy5jc3YgZmlsZS4gTmVlZCB0byBkbyBvbmx5IG9uY2UuCmBgYHtyfQpmaWxlLnJlbmFtZShkaXIocGF0dGVybiA9ICJFeHBlcmltZW50LU1hcmtlcnMuY3N2IiksIkVFX0dBUDFfQXJjaE11dHNfMjAyMS1FeHBlcmltZW50LU1hcmtlcnMuY3N2IikKYGBgCgojIyMgU1RFUCAzOiAgUGVyZm9ybSBnYXRpbmcgb24gZ2F0aW5nIHNldApHYXRlIGZvciAxKSBDZWxscywgMikgU2luZ2xldHMsIDMpIENOVlMKUmVzdWx0cyBpbiBhIGdhdGluZyBmaWxlLCBhbmQgZ2F0ZXMgYXBwbGllZCB0byBhbGwgc2FtcGxlcyBpbiB0aGUgZ2F0aW5nIHNldC4KCipUcmFuc2Zvcm0gdGhlIGRhdGEqClRyYW5zZm9ybWluZyB0aGUgZGF0YSBtYWtlcyBpdCBlYXNpZXIgdG8gaW50ZXJwcmV0IHZpc3VhbGx5IGFuZCB3ZWxsIGFzIHRvIGRyYXcgZ2F0ZXMuIFRoZSB1bnRyYW5zZm9ybWVkIGRhdGEgd2hlbiBwbG90dGVkLCB0aGUgemVybyBjb3B5IHN0cmFpbnMgdGFrZSB1cCBtb3N0IG9mIHRoZSBjb29yZGluYXRlIHBsYW5lIHdoaWxlIHRoZSBvbmUgY29weSBhbmQgdHdvIGNvcHkgYXJlIHZlcnkgY2xvc2UgdG9nZXRoZXIuIApVc2VmdWwgYXJ0aWNsZSBpZiB5b3UgSSB3YW50IHRvIGNob29zZSBkaWZmZXJlbnQgdHJhbnNmb3JtYXRpb25zOiBodHRwczovL2RpbGxvbmhhbW1pbGwuZ2l0aHViLmlvL0N5dG9FeHBsb3JlUi9hcnRpY2xlcy9DeXRvRXhwbG9yZVItVHJhbnNmb3JtYXRpb25zLmh0bWwKCkluIG91ciBjYXNlLCBpdCB3YXMgbmVjZXNzYXJ5IHRvIHVzZSBhIGxvZ2ljYWwgdHJhbnNmb3JtYXRpb24gZm9yIHRoZSBCMi1BIHZhbHVlcyBhbmQgYSBzZWNvbmQgdHJhbnNmb3JtYXRpb24gbG9nIGZvciB0aGUgb3RoZXIgdmFsdWVzLiBJIGNvdWxkIG5vdCB1c2UgbG9naWNhbCB0cmFuc2Zvcm1hdGlvbiBmb3IgYWxsIG5vciBjb3VsZCBJIHVzZSB0aGUgbG9nIHRyYW5zZm9ybWF0aW9uIGZvciBhbGwgdmFsdWVzLiAKR0ZQX3RyYW5zIDwtIGN5dG9fdHJhbnNmb3JtZXJfbG9naWNsZSh0aW1lcG9pbnRfZ2F0aW5nX3NldCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjaGFubmVscyA9IGMoIkIyLUEiKSwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB3aWR0aEJhc2lzID0gLTEwCikjcmV0dXJucyBpdCBhcyBhIGxpc3QKRlNDX1NTQ190cmFucyA8LSBjeXRvX3RyYW5zZm9ybWVyX2xvZyh0aW1lcG9pbnRfZ2F0aW5nX3NldCwKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBjaGFubmVscyA9IGMoIkZTQy1BIiwgIkZTQy1IIiwgIlNTQy1BIiwgIlNTQy1IIikKKQpjb21iaW5lZF90cmFucyA8LSBjeXRvX3RyYW5zZm9ybWVyX2NvbWJpbmUoR0ZQX3RyYW5zLEZTQ19TU0NfdHJhbnMpCnRyYW5zZm9ybWVkX3RpbWVwb2ludF9nYXRpbmdfc2V0IDwtIGN5dG9fdHJhbnNmb3JtKHRpbWVwb2ludF9nYXRpbmdfc2V0LAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB0cmFucyA9IGNvbWJpbmVkX3RyYW5zKSAjYXBwbGllcyB0aGUgdGhlIHRyYW5zZm9ybWF0aW9uIGFuZCByZXR1cm5zIGl0IGFzIGEgZ2F0aW5nU2V0CgojcXVpY2tseSBjaGVjayB0aGUgdHJhbnNmb3JtYXRpb24gYnkgcGxvdHRpbmcgdGhlIGRhdGEKI2N5dG9fcGxvdF9leHBsb3JlKHRyYW5zZm9ybWVkX3RpbWVwb2ludF9nYXRpbmdfc2V0W2MoMiwxNCwxNiwxNywxOCwxOSwyMSldLAojICAgICAgICAgICAgICAgICAgY2hhbm5lbHNfeCA9ICJGU0MtQSIsCiMgICAgICAgICAgICAgICAgICBjaGFubmVsc195ID0gIkdGUCIsCiMgICAgICAgICAgICAgICAgICBheGVzX2xpbWl0cyA9ICJkYXRhIikKCiMjR2F0aW5nIHVzaW5nIHRoZSBlbnRpcmUgdGltZXBvaW50IGRhdGFzZXQuCgojIG5vdGU6aWYgeW91IGFscmVhZHkgaGF2ZSBhIGdhdGluZyB0ZW1wbGF0ZSBhbmQgZG9uJ3QgbmVlZCB0byBkcmF3IGdhdGVzLCB0aGVuIHNraXAgY3l0b19kcmF3LCB1c2UgY3l0b19nYXRpbmdUZW1wbGF0ZV9hcHBseSB0byBhcHBseSB0aGUgZ2F0aW5nIHRlbXBsYXRlLmNzdiB0byB5b3VyIGdhdGluZyBzZXQKY3l0b19nYXRpbmdUZW1wbGF0ZV9hcHBseSh0cmFuc2Zvcm1lZF90aW1lcG9pbnRfZ2F0aW5nX3NldCwgZ2F0aW5nVGVtcGxhdGU9ICJjeXRla19nYXRpbmdfMDFfMDJfMDRfdjIuY3N2IikKCiNGaXJzdCB3ZSBnYXRlIGZvciB0aGUgY2VsbHMKY3l0b19nYXRlX2RyYXcodHJhbnNmb3JtZWRfdGltZXBvaW50X2dhdGluZ19zZXQsCiAgI3RyYW5zZm9ybWVkX2xvZ2ljbGVfdGltZXB0LAogICAgICAgICAgICAgICBwYXJlbnQgPSAicm9vdCIsCiAgICAgICAgICAgICAgIGFsaWFzID0gIkNlbGxzIiwKICAgICAgICAgICAgICAgY2hhbm5lbHMgPSBjKCJGU0MtQSIsIlNTQy1BIiksCiAgICAgICAgICAgICAgIGF4ZXNfbGltaXRzID0gImRhdGEiLAogICAgICAgICAgICAgICBnYXRpbmdUZW1wbGF0ZSA9ICJjeXRla19nYXRpbmdfMDFfMDJfMDRfdjIuY3N2IiwKKQoKI1RoZW4gd2UgZGVmaW5lIHRoZSBzaW5nbGV0cyBiYXNlZCBvbiBmb3J3YXJkIHNjYXR0ZXIgaGVpZ2h0IGFuZCB3aWR0aApjeXRvX2dhdGVfZHJhdyh0cmFuc2Zvcm1lZF90aW1lcG9pbnRfZ2F0aW5nX3NldCwKICAgICAgICAgICAgICAgcGFyZW50ID0gIkNlbGxzIiwKICAgICAgICAgICAgICAgYWxpYXMgPSAiU2luZ2xlX2NlbGxzIiwKICAgICAgICAgICAgICAgY2hhbm5lbHMgPSBjKCJGU0MtQSIsIkZTQy1IIiksCiAgICAgICAgICAgICAgIGF4ZXNfbGltaXRzID0gImRhdGEiLAogICAgICAgICAgICAgICBnYXRpbmdUZW1wbGF0ZSA9ICJjeXRla19nYXRpbmdfMDFfMDJfMDRfdjIuY3N2IgopCgojR2F0aW5nIGZvciBDTlZzIHVzaW5nIHRoZSAwLDEgYW5kIDIgY29weSBjb250cm9sczoKREdZMSA8LSBjeXRvX2V4dHJhY3QodHJhbnNmb3JtZWRfdGltZXBvaW50X2dhdGluZ19zZXQsICJTaW5nbGVfY2VsbHMiKVtjKDMwLDYxLDkyKV0gI0RHWTEKCkRHWTUwMCA8LSBjeXRvX2V4dHJhY3QodHJhbnNmb3JtZWRfdGltZXBvaW50X2dhdGluZ19zZXQsICJTaW5nbGVfY2VsbHMiKVtjKDEsMzIsNjMpXSAjREdZNTAwCgpER1kxMzE1IDwtIGN5dG9fZXh0cmFjdCh0cmFuc2Zvcm1lZF90aW1lcG9pbnRfZ2F0aW5nX3NldCwgIlNpbmdsZV9jZWxscyIpW2MoMzEsNjIsOTMpXSAjREdZMTMxNQoKY3l0b19nYXRlX2RyYXcodHJhbnNmb3JtZWRfdGltZXBvaW50X2dhdGluZ19zZXQsCiAgICAgICAgICAgICAgIHBhcmVudCA9ICJTaW5nbGVfY2VsbHMiLCAjZmlyc3QgY29sb3IKICAgICAgICAgICAgICAgYWxpYXMgPSBjKCJ6ZXJvX2NvcHkiLCAib25lX2NvcHkiLCAidHdvX29yX21vcmVfY29weSIpLCAjZGVmaW5lcyBnYXRlIG5hbWVzCiAgICAgICAgICAgICAgIGNoYW5uZWxzID0gYygiRlNDLUEiLCJCMi1BIiksCiAgICAgICAgICAgICAgIGF4ZXNfbGltaXRzID0gImRhdGEiLAogICAgICAgICAgICAgICAjc2VsZWN0ID0gbGlzdChTdHJhaW4gPSBjKCJER1kxIiwiREdZNTAwIiwiREdZMTMxNSIpKSwgICNjb250cm9sIHN0cmFpbnMKICAgICAgICAgICAgICAgZ2F0aW5nVGVtcGxhdGUgPSAiY3l0ZWtfZ2F0aW5nXzAxXzAyXzA0X3YyLmNzdiIsCiAgICAgICAgICAgICAgIG92ZXJsYXkgPSBjKERHWTEsIERHWTUwMCwgREdZMTMxNSksCiAgICAgICAgICAgICAgIHBvaW50X2NvbCA9IGMoImdyYXkiLCAiZ3JlZW4iLCAicmVkIiwgImJsdWUiKQopCgpBZGQgYSBuZXcgY2h1bmsgYnkgY2xpY2tpbmcgdGhlICpJbnNlcnQgQ2h1bmsqIGJ1dHRvbiBvbiB0aGUgdG9vbGJhciBvciBieSBwcmVzc2luZyAqQ21kK09wdGlvbitJKi4KYGBge3J9CmxvYWQKYGBgCgoKV2hlbiB5b3Ugc2F2ZSB0aGUgbm90ZWJvb2ssIGFuIEhUTUwgZmlsZSBjb250YWluaW5nIHRoZSBjb2RlIGFuZCBvdXRwdXQgd2lsbCBiZSBzYXZlZCBhbG9uZ3NpZGUgaXQgKGNsaWNrIHRoZSAqUHJldmlldyogYnV0dG9uIG9yIHByZXNzICpDbWQrU2hpZnQrSyogdG8gcHJldmlldyB0aGUgSFRNTCBmaWxlKS4gCgpUaGUgcHJldmlldyBzaG93cyB5b3UgYSByZW5kZXJlZCBIVE1MIGNvcHkgb2YgdGhlIGNvbnRlbnRzIG9mIHRoZSBlZGl0b3IuIENvbnNlcXVlbnRseSwgdW5saWtlICpLbml0KiwgKlByZXZpZXcqIGRvZXMgbm90IHJ1biBhbnkgUiBjb2RlIGNodW5rcy4gSW5zdGVhZCwgdGhlIG91dHB1dCBvZiB0aGUgY2h1bmsgd2hlbiBpdCB3YXMgbGFzdCBydW4gaW4gdGhlIGVkaXRvciBpcyBkaXNwbGF5ZWQuCgo=</div>
 
 
 
