@@ -19,7 +19,7 @@ devtools::install_github("DillonHammill/CytoExploreR")
 ```
 
 Load required packages
-```{r}
+```{r, echo=FALSE}
 library(CytoExploreR)
 library(tidyverse)
 library(ggridges)
@@ -27,9 +27,9 @@ library(ggridges)
 
 ## Vignette Dataset
 
-Three replicate populations of the GAP1 CNV reporter strain, in which a mCitrine gene was inserted upstream of the GAP1 promoter and coding sequence, was experimentally evolved in chemostats in glutamine-limited media for 200 generations. Additionally, there was one population each of 3 control strains: zero copy 'unstained' control (DGY1) that has no mCitrine, one copy control (DGY500) in which the mCitrine gene was inserted in neutral locus *WHAT LOCUS?* that doesn't undergo copy number variation under glutamine-limited growth, and two copy control (DGY1315) containing two inserted copies of mCitrine in neutral loci. Samples of every population were taken every 8, 13, 8 generations (Mon, Wed, Fri). In each sample, 100,000 events were measured for mCitrine fluorescence (excitation wavelength = 516, emission wavelength = 529 ) via the B2-A channel, forward scatter, and side scatter. In total, there are six populations and 19 timepoints. 
+Three replicate populations of the GAP1 CNV reporter strain, in which a mCitrine gene was inserted upstream of the *GAP1* promoter and coding sequence, were experimentally evolved in glutamine-limited media in chemostats for 200 generations. Additionally, there was one population each of 3 control strains: zero copy 'unstained' control (DGY1) that has no mCitrine, one copy control (DGY500) in which the mCitrine gene was inserted in neutral locus *WHAT LOCUS?* that doesn't undergo copy number variation under glutamine-limited growth, and two copy control (DGY1315) containing two inserted copies of mCitrine in neutral loci. Samples of each population were taken every 8, 13, 8 generations (Mon, Wed, Fri). In each sample, 100,000 events were measured on the Cytek Aurora Flow Cytometer for mCitrine fluorescence (excitation wavelength = 516, emission wavelength = 529 ) via the B2-A channel, forward scatter (FSC), and side scatter (SSC). In total, there are six populations and 19 timepoints. 
 
-### Set working directory and get list of subdirectories
+## Set working directory and get list of subdirectories
 Place your FCS files in a directory. Multiple subdirectories containing FCS files are OK. 
 
 *Note 1* You can only load in one folder's worth of FCS files at a time. In this vignette, we have organized one timepoint's worth of FCS files per subdirectory. There is one FSC file per population. Additionally, we have one subdirectory with three timepoints' worth of FCS files inside for drawing gates (because timepoint one data were not sufficient to draw good gates, see STEP __). In total, there are 20 subdirectories, with an FSC file per population, for which there are six. 
@@ -40,21 +40,21 @@ Place your FCS files in a directory. Multiple subdirectories containing FCS file
 
 ```{r setup, include=FALSE, echo=FALSE}
 require("knitr")
-opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_data_workingcopy")
+opts_chunk$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_data_workingcopy")
 ```
 
 ```{r}
 folders = list.dirs()[-1]
 ```
 
-### Version name
+## Version name
 Choose a name to be used for all output files including the gating template and associated flow data and graphs. Since we will be using data from timepoints 1, 2, and 4 to draw gates, we choose a name to reflect that. 
 ```{r}
 version_name = "timepoints-01-02-04_v1"
 getwd()
 ```
 
-### STEP 1: Generate experiment details file.
+## STEP 1: Generate experiment details file.
 A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample.
 
 A custom sample sheet is imported to the function. 
@@ -126,57 +126,73 @@ By default the Experiment-Markers.csv file is named with the date created. Renam
 file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv")
 ```
 
-### STEP 3:  Perform gating on gating set
+## STEP 3:  Perform gating on gating set
 Gate for 1) Cells, 2) Singlets, 3) CNVS
 Results in a gating file, and gates applied to all samples in the gating set.
 
 *Transform the data*
-Transforming the data makes it easier to interpret visually and well as to draw gates. The untransformed data when plotted, the zero copy strains take up most of the coordinate plane while the one copy and two copy are very close together. 
-Useful article if you I want to choose different transformations: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
+Transforming the data makes it easier to interpret visually and well as to draw gates. The untransformed data when plotted, the zero copy strains take up most of the coordinate plane while the one copy and two copy are very close together. The fluorescence profiles/distributions of the one copy and two copy controls overlap some. They are not mutually exclusive which is a limitation to note. 
+
+This is a useful article if you I want think about to choosing different transformations: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
 
 In our case, it was necessary to use a logical transformation for the B2-A values and a second transformation log for the other values. I could not use logical transformation for all nor could I use the log transformation for all values. 
+```{r}
 GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
                                       channels = c("B2-A"),
                                       widthBasis = -10
 )#returns it as a list
 FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
                                       channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
-)
-combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+) #log transform the forward and side scatter
+
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans) #combine both transformations
+
 transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
                                                    trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+```
 
-#quickly check the transformation by plotting the data
-#cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
-#                  channels_x = "FSC-A",
-#                  channels_y = "GFP",
-#                  axes_limits = "data")
+Check the transformed data by plotting
+Subset rows to plot as needed.
+```{r}
+cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
+                  channels_x = "FSC-A",
+                  channels_y = "GFP",
+                  axes_limits = "data")
+```
 
-##Gating using the entire timepoint dataset.
 
-# note:if you already have a gating template and don't need to draw gates, then skip cyto_draw, use cyto_gatingTemplate_apply to apply the gating template.csv to your gating set
-cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+#### Gating using the timepoints from the gating dataset.
 
-#First we gate for the cells
+*Note*:if you already have a gating template and don't need to draw gates,skip the cyto_gate_draw() steps. Instead, use cyto_gatingTemplate_apply() to apply a gatingTemplate.csv to your gating set. See STEP 5.5.  
+
+First we gate for the cells
+```{r}
 cyto_gate_draw(transformed_timepoint_gating_set,
   #transformed_logicle_timept,
                parent = "root",
                alias = "Cells",
                channels = c("FSC-A","SSC-A"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
+               gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
+```
 
-#Then we define the singlets based on forward scatter height and width
+Then we define the singlets based on forward scatter height and width
+```{r}
 cyto_gate_draw(transformed_timepoint_gating_set,
                parent = "Cells",
                alias = "Single_cells",
                channels = c("FSC-A","FSC-H"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv"
+               gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
+```
 
-#Gating for CNVs using the 0,1 and 2 copy controls:
+Gating for CNVs using the 0,1 and 2 copy controls:
+Subset the rows in the gatingset that you want to extract to overlay when drawing gates
+Choose colors of the parent population and the overlay populations. 
+Choose gate names
+```{r}
 DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(30,61,92)] #DGY1
 
 DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32,63)] #DGY500
@@ -184,15 +200,127 @@ DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(1,32,
 DGY1315 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[c(31,62,93)] #DGY1315
 
 cyto_gate_draw(transformed_timepoint_gating_set,
-               parent = "Single_cells", #first color
+               parent = "Single_cells", #maps to first point color
                alias = c("zero_copy", "one_copy", "two_or_more_copy"), #defines gate names
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
-               #select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
-               overlay = c(DGY1, DGY500, DGY1315),
+               gatingTemplate = paste0("cytek_gating_",version_name,".csv"),
+               overlay = c(DGY1, DGY500, DGY1315), #maps to remaining point colors
                point_col = c("gray", "green", "red", "blue")
 )
+```
+
+### STEP 4: Export gate-based data and non-gate based single cell data tables with fluorescence 
+
+Get cell count from each gate
+```{r}
+#get cell count from each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
+    rename(Gate = pop, name = sample, Count = count) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(version_name,"_counts_", prefix,".csv"))
+```  
+
+Get frequency of cells inside each gate
+```{r}
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
+    rename(Gate = pop, name = sample, Frequency = percent) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(version_name,"_freq_", prefix,".csv"))
+```
+
+Get single cell raw fluorescence data (NOT based on gates)
+Compute the normalized B2-A fluoresence over cell size forward scatter area (FSC-A)
+```{r}
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluorescence
+  write_csv(paste0(version_name,"_SingleCellDistributions_",prefix,".csv"))
+```
+
+STEP 5:  Use function to perform analysis to all subdirectories
+This function that will
+1. Read in all the files in a folder
+2. Read in experiment details files using pData
+3. Specify experiment markers
+4. Transform gating set
+5. Apply existing gating file using cyto_gatingTemplate_apply()
+6. Output stats file as .csv
+
+Specify markers and channels
+```{r}
+my_markers<-c("GFP") #list your marker name(s)
+channel<-c("B2-A") #list your channel(s)
+names(my_markers)<-channel
+```
+
+Function to analyze all experimental subdirectories
+```{r}
+analyze_all_exp = function(folder_name, my_markers, out_name="v1", gating_template="cytek_gating.csv") {
+
+  path <- folder_name #gets relative path name for folder to be analyzed
+
+  prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
+
+  exp_details_path <- paste0(path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
+
+  #1. read in files and make a gating set
+  print(path)
+  timepoint_gating_set <- cyto_setup(path=path, select="fcs", details=F, markers = F)
+
+  #2. read in experiment details for that gating set
+  experiment_details <- read_csv(exp_details_path, show_col_types = F) #import experiment-details.csv
+  for(i in 1:length(names(experiment_details))){
+    flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+  }
+  
+  #3. specify markers for that gating set
+  markernames(timepoint_gating_set)<-my_markers
+
+  #4. transform data
+  GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
+                                                 channels = c("B2-A"),
+                                                 widthBasis = -10
+                                                 )#returns it as a list
+  FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                        channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+                        )
+  combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+  transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                       trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+  #5. apply gatingTemplate.csv to transformed gating set
+  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
+
+  #6. write data tables: count and frequency of cells inside each gate, single cell raw fluorescence
+
+  #get cell count from each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
+    rename(Gate = pop, name = sample, Count = count) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(out_name,"_counts_", prefix,".csv"))
+  
+  #get frequency of cells inside each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
+    rename(Gate = pop, name = sample, Frequency = percent) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(out_name,"_freq_", prefix,".csv"))
+
+  #raw transformed B2-A and FSC values for each cell
+  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each cell as a list of matrices
+  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+   mutate(name = as.factor(name)) %>% #convert `name` to factor
+   left_join(experiment_details %>% #join by name column to add metadata
+               mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor for each cell
+   write_csv(paste0(out_name,"_SingleCellDistributions_",prefix,".csv"))
+}
+```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 ```{r}

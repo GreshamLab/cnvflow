@@ -212,27 +212,6 @@ experiment_details
   #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
   #Titir & Julie
 
-  #frequency of cells inside each gate
-#  cyto_stats_compute(transformed_timepoint_gating_set, #frequency of cells inside each gate
-#                                      parent = c("Single_cells"),
-#                                     alias = c("zero_copy", "one_copy", "two_or_more_copy"),
-#                                      stat="freq",
-#                                      save_as = paste0("01_02_04_v2_stats_freq_",prefix,".csv") #writes to working directory
-#                                      )
-
-  #cell number
-#  cyto_stats_compute(transformed_timepoint_gating_set,
-#                                             parent = c("Single_cells"),
-#                                             alias  = c("Single_cells"),
-#                                             stat="count",
-#                                             save_as = paste0("01_02_04_v2_stats_cell_number_", prefix,".csv"))
-  #get cell count from each gate
-  #cyto_stats_compute(transformed_timepoint_gating_set,
-  #                   parent = "Single_cells",
-  #                  alias = c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"),
-  #                   stat="count"
-  #                   save_as = paste0("01_02_04_v2_stats_cell_number_in_Gates", prefix,".csv"))
-  ##cyto_stat_compute() computes freq and count values that DO NOT match % in cyto_plot_gating_scheme. Instead, use gs_pop_get_stats()
   #get cell count from each gate
   gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
     rename(Gate = pop, name = sample, Count = count) %>%
