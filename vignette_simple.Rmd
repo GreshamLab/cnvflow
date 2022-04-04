@@ -4,7 +4,10 @@ author: "Julie Chuong"
 date: "4/3/2022"
 output: html_document
 ---
-This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. This vignette more worthwhile if you have one or two flow datasets, not a timecourse, ie. multiple subdirectories of flow data, one for each sampling day of a multiple day timecourse. For a vignette that analyzes timecourse flow data, see the our Vignette - Timecourse Flow. 
+This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. 
+This vignette more worthwhile if you have one or two flow datasets, not a timecourse, ie. multiple subdirectories
+of flow data, one for each sampling day of a multiple day timecourse. 
+For a vignette that analyzes timecourse flow data, see the our Vignette - Timecourse Flow. 
 
 Install CytoExplorer package and requirements (Skip if already installed)
 ```{r}

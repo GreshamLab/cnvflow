@@ -4,7 +4,10 @@ author: "Julie Chuong"
 output: html_notebook
 ---
 
-This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. 
+This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data 
+from the Cytek Aurora. This vignette more worthwhile if you have timecourse data, ie. multiple 
+subdirectories of flow data, one for each sampling day of a multiple day timecourse. 
+For a simpler vignette to analyze one or two datasets, see the our Vignette - Simple. 
 
 Install CytoExplorer package and requirements (Skip if already installed)
 ```{r}
@@ -142,6 +145,7 @@ gating_subdir = folders[1]
 exp_details_path = list.files(path = paste0(gating_subdir), pattern = "_experiment_details.csv", full.names = T)
 ```
 
+Load in FSC data as a gating set. 
 Edit Markers on Viewer pane. 
 Type in B2-A in the marker column of the B2-A channel. FSC and SSC are included markers by default 
 so we don't need to edit them. Click 'Save & Close' button at the bottom of the Viewer pane.
