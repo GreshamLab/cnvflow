@@ -5,17 +5,18 @@ date: "4/3/2022"
 output: html_document
 ---
 This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. 
-This vignette more worthwhile if you have one or two flow datasets, not a timecourse, ie. multiple subdirectories
-of flow data, one for each sampling day of a multiple day timecourse. 
+This vignette is  worthwhile if you have only one or two flow datasets, like checking a samples of GFP-tagged strains for GFP,
+viability stains of cells, etc. 
+We do not recommend this vignette for timecourse data, ie. multiple subdirectories of flow data, wherein there is one subdirectory for each sampling day of a timecourse. 
 For a vignette that analyzes timecourse flow data, see the our Vignette - Timecourse Flow. 
 
-Install CytoExplorer package and requirements (Skip if already installed)
+Install CytoExplorer package and requirements. Skip if already installed.
 ```{r}
 library(BiocManager)
 install.packages("cytolib", "flowCore", "flowWorkspace", "openCyto")
 ```
 
-Install CytoExploreR from GitHub (Skip is already installed)
+Install CytoExploreR from GitHub. Skip is already installed. 
 ```{r}
 library(devtools)
 devtools::install_github("DillonHammill/CytoExploreR")
@@ -34,7 +35,7 @@ These samples are of GAP1 CNV reporter strain (DGY1657), in which a mCitrine gen
 was inserted upstream of the *GAP1* promoter and coding sequence, were incubated overnight at 30C in 
 glutamine-limited media. Additionally, there was one sample each of
 3 control strains: zero copy 'unstained' control (DGY1) that has no mCitrine, one copy control (DGY500) in
-which the mCitrine gene was inserted in neutral locus *WHAT LOCUS?* that doesn't undergo copy number
+which the mCitrine gene was inserted in neutral locus, HO, that doesn't undergo copy number
 variation under glutamine-limited growth, and two copy control (DGY1315) containing two inserted copies of
 mCitrine in neutral loci.
 In each sample, 100,000 events were measured on the Cytek Aurora Flow Cytometer for mCitrine fluorescence
@@ -57,13 +58,7 @@ software and re-export the FCS files.
 
 ```{r setup, include=FALSE, echo=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_simple_data_workingcopy")
-```
-
-```{r}
-getwd()
-folders = list.dirs()[-1]
-folders
+knitr::opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_simple_data_workingcopy/FCS_files")
 ```
 
 ## Version name
