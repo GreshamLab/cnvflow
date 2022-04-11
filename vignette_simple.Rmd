@@ -1,8 +1,10 @@
 ---
-title: "vignette_simple"
+title: "Vignette - Simple Flow"
 author: "Julie Chuong"
 date: "4/3/2022"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 This is notebook is to show you how to use the package CytoexploreR to analyze flow cytometry data from the Cytek Aurora. 
 This vignette is  worthwhile if you have only one or two flow datasets, like checking a samples of GFP-tagged strains for GFP,
@@ -11,6 +13,14 @@ We do not recommend this vignette for timecourse data, ie. multiple subdirectori
 For a vignette that analyzes timecourse flow data, see the our Vignette - Timecourse Flow. 
 
 Install CytoExplorer package and requirements. Skip if already installed.
+```{r, setup, eval = FALSE, message = FALSE, warning=FALSE}
+```
+
+```{r include = FALSE}
+require("knitr")
+knitr::opts_chunk$set(eval = FALSE, message = FALSE, warning = FALSE)
+```
+
 ```{r}
 library(BiocManager)
 install.packages("cytolib", "flowCore", "flowWorkspace", "openCyto")
@@ -23,7 +33,7 @@ devtools::install_github("DillonHammill/CytoExploreR")
 ```
 
 Load required packages
-```{r, include = FALSE, echo=FALSE}
+```{r, eval = TRUE, message = FALSE, warning=FALSE}
 library(CytoExploreR)
 library(tidyverse)
 library(ggridges)
@@ -31,61 +41,63 @@ library(ggridges)
 
 ## Vignette Dataset
 
-These samples are of GAP1 CNV reporter strain (DGY1657), in which a mCitrine gene
-was inserted upstream of the *GAP1* promoter and coding sequence, were incubated overnight at 30C in 
-glutamine-limited media. Additionally, there was one sample each of
-3 control strains: zero copy 'unstained' control (DGY1) that has no mCitrine, one copy control (DGY500) in
-which the mCitrine gene was inserted in neutral locus, HO, that doesn't undergo copy number
-variation under glutamine-limited growth, and two copy control (DGY1315) containing two inserted copies of
-mCitrine in neutral loci.
+There were four samples that were analyzed on the Cytek Aurora. 
+One was *GAP1* CNV reporter strain (DGY1657), in which a mCitrine gene was inserted upstream of the *GAP1* promoter 
+and coding sequence. Additionally, there was one sample each of 3 control strains: zero copy 'unstained' control 
+(DGY1) that has no mCitrine, one copy control (DGY500) in which the mCitrine gene was inserted in neutral locus, HO,
+that doesn't undergo copy number variation under glutamine-limited growth, and two copy control (DGY1315) containing
+two inserted copies of mCitrine in neutral loci. Each sample was cultured from a single colony overnight in
+glutamine-limited media at 30C. 
+
 In each sample, 100,000 events were measured on the Cytek Aurora Flow Cytometer for mCitrine fluorescence
 (excitation wavelength = 516, emission wavelength = 529 ) via the B2-A channel, forward scatter (FSC), and 
 side scatter (SSC).
 Note that you may have used a different channel depending on your cell stain. 
 
-## Set working directory and get list of subdirectories
+## Set working directory
 Place your FCS files in a directory. Multiple subdirectories containing FCS files are OK. 
 
-*Note 1* You can only load in one folder's worth of FCS files at a time. In this vignette, 
+**Note 1**: You can only load in one folder's worth of FCS files at a time. In this vignette, 
 we put all of our FCS data files in one subdirectory named FCS_files. There is one FSC file per sample.
 In total, there are 4 FSC files. 
 
-*Note 2* You should NOT manually rename your FCS files after exporting it from the Cytek. 
+**Note 2**: You should **NOT** manually rename your FCS files after exporting it from the Cytek. 
 In other words, files should have their original names from the machine. 
 "Renaming the files manually is not recommended as it does not update the associated keywords contained in the FCS files"
 (Source: https://github.com/DillonHammill/CytoExploreR/issues/85). If files need to renamed, do so on on the Cytek
 software and re-export the FCS files.  
 
-```{r setup, include=FALSE, echo=FALSE}
+```{r eval = TRUE, echo = TRUE}
 require("knitr")
 knitr::opts_knit$set(root.dir = "~/Documents/vignette_simple_data_workingcopy")
 ```
 
-```{r}
+```{r, eval = TRUE}
 getwd()
 ```
 
 ## Version name
 Choose a name to be used for all output files including the gating template and associated flow data and graphs.
 In this vignette, we will set it to my initials, date, and version 1. 
-```{r}
+```{r eval=TRUE}
 version_name = "my_initials_date_v1"
 ```
 
 ## STEP 1: Load in FCS data as a gating set
-An editable markers sheet will show up on Viewer Pane. 
-Edit Markers on Viewer pane by typing in "B2-A' in the marker column of the B2-A channel.
-FSC and SSC are included markers by default so you don't need to edit them. 
-Scroll to the bottom of the Viewer pane.
-Click 'Save & Close' button at the bottom of the Viewer pane.
-```{r}
+**INSTRUCTIONS**: 
+
++ An editable markers sheet will show up on `Viewer` Pane.
++ Edit Markers on Viewer pane by typing in "B2-A" in the `marker` column of the B2-A channel. FSC and SSC are included markers by default so you do not need to edit them.  
++ Scroll to the bottom of the Viewer pane.  
++ Click `Save & Close` button at the bottom of the `Viewer` pane.
+```{r eval = TRUE}
 my_gating_set <- cyto_setup(path = "./FCS_files", restrict=TRUE, select="fcs")
 ```
 ## STEP 2: Edit the experimental details to include metadata from the sample sheet 
-Merge samplesheet with autogenerated experiment details file from cyto_setup().
-**ONLY NEED TO DO ONCE** to generate Vignette-Experiment-Details.csv file. Once you have the file, it will automatically be used the next time you load in FCS data as a gating set (STEP 1).
+Merge samplesheet with autogenerated experiment details file from `cyto_setup()`.  
+**ONLY NEED TO DO ONCE** to generate `Vignette-Experiment-Details.csv` file. Once you have the file, it will automatically be used the next time you load in FCS data as a gating set (STEP 1).
 
-Here we assume the sample sheet metadata file is already in the working directory. 
+Here we assume the samplesheet metadata file is already in the working directory.  
 Provide the file path to the sample sheet (metadata). 
 ```{r}
 file.rename(dir(pattern = "Experiment-Details.csv"),"Vignette-Experiment-Details.csv")
@@ -94,9 +106,9 @@ sample_sheet = read_csv(file = paste0(list.files(pattern = "sample_sheet_vignett
 experiment_details = left_join(exp_details, sample_sheet) %>%
   write_csv("Vignette-Experiment-Details.csv")
 ```
-
-Add the experiment details metadata to the gating set.
-**ONLY NEED TO ONCE**
+  
+  Add the experiment details metadata to the gating set.  
+  **ONLY NEED TO ONCE**
 ```{r}
 for(i in 1:length(names(experiment_details))){
   flowWorkspace::pData(my_gating_set)[names(experiment_details[i])]<-experiment_details[i]
@@ -105,7 +117,7 @@ for(i in 1:length(names(experiment_details))){
 
 Check that the experiment details metadata were successfully attached to the gating set. 
 ```{r}
-cyto_details(my_gating_set) %>% View()
+cyto_details(my_gating_set)
 ```
 
 By default the Experiment-Markers.csv file is named with the date created. 
@@ -135,8 +147,7 @@ for all nor could I use the log transformation for all values.
 
 *Error in plot.new() : QuartzBitmap_Output - unable to open file 
 
-```{r}
-getwd()
+```{r eval = TRUE}
 GFP_trans <- cyto_transformer_logicle(my_gating_set,
                                       channels = c("B2-A"),
                                       widthBasis = -10
@@ -152,38 +163,38 @@ transformed_gating_set <- cyto_transform(my_gating_set,
 ```
 
 Check the transformed data by plotting.
-```{r}
-getwd()
+```{r eval = TRUE}
 cyto_plot_explore(transformed_gating_set, #plots all FCS files
                   channels_x = "FSC-A",
                   channels_y = "B2-A",
                   axes_limits = "data")
 ```
 
-Subset rows to plot as desired, using the row assignment in cyto_details()
+Subset rows to plot as desired, using the row assignment in `cyto_details()`
 ```{r}
-cyto_details(transformed_gating_set) %>% View()
+cyto_details(transformed_gating_set)
 
-cyto_plot_explore(transformed_gating_set[c(1,2)], #optionally subset rows to plot 
+cyto_plot_explore(transformed_gating_set[c(2,3)], #optionally subset rows to plot 
                   channels_x = "FSC-A",
                   channels_y = "B2-A",
                   axes_limits = "data")
 ```
 
 
-#### Gating using the timepoints from the gating dataset.
+### Draw Gates using Control Strains as a Guide
 
-*Note*:if you already have a gating template and don't need to draw gates,
-skip the cyto_gate_draw() steps. Instead, use cyto_gatingTemplate_apply() 
+**Note**: if you already have a gating template and don't need to draw gates,
+skip the `cyto_gate_draw()` steps. Instead, use `cyto_gatingTemplate_apply()` 
 to apply a gatingTemplate.csv to your gating set. 
-```{r}
-cyto_gatingTemplate_apply(transformed_gating_set, gatingTemplate= gatingTemplate.csv)
+```{r eval = TRUE, results='hide'}
+cyto_gatingTemplate_apply(transformed_gating_set, gatingTemplate=paste0( "cytek_gating_",version_name,".csv"))
 ```
 
-A new window will pop out. Draw the desired gate.
-Press esc on keyboard when finished drawing to save the gate. 
+**INSTRUCTIONS**  
 
-**INSERT GIF HERE**
+* A new window will pop out.  
+* Draw the desired gate.  
+* Press `esc` on keyboard when finished drawing to save the gate.  
 
 First we gate for the cells, filtering out cell debris, bacteria, etc. 
 ```{r}
@@ -195,6 +206,7 @@ cyto_gate_draw(transformed_gating_set,
                gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
 ```
+**INSERT CELL GATING GIF HERE**
 
 Then we define the singlets based on side-scatter area and height.
 ```{r}
@@ -206,6 +218,9 @@ cyto_gate_draw(transformed_gating_set,
                gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
 ```
+**INSERT SINGLET GATING GIF HERE**
+
+
 
 Gating for CNVs using the 0,1 and 2 copy controls:
 In `cyto_extract()`, we can subset and extract the rows of interest. Here, we use `cyto_extract()` to
@@ -214,7 +229,7 @@ The row assignment correspond to the experimental details associated with the ga
 In `cyto_gate_draw()`, choose colors of the parent population and the overlay populations. 
 In `cyto_date_draw()`, the `alias` argument lets you choose gate names.
 ```{r}
-experiment_details %>% View() #View the rows and choose which to extract
+cyto_details(transformed_gating_set) #View the rows and choose which to extract
 ```
 
 ```{r}
@@ -235,7 +250,10 @@ cyto_gate_draw(transformed_gating_set,
 )
 ```
 
-Get statistics
+**INSERT GATING GIF HERE** 
+
+
+## STEP 4: Get statistics
 
 Get cell counts in each gate
 ```{r}
@@ -243,6 +261,8 @@ counts = gs_pop_get_stats(transformed_gating_set, c("Single_cells", "zero_copy",
     rename(Gate = pop, name = sample, Count = count) %>%
     left_join(experiment_details) %>%
     write_csv(paste0(version_name,"_counts.csv"))
+
+#counts = read_csv(paste0(version_name,"_counts.csv"))
 ```
 
 Get frequency of cells inside each gate
@@ -251,13 +271,38 @@ freq = gs_pop_get_stats(transformed_gating_set, c("Single_cells","zero_copy", "o
     rename(Gate = pop, name = sample, Frequency = percent) %>%
     left_join(experiment_details) %>%
     write_csv(paste0(version_name,"_freq.csv"))
+
+#freq = read_csv(paste0(version_name,"_freq.csv"))
 ```
 
 Check that there's are at least 70,000 single cells per sample
-
-Check cells in gates
 ```{r}
-Check cells in gates
+freq_and_counts =
+  counts %>% filter(Gate == "Single_cells") %>%
+  rename(Parent = Gate) %>%
+  left_join(freq) %>%
+  filter(!(Gate == "Single_cells")) %>%
+  mutate(Frequency = Frequency*100) %>%
+  relocate(2:3, .after = Gate)
+
+freq_and_counts %>%
+  distinct(Strain, Count)
+```
+
+Plot frequency of cells in gates per sample. 
+```{r}
+freq_and_counts %>%
+  mutate(Gate = fct_relevel(Gate, c("zero_copy", "one_copy", "two_or_more_copy")),
+         Strain=fct_relevel(Strain, c("DGY1","DGY500","DGY1657","DGY1315")),
+         Description=fct_relevel(Description, c("0 copy control", "1 copy control","CNV reporter strain","2 copy control"))
+         )%>%
+  filter(Count>70000) %>%
+  ggplot(aes(Description, Frequency, fill = Gate)) +
+  geom_bar(position="dodge", stat="identity") +
+  scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
+  ylab("% of cells in gate") +
+  theme_classic() +
+  theme(text = element_text(size=12))
 ```
 
 Get raw transformed B2-A and FSC values for every cell
@@ -269,17 +314,22 @@ sc_distr = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #conve
    left_join(experiment_details) %>% #join by name column to add metadata
    mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluorescence for every cell
    write_csv(paste0(version_name,"_SingleCellDistributions.csv"))
+
+sc_distr = read_csv(paste0(version_name,"_SingleCellDistributions.csv"))
 ```
 
+## STEP 5: Make Plots
 Graph single cell fluorescence distributions (ridgeplots) for each sample
-```{r}
+```{r, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='hide',fig.keep='all'}
 sc_distr = sc_distr %>% 
   mutate_if(is.character,as.factor) %>% #change all strings columns to factors 
-  mutate(Strain=fct_relevel(Strain,c("DGY1","DGY500","DGY1657","DGY1315"))) %>%
-  mutate(`mCitrine copy number`=fct_relevel(`mCitrine copy number`, c("zero copy","one copy", "two copy" )))
+  mutate(Strain=fct_relevel(Strain,c("DGY1","DGY500","DGY1657","DGY1315")),
+        `mCitrine copy number`=fct_relevel(`mCitrine copy number`, c("zero copy","one copy", "two copy" )),
+        Description=fct_relevel(Description, c("0 copy control", "1 copy control","CNV reporter strain","2 copy control"))
+  )
         
 sc_distr %>%
-  ggplot(aes(B2A_FSC, Strain, fill = `mCitrine copy number`)) +
+  ggplot(aes(B2A_FSC, Description, fill = `mCitrine copy number`)) +
   geom_density_ridges(scale = 1) +
   scale_y_discrete(expand = expansion(add = c(0.2, 1.0)))+
    scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
