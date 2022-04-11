@@ -209,6 +209,7 @@ cyto_gate_draw(transformed_gating_set,
 **INSERT CELL GATING GIF HERE**
 
 Then we define the singlets based on side-scatter area and height.
+See other ways to discriminate doublets: https://expert.cheekyscientist.com/how-to-perform-doublet-discrimination-in-flow-cytometry/ 
 ```{r}
 cyto_gate_draw(transformed_gating_set,
                parent = "Cells",
