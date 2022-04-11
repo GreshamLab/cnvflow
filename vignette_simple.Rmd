@@ -58,7 +58,11 @@ software and re-export the FCS files.
 
 ```{r setup, include=FALSE, echo=FALSE}
 require("knitr")
-knitr::opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/vignette_simple_data_workingcopy")
+knitr::opts_knit$set(root.dir = "~/Documents/vignette_simple_data_workingcopy")
+```
+
+```{r}
+getwd()
 ```
 
 ## Version name
@@ -158,6 +162,7 @@ transformed_gating_set <- cyto_transform(my_gating_set,
 
 Check the transformed data by plotting.
 ```{r}
+getwd()
 cyto_plot_explore(transformed_gating_set, #plots all FCS files
                   channels_x = "FSC-A",
                   channels_y = "B2-A",
@@ -257,6 +262,13 @@ freq = gs_pop_get_stats(transformed_gating_set, c("Single_cells","zero_copy", "o
     write_csv(paste0(version_name,"_freq.csv"))
 ```
 
+Check that there's are at least 70,000 single cells per sample
+
+Check cells in gates
+```{r}
+Check cells in gates
+```
+
 Get raw transformed B2-A and FSC values for every cell
 **Are the values transformed? Check the values on a gating set thats not been transformed.** 
 ```{r}
@@ -268,33 +280,37 @@ sc_distr = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #conve
    write_csv(paste0(version_name,"_SingleCellDistributions.csv"))
 ```
 
-Write a single cell distribution csv file for each of the 4 strains. 
-**IS THIS NECESSARY CODE TO INCLUDE???**
-```{r}
-for(pop in unique(sc_distr$Strain)) {
-  print(pop)
-  sc_distr %>%
-  filter(Strain == pop) %>%
-  write_csv(paste0(version_name,"sc_distributions_",pop,".csv"))
-}
-```
+Graph single cell fluorescence distributions (ridgeplots) for each sample
 ```{r}
 sc_distr = sc_distr %>% 
   mutate_if(is.character,as.factor) %>% #change all strings columns to factors 
-  mutate(Strain=fct_relevel(Strain,c("DGY1","DGY500","DGY1657","DGY1315")))
-         
-#levels(sc_distr$Strain) = c("DGY1","DGY500","DGY1657","DGY1315")
-#levels(sc_distr$Strain)
-
+  mutate(Strain=fct_relevel(Strain,c("DGY1","DGY500","DGY1657","DGY1315"))) %>%
+  mutate(`mCitrine copy number`=fct_relevel(`mCitrine copy number`, c("zero copy","one copy", "two copy" )))
+        
 sc_distr %>%
   ggplot(aes(B2A_FSC, Strain, fill = `mCitrine copy number`)) +
   geom_density_ridges(scale = 1) +
-  #facet_grid(~Strain) +
   scale_y_discrete(expand = expansion(add = c(0.2, 1.0)))+
-  #scale_fill_brewer(type = "seq", palette = 5, direction = 1) +
-  scale_fill_manual(values= rev(c(RColorBrewer::brewer.pal(3, "Greens")))) +
-  # scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
+   scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
   scale_x_continuous("normalized fluorescence", limits=c(0, 3.0), breaks = c(0, 1, 2, 3), labels = c(0,1,2,3)) +
+  theme_classic() +
+  theme(
+      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+      axis.text.y = element_text(family="Arial", size = 10, color = "black"),
+      strip.background = element_blank(), #remove box around facet title
+      strip.text = element_text(size=12)
+  )
+ggsave(paste0(version_name,"_sc_fluor_ridgeplots.png"))
+```
+**INSERT GRAPH PIC** 
+
+
+Graph boxplots of normalized fluorescence per sample
+```{r}
+ggplot(sc_distr, aes(Strain, B2A_FSC, fill = `mCitrine copy number`)) + 
+  geom_boxplot() +
+  ylab("normalized fluorescence")+
+  scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
   theme_classic() +
   theme(
       #legend.position = 'none', #remove the legend
@@ -303,6 +319,7 @@ sc_distr %>%
       strip.background = element_blank(), #remove box around facet title
       strip.text = element_text(size=12)
   )
-ggsave(paste0(version_name,"sc_fluor_ridgeplots.png"))
-```
 
+ggsave(paste0(version_name,"_sc_fluor_boxplots.png"))
+```
+**INSERT GRAPH PIC** 
