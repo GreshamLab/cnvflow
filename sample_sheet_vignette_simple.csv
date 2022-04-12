@@ -1,0 +1,5 @@
+name,Strain,Media,Outflow well,mCitrine copy number,Description,Genotype
+CNV_reporter_test-Plate_001-Group_001-B3 Well_001.fcs,DGY1,glutamine-limited,B03,zero copy,0 copy control,MATa FY4 prototroph
+CNV_reporter_test-Plate_001-Group_001-H3 Well_005.fcs,DGY1315,glutamine-limited,H03,two copy,2 copy control,"MATa HO::kanMX-mCitrine, DORF::kanMX-mCitrine"
+CNV_reporter_test-Plate_001-Group_001-F3 Well_004.fcs,DGY1657,glutamine-limited,F03,one copy,CNV reporter strain,MATa KanMX::mCitrine near GAP1
+CNV_reporter_test-Plate_001-Group_001-D3 Well_003.fcs,DGY500,glutamine-limited,D03,one copy,1 copy control,MAT a HO::prACT1-kanMX-ymCitrine
