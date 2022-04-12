@@ -18,7 +18,8 @@ Install CytoExplorer package and requirements. Skip if already installed.
 
 ```{r include = FALSE}
 require("knitr")
-knitr::opts_chunk$set(eval = FALSE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(eval = FALSE, message = FALSE, warning = FALSE, 
+                      include_graphics("https://github.com/GreshamLab/cnvflow/blob/main/experiment_markers.gif"))
 ```
 
 ```{r}
@@ -89,7 +90,9 @@ version_name = "my_initials_date_v1"
 + An editable markers sheet will show up on `Viewer` Pane.
 + Edit Markers on Viewer pane by typing in "B2-A" in the `marker` column of the B2-A channel. FSC and SSC are included markers by default so you do not need to edit them.  
 + Scroll to the bottom of the Viewer pane.  
-+ Click `Save & Close` button at the bottom of the `Viewer` pane.
++ Click `Save & Close` button at the bottom of the `Viewer` pane.  
+
+![Alt Text](https://media.giphy.com/media/2G8UP1gfTSAIIqM8fG/giphy.gif)
 ```{r eval = TRUE}
 my_gating_set <- cyto_setup(path = "./FCS_files", restrict=TRUE, select="fcs")
 ```
@@ -206,7 +209,8 @@ cyto_gate_draw(transformed_gating_set,
                gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
 ```
-**INSERT CELL GATING GIF HERE**
+**INSERT CELL GATING GIF HERE**  
+![](https://media.giphy.com/media/ioVu7wNdo4TBRK0TPE/giphy.gif)
 
 Then we define the singlets based on side-scatter area and height.
 See other ways to discriminate doublets: https://expert.cheekyscientist.com/how-to-perform-doublet-discrimination-in-flow-cytometry/ 
@@ -219,7 +223,8 @@ cyto_gate_draw(transformed_gating_set,
                gatingTemplate = paste0("cytek_gating_",version_name,".csv")
 )
 ```
-**INSERT SINGLET GATING GIF HERE**
+**INSERT SINGLET GATING GIF HERE**  
+![](https://media.giphy.com/media/k79Tm14uZKsFUOpCW6/giphy.gif)
 
 
 
@@ -251,7 +256,8 @@ cyto_gate_draw(transformed_gating_set,
 )
 ```
 
-**INSERT GATING GIF HERE** 
+**INSERT GATING GIF HERE**  
+![](https://media.giphy.com/media/FPx5yzPpyDzekyU6a0/giphy.gif)
 
 
 ## STEP 4: Get statistics
@@ -285,14 +291,16 @@ freq_and_counts =
   filter(!(Gate == "Single_cells")) %>%
   mutate(Frequency = Frequency*100) %>%
   relocate(2:3, .after = Gate)
+```
 
+```{r}
 freq_and_counts %>%
   distinct(Strain, Count)
 ```
 
 Plot frequency of cells in gates per sample. 
 ```{r}
-freq_and_counts %>%
+freq_bar = freq_and_counts %>%
   mutate(Gate = fct_relevel(Gate, c("zero_copy", "one_copy", "two_or_more_copy")),
          Strain=fct_relevel(Strain, c("DGY1","DGY500","DGY1657","DGY1315")),
          Description=fct_relevel(Description, c("0 copy control", "1 copy control","CNV reporter strain","2 copy control"))
@@ -304,6 +312,8 @@ freq_and_counts %>%
   ylab("% of cells in gate") +
   theme_classic() +
   theme(text = element_text(size=12))
+
+freq_bar
 ```
 
 Get raw transformed B2-A and FSC values for every cell
@@ -316,12 +326,12 @@ sc_distr = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #conve
    mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluorescence for every cell
    write_csv(paste0(version_name,"_SingleCellDistributions.csv"))
 
-sc_distr = read_csv(paste0(version_name,"_SingleCellDistributions.csv"))
+#sc_distr = read_csv(paste0(version_name,"_SingleCellDistributions.csv"))
 ```
 
 ## STEP 5: Make Plots
 Graph single cell fluorescence distributions (ridgeplots) for each sample
-```{r, echo=FALSE,warning=FALSE,message=FALSE,error=FALSE, results='hide',fig.keep='all'}
+```{r}
 sc_distr = sc_distr %>% 
   mutate_if(is.character,as.factor) %>% #change all strings columns to factors 
   mutate(Strain=fct_relevel(Strain,c("DGY1","DGY500","DGY1657","DGY1315")),
@@ -329,7 +339,7 @@ sc_distr = sc_distr %>%
         Description=fct_relevel(Description, c("0 copy control", "1 copy control","CNV reporter strain","2 copy control"))
   )
         
-sc_distr %>%
+rp = sc_distr %>%
   ggplot(aes(B2A_FSC, Description, fill = `mCitrine copy number`)) +
   geom_density_ridges(scale = 1) +
   scale_y_discrete(expand = expansion(add = c(0.2, 1.0)))+
@@ -342,14 +352,16 @@ sc_distr %>%
       strip.background = element_blank(), #remove box around facet title
       strip.text = element_text(size=12)
   )
-ggsave(paste0(version_name,"_sc_fluor_ridgeplots.png"))
+
+rp
+#ggsave(paste0(version_name,"_sc_fluor_ridgeplots.png"))
 ```
 **INSERT GRAPH PIC** 
 
 
 Graph boxplots of normalized fluorescence per sample
 ```{r}
-ggplot(sc_distr, aes(Strain, B2A_FSC, fill = `mCitrine copy number`)) + 
+bp = ggplot(sc_distr, aes(Strain, B2A_FSC, fill = `mCitrine copy number`)) + 
   geom_boxplot() +
   ylab("normalized fluorescence")+
   scale_fill_manual(values= c(RColorBrewer::brewer.pal(3, "Greens"))) +
@@ -362,6 +374,8 @@ ggplot(sc_distr, aes(Strain, B2A_FSC, fill = `mCitrine copy number`)) +
       strip.text = element_text(size=12)
   )
 
-ggsave(paste0(version_name,"_sc_fluor_boxplots.png"))
+bp
+
+#ggsave(paste0(version_name,"_sc_fluor_boxplots.png"))
 ```
 **INSERT GRAPH PIC** 
