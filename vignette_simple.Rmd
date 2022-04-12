@@ -18,8 +18,7 @@ Install CytoExplorer package and requirements. Skip if already installed.
 
 ```{r include = FALSE}
 require("knitr")
-knitr::opts_chunk$set(eval = FALSE, message = FALSE, warning = FALSE, 
-                      include_graphics("https://github.com/GreshamLab/cnvflow/blob/main/experiment_markers.gif"))
+knitr::opts_chunk$set(eval = FALSE, echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ```{r}
