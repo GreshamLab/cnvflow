@@ -24,7 +24,7 @@ setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer
 folders = list.dirs()[-1]
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
-version_name = "jc_v3"
+version_name = "jc_v4"
 
 #STEP 1: Generate experiment details file.
 #A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
@@ -405,37 +405,47 @@ make_ridgeplots = function(file_name){
 map(pop_files, make_ridgeplots)
 
 
-
-# plot proportion of the population with a CNV over time
-#freq %>%
+my_facet_names <- as_labeller(c("GAP1 WT architecture" = "Wildtype architecture",
+                          "GAP1 LTR KO" = "LTR KO",
+                        "GAP1 ARS KO" = "ARS KO",
+                        "GAP1 LTR + ARS KO" = "LTR and ARS KO"))
+# Plot proportion of the population with a CNV over time
 fw_freq_and_counts %>%
-  filter(Count>70000) %>%
+  filter(Count>70000,
+         generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   group_by(sample, generation) %>%
-  mutate(prop_CNV = sum(Frequency)) %>% #View()
+  mutate(prop_CNV = sum(Frequency)
+         ) %>% #View()
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
-  geom_line() +
+  geom_line(size = 1.5) +
   #geom_point()+
-  facet_wrap(~Description) +
+  facet_wrap(~factor(Description,
+              levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names) +
   xlab("Generation") +
-  ylab("Proportion of the population with GAP1 CNV") +
-  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
-"#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
-"#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #ARS,7,pink
-"#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #LTR,8,green
-   )) +
-  #scale_color_manual(values = c()
+  ylab("Proportion of population with GAP1 amplications") +
+#  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
+#"#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
+#"#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #ARS,7,pink
+#"#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #LTR,8,green
+#   )) +
+  scale_color_manual(values = c(
+  "gray","gray","gray","gray","gray",
+  "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
+  "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
+  "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR,8,
+)) +
   theme_classic() +
   scale_x_continuous(breaks=seq(0,250,50)) +
-  theme(text = element_text(size=12),
+  theme(text = element_text(size=16),
         legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 10, color = "black"),
+        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 14, color = "black"),
         strip.background = element_blank(), #removed box around facet title
-        strip.text = element_text(size=12)
+        strip.text = element_text(size=16)
         )
 
 #Plot proportion of the populations with a CNV over time (collapse the replicates)
