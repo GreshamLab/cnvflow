@@ -433,7 +433,7 @@ fw_freq_and_counts %>%
 #"#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #LTR,8,green
 #   )) +
   scale_color_manual(values = c(
-  "gray","gray","gray","gray","gray",
+  "gray","gray","gray","gray","gray", #wildtype, 5, gray
   "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
   "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
   "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR,8,
@@ -871,28 +871,7 @@ confint(fit, 'Generation', level = 0.95)
 
 
 
-
-
 ####### MY PALLETEE
-#GOLD - #DEBD52
-#Soft Blue - #54A2DE
-#Soft Blue Purple - #5474DE
-#Soft Purple - #6254DE
-#Hot Turquoise - #54DEBE
-# Hot Pink - #BE54DE
-# Light Green - #74DE54
-
-#Square
-#DEBD52 #gold
-#54DE79 #neon green
-#5474DE #purple or #Soft Blue Purple - #5474DE
-#DE54B9 #pink
-
-#Square
-#26AA49 #true green
-#2745AA #purple
-#AA2787 #magent
-#AA8C27 #golde
 
 #Gold Metallic (6)
 #DEBD52
@@ -902,42 +881,8 @@ confint(fit, 'Generation', level = 0.95)
 #D9BB59
 #B89523
 
-#Green Machalite (8)
-#54DE79
-#41DB6A
-#2FD75C
-#26CA52
-#23B84B
-#60E182
-#6CE38C
-#78E595
-
-#royal blue light (8)
-#5774E5
-#637EE7
-#6F88E9
-#7B92EA
-#4463E2
-#3053DF
-#2246D7
-#1E3FC3
-#5766E6
-
-#Pink (8)
-#DE54B9
-#E160BE
-#E36CC3
-#E578C8
-#E885CD
-#DB41B2
-#D72FAA
-#BE54DE #medium orchid
-#B741DB
-#B02FD7
-#A426CA
-
-#ARS = BLUE  #00B0F6
-# LTR = PINK  #E76BF3
-# GREEN #00BF7D or #7CAE00
-# GOLD = #B79F00 or #C49A00
-
+#NEW PALLETE 4/20/22
+#WT = gray  "gray","gray","gray","gray","gray",
+#LTR and ARS = GOLD metalic "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
+#ARS = SALMON  "#e26d5c"
+#LTR = BABY BLUE "#6699cc"
