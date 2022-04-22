@@ -746,21 +746,30 @@ Tup_per_pop = #freq %>%
   select(Type, Strain, Description, sample, generation, Gate, Frequency) %>% #View()
   group_by(sample) %>%
   slice(which.min(generation))
+
 Tup_per_pop %>% write_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
 Tup_per_pop = read_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
+
 ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
   geom_boxplot() +
-  xlab("genotype") +
-  #scale_fill_manual(values=c("#00B0F6", "#00BF7D", "#E76BF3", "#B79F00")) +  #c(ARS,LTR+ARS,LTR,WT)
-  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52")) +  #c(ARS,LTR+ARS,LTR,WT)
-  #scale_fill_manual(values=c("#AA2787", "#2745AA", "#26AA49", "#AA8C27")) +  #c(ARS,LTR+ARS,LTR,WT)
-  #scale_fill_manual(values=c(awtools::spalette))+
-  ylab("generation of first CNV appearance") +
+  xlab("Genotype") +
+  scale_fill_manual(values=c("#e26d5c", "#DEBD52", "#6699cc", "gray"))+
+  ylab("Generation of first CNV appearance") +
+  scale_x_discrete(labels=c("Wildtype architecture","LTR KO","ARS KO","LTR and ARS KO"))+
   scale_y_continuous(breaks=c(8,20, 30, 40, 50, 60, max(Tup_per_pop$generation)))+
   theme_classic() +
   theme(legend.position = "none",
-        text = element_text(size=12))
-#ggsave("01_02_04_v2_fw_Tup_boxplot.png")
+        axis.text.x = element_text(family="Arial", size = 14, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 16, color = "black"),
+        text = element_text(size=16))
+#ggsave("01_02_04_v2_fw_Tup_boxplot_042022.png")
+
+theme(
+
+  axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+  axis.text.y = element_text(family="Arial", size = 10, color = "black"),
+
+  strip.text = element_text(size=12)
 
 # ANOVA to test for significance
 # One Way ANOVA because there is only 1 independent variable, genotype.
