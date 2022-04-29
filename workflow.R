@@ -424,7 +424,7 @@ fw_freq_and_counts %>%
   geom_line(size = 1.5) +
   #geom_point()+
   facet_wrap(~factor(Description,
-              levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names) +
+              levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
   ylab("Proportion of population with GAP1 amplications") +
 #  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
@@ -440,6 +440,7 @@ fw_freq_and_counts %>%
 )) +
   theme_classic() +
   scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_y_continuous(limits=c(0,100)) +
   theme(text = element_text(size=16),
         legend.position = "none",
         axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
@@ -531,10 +532,14 @@ sc_distr_alltimepoints %>%
   select(-FSC.A, -B2.A, -B2A_FSC) %>%
   write_csv("medians_normalized_fluor_alltimepoints.csv")
 
+cell_numbers = fw_counts %>%
+  filter(Gate == "Single_cells")
+
 norm_medians = read_csv("medians_normalized_fluor_alltimepoints.csv") %>%
-  left_join(cell_numbers) %>%
-  select(-Marker) %>%
-  rename(Gate = Population)
+  left_join(cell_numbers)
+#%>%
+  #select(-Marker) %>%
+  #rename(Gate = Population)
 
 #Rename description of controls so we can graph them on experimental facet plots
 relabel_controls = norm_medians %>% arrange(Description) %>%
@@ -558,31 +563,43 @@ clean_adj_norm_medians = adj_norm_medians %>%
 
 #Graph experimental with along controls
 clean_adj_norm_medians %>%
-  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%#filter out outliers (likely resulting from contamination) as defined by Fluor <1.5
-ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
-  geom_line(aes(linetype = Type)) +
+  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%  #filter out outliers (likely resulting from contamination) as defined by Fluor <1.5
+  ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
+  geom_line(aes(linetype = Type), size = 1.5) +
   scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
-  scale_color_manual(values=c("gray", "gray", "gray", #controls
-                              "#DEBD52", "#DBB741", "#D7B02F", "#CAA426","#D9BB59", #WT,5, golds
-                              #rep("#5474DE", 8),  #ALL,8, blue/purple "#5474DE"
-                              "#5774E5","#637EE7", "#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3", #ALL,8, blue/purple "#5474DE"
-                              "#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #rep("#DE54B9", 7), #ARS, 7,  pink "#DE54B9"
-                              "#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #rep("#54DE79", 8)  #LTR,8, green "#54DE79"
-  ))+
-  facet_wrap(~Description) +
+#  scale_color_manual(values=c("gray", "gray", "gray", #controls
+#                              "#DEBD52", "#DBB741", "#D7B02F", "#CAA426","#D9BB59", #WT,5, golds
+#                              #rep("#5474DE", 8),  #ALL,8, blue/purple "#5474DE"
+#                              "#5774E5","#637EE7", "#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3", #ALL,8, blue/purple "#5474DE"
+#                              "#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #rep("#DE54B9", 7), #ARS, 7,  pink "#DE54B9"
+#                              "#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #rep("#54DE79", 8)  #LTR,8, green "#54DE79"
+#  ))+
+
+
+  scale_color_manual(values = c(
+    "black", "black", "black", #controls
+    "gray","gray","gray","gray","gray", #wildtype, 5, gray
+    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
+    "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
+    "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR,8,
+  )) +
+#  facet_wrap(~Description) +
+  facet_wrap(~factor(Description,
+                     levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
   ylab("Median normalized fluorescence (a.u.)") +
-  scale_x_continuous(breaks=seq(0,260,50)) +
-  #ylim(c(1.5,2.5))+
+  scale_x_continuous(breaks=seq(0,200,50)) +
+  xlim(0,225)+
+  ylim(c(1.5,2.5))+
   theme_classic() +
   theme(legend.position = "none",
-        text = element_text(size=12),
+        text = element_text(size=16),
         strip.background = element_blank(), #removed box around facet title
-        strip.text = element_text(size=12),
-        axis.text.x = element_text(family="Arial", size = 12, color = "black"), #edit x-tick labels
+        strip.text = element_text(size=16),
+        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
         axis.text.y = element_text(family="Arial", size = 12, color = "black"))
-ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
-ggsave("MedNormFluro_v2_010722.png")
+#ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
+#ggsave("MedNormFluro_v2_010722.png")
 
 # Combine the replicates/populations and plot median normalized fluorescence over time
       # dashed gray controls lines on top of the experiment lineplot
@@ -617,6 +634,11 @@ ggsave("loes_regression_MedNormFluo_011222.png")
 #  filter(sample == pop) %>%
 #  write_csv(paste0("sc_distributions_",pop,"_all_timepoints.csv"))
 #}
+
+
+
+###### RANDOM INVESTIGATIONS ############
+
 #### Investigate the zig zaggy timepoints by graphing the ridgeplots for those populations to see what the distribution is like. (Zigzaggy lines of any one population can seen in the plot_list plots)
 #my idea is maybe the distribution shape can tel whether it's CNV dynamics or contamination.
 sc_gap1_4 = read.csv(file = "sc_distributions_gap1_4_all_timepoints.csv", stringsAsFactors = T) %>%
