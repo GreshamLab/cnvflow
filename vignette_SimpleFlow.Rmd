@@ -77,7 +77,7 @@ getwd()
 Choose a name to be used for all output files including the gatingTemplate.csv and associated flow data and graphs.  
 In this vignette, we will set it to my initials, date, and version 1. 
 ```{r}
-version_name = "my_initials_date_v1"
+version_name = "JC_050922_v1"
 ```
 
 ## STEP 1: Load in FCS data as a gating set  
@@ -245,7 +245,7 @@ one_ctrl <- cyto_extract(transformed_gating_set, "Single_cells")[c(2)] # row of 
 two_ctrl <- cyto_extract(transformed_gating_set, "Single_cells")[c(4)] # row of 2 copy control data
 
 cyto_gate_draw(transformed_gating_set,
-               point_col = c("gray", "green", "black", "blue"), #choose colors
+               point_col = c("gray", "gray", "dark green", "green"), #choose colors
                parent = "Single_cells", #maps to first point color
                overlay = c(zero_ctrl, one_ctrl, two_ctrl),#maps to remaining point colors
                alias = c("zero_copy", "one_copy", "two_or_more_copy"), #Name the gate names here
