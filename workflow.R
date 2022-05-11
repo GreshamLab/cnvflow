@@ -593,13 +593,14 @@ clean_adj_norm_medians %>%
   ylim(c(1.5,2.5))+
   theme_classic() +
   theme(legend.position = "none",
-        text = element_text(size=16),
+        text = element_text(size=20),
         strip.background = element_blank(), #removed box around facet title
         strip.text = element_text(size=16),
-        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 12, color = "black"))
+        axis.text.x = element_text(family="Arial", size = 20, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 18, color = "black"))
 #ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
 #ggsave("MedNormFluro_v2_010722.png")
+ggsave("MedNormFluor_051022.png")
 
 # Combine the replicates/populations and plot median normalized fluorescence over time
       # dashed gray controls lines on top of the experiment lineplot
@@ -773,7 +774,7 @@ Tup_per_pop %>% write_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
 Tup_per_pop = read_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
 
 ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape = NA) +
   xlab("Genotype") +
   scale_fill_manual(values=c("#e26d5c", "#DEBD52", "#6699cc", "gray"))+
   ylab("Generation of first CNV appearance") +
@@ -781,11 +782,17 @@ ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Des
   scale_y_continuous(breaks=c(8,20, 30, 40, 50, 60, max(Tup_per_pop$generation)))+
   theme_classic() +
   theme(legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 14, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 16, color = "black"),
-        text = element_text(size=16))
+        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 20, color = "black"),
+        text = element_text(size=18))+
+  geom_jitter(size = 2, alpha = 0.9, color = c(
+    rep("black",5), #wildtype, 5, gray
+    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR and ARS gold
+    "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
+  rep("black", 8) #LTR,8, #blue
+))
 #ggsave("01_02_04_v2_fw_Tup_boxplot_042022.png")
-
+ggsave("01_02_04_v2_fw_Tup_boxplot_051022.png")
 theme(
 
   axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
