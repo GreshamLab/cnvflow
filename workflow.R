@@ -332,7 +332,7 @@ for(exp in unique(freq$Description)) {
     #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
     filter(Description==exp) %>%
     ggplot(aes(generation, Frequency, color = Gate)) +
-    geom_line() +
+    geom_line(size = 1.5) +
     facet_wrap(~sample) +
     ylab("% of cells in gate") +
     theme_minimal()+
@@ -357,12 +357,12 @@ for(exp in unique(fw_freq_and_counts$Description)) {
     #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
     filter(Description==exp) %>%
     ggplot(aes(generation, Frequency, color = Gate)) +
-    geom_line() +
+    geom_line(size =1.5) +
     facet_wrap(~sample) +
     ylab("% of cells in gate") +
     theme_minimal()+
     scale_x_continuous(breaks=seq(0,250,50))+
-    theme(text = element_text(size=12))
+    theme(text = element_text(size=20))
   i = i+1
 }
 names(plot_list) = unique(fw_freq_and_counts$Description)
@@ -421,12 +421,12 @@ fw_freq_and_counts %>%
   select(sample, generation, Description, prop_CNV) %>%
   distinct() %>%
   ggplot(aes(generation, prop_CNV, color = sample)) +
-  geom_line(size = 1.5) +
+  geom_line(size = 2.5) +
   #geom_point()+
   facet_wrap(~factor(Description,
               levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
-  ylab("Proportion of population with GAP1 amplications") +
+  ylab("Proportion of cells with GAP1 amplications") +
 #  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
 #"#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
 #"#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #ARS,7,pink
@@ -441,12 +441,13 @@ fw_freq_and_counts %>%
   theme_classic() +
   scale_x_continuous(breaks=seq(0,250,50)) +
   scale_y_continuous(limits=c(0,100)) +
-  theme(text = element_text(size=16),
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        text = element_text(size=25),
         legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 14, color = "black"),
+        axis.text.x = element_text(family="Arial", size = 30, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(family="Arial", size = 30, color = "black"),
         strip.background = element_blank(), #removed box around facet title
-        strip.text = element_text(size=16)
+        strip.text = element_text(size=25)
         )
 
 #Plot proportion of the populations with a CNV over time (collapse the replicates)
@@ -601,6 +602,34 @@ clean_adj_norm_medians %>%
 #ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
 #ggsave("MedNormFluro_v2_010722.png")
 ggsave("MedNormFluor_051022.png")
+
+# Graph single plots of median normalized fluoresence for every population (sample)
+# Later, match it up with the single cell distribution ridgeplots to see if ridgeplots are consistent with the median.
+# (They should be consistent)
+plot_list = list()
+i=1
+for(exp in unique(clean_adj_norm_medians$Description)) {
+  plot_list[[i]] = clean_adj_norm_medians %>%
+    filter(Description==exp) %>%
+    ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
+    geom_line(aes(linetype = Type), size = 1.5) +
+    facet_wrap(~sample) +
+    scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
+    xlab("Generation") +
+    ylab("Median normalized fluorescence (a.u.)") +
+    scale_x_continuous(breaks=seq(0,250,50))+
+    theme_bw() +
+    theme(text = element_text(size=20),
+          plot.margin = unit(c(1, 1, 1, 1), "cm"),
+          strip.background = element_blank(), #removed box around facet title
+    )
+  i = i+1
+}
+names(plot_list) = unique(clean_adj_norm_medians$Description)
+plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+plot_list$`GAP1 ARS KO`
+plot_list$`GAP1 LTR KO`
+plot_list$`GAP1 LTR + ARS KO`
 
 # Combine the replicates/populations and plot median normalized fluorescence over time
       # dashed gray controls lines on top of the experiment lineplot
