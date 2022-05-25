@@ -566,7 +566,7 @@ clean_adj_norm_medians = adj_norm_medians %>%
 clean_adj_norm_medians %>%
   filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%  #filter out outliers (likely resulting from contamination) as defined by Fluor <1.5
   ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
-  geom_line(aes(linetype = Type), size = 1.5) +
+  geom_line(aes(linetype = Type), size = 2.0) +
   scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
 #  scale_color_manual(values=c("gray", "gray", "gray", #controls
 #                              "#DEBD52", "#DBB741", "#D7B02F", "#CAA426","#D9BB59", #WT,5, golds
@@ -594,11 +594,14 @@ clean_adj_norm_medians %>%
   ylim(c(1.5,2.5))+
   theme_classic() +
   theme(legend.position = "none",
-        text = element_text(size=20),
+        text = element_text(size=36),
         strip.background = element_blank(), #removed box around facet title
-        strip.text = element_text(size=16),
-        axis.text.x = element_text(family="Arial", size = 20, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 18, color = "black"))
+        strip.text = element_text(size=36),
+        #axis.text.x = element_text(family="Arial", size = 24, color = "black"), #edit x-tick labels
+        axis.text.x = element_text(size = 36, color = "black"), #edit x-tick labels
+        #axis.text.y = element_text(family="Arial", size = 24, color = "black")
+        axis.text.y = element_text(size = 36, color = "black")
+        )
 #ggsave("MedNormFluo_FacetPlots_NoOutliers_010722.png")
 #ggsave("MedNormFluro_v2_010722.png")
 ggsave("MedNormFluor_051022.png")
