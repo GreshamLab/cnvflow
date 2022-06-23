@@ -372,6 +372,9 @@ plot_list$`GAP1 ARS KO`
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 LTR + ARS KO`
 
+
+
+
 #Plot ridgeplots of each population to catch contaminated timepoints/outlier values.
   #(Later will calculate Sup values for each population)
 #I could write a Function that plots ridgeplots. Then I can write use map() to apply this FUNCtion to all population.csv since I have 32 pops
@@ -623,7 +626,8 @@ for(exp in unique(clean_adj_norm_medians$Description)) {
     ylab("Median normalized fluorescence (a.u.)") +
     scale_x_continuous(breaks=seq(0,250,50))+
     theme_bw() +
-    theme(text = element_text(size=20),
+    theme(#text = element_text(size=20),
+          axis.text.x = element_text(size=10),
           plot.margin = unit(c(1, 1, 1, 1), "cm"),
           strip.background = element_blank(), #removed box around facet title
     )
