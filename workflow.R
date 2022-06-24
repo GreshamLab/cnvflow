@@ -21,7 +21,7 @@ library(ggridges)
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 #setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
 setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
-folders = list.dirs()[-1]
+folders = list.dirs()[5:28] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
 version_name = "jc_v4"
@@ -59,10 +59,10 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs
 #STEP 2: Read in all files in a directory and rename the channels.
 #Results in one timepoint's gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
-folders = list.dirs()[-1]
-exp_details_path = list.files(path = paste0(folders[4]), pattern = "_experiment_details.csv", full.names = T)
+
+exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
 #exp_details_path = list.files(path = folder08, pattern = "_experiment_details.csv", full.names = T)
-timepoint_gating_set <- cyto_setup(path = paste0(folders[4]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
 #use flowWorkspace::pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
@@ -216,7 +216,7 @@ experiment_details
   gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
     rename(Gate = pop, name = sample, Count = count) %>%
     left_join(experiment_details) %>%
-    write_csv(paste0("01_02_04_v2_fw_counts_", prefix,".csv"))
+    write_csv(paste0("01_02_04_v2_fw_count_", prefix,".csv"))
   #get frequency of cells inside each gate
   gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
     rename(Gate = pop, name = sample, Frequency = percent) %>%
@@ -237,9 +237,8 @@ experiment_details
 #Uses map from purr() to apply function from step 5 to all directories
 #Author: Julie
 
-#map(folders[-1], analyze_all_exp, my_markers, gating_template = "cytek_gating.csv")
-try(map(folders[4:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
-try(map(folders[23],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
+try(map(folders[1:length(folders)],analyze_all_exp, my_markers, gating_template = "cytek_gating_01_02_04_v2.csv"))
+
 #STEP 7: Pull in all counts or freq or single cell distribution files from directory and combine into a single dataframe
 #Author: Julie
 
@@ -251,10 +250,10 @@ list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_
   read_csv() %>%
   write_csv(file = "01_02_04_v2_fw_freq_all_timepoints.csv")
 
-#do on hpc because large files
-#list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
-#  read_csv() %>%
-#  write_csv(file = "01_02_04_v2_SingleCellDistributions_all_timepoints.csv")
+# Do on hpc because large files, do once
+# list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
+#   read_csv() %>%
+#   write_csv(file = "01_02_04_v2_SingleCellDistributions_all_timepoints.csv")
 
 #STEP 8: Plot ridgeplots, time series, & assess gates
 #Determine whether =>83% of controls are in the correct gate
@@ -262,19 +261,19 @@ list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_
 #Author: Grace & Julie
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
-fw_freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") #%>% rename(Frequency = frequency)
-fw_counts= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
+freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") #%>% rename(Frequency = frequency)
+count= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
 sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
-fw_freq_and_counts =
-  fw_counts %>% filter(Gate == "Single_cells") %>%
+freq_and_counts =
+  count %>% filter(Gate == "Single_cells") %>%
   rename(Parent = Gate) %>%
-  left_join(fw_freq) %>%
+  left_join(freq) %>%
   filter(!(Gate == "Single_cells")) %>%
   mutate(Frequency = Frequency*100) %>%
   relocate(2:3, .after = Gate)
 
 #Table of low cell observations, convenient to have to anti_join() in further steps
-lowcell = fw_freq_and_counts %>%
+lowcell = freq_and_counts %>%
   filter(Count <7000) %>%
   mutate(generation = factor(generation, levels = unique(generation))) %>% #View()
   select(-Count)
@@ -282,7 +281,7 @@ lowcell = fw_freq_and_counts %>%
 #df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
 
 ## check controls are in their proper gates
-  fails = fw_freq_and_counts %>%
+  fails = freq_and_counts %>%
     #fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
   filter(str_detect(Description, "control")) %>%
@@ -308,8 +307,8 @@ lowcell = fw_freq_and_counts %>%
   #fails %>% write_csv("01_02_04_v2_79_10_fail_.csv")
   fails %>% write_csv("01_02_04_v2_fw_79_11_fail.csv")
 
-# plot controls over time
-fw_freq_and_counts %>%
+# plot proportion of control cells in control gates over time
+freq_and_counts %>%
   filter(Count>70000,
           str_detect(Description, "control")) %>%
   select(Type, Strain, Description, generation, Gate, Frequency, Count) %>%
@@ -350,9 +349,9 @@ plot_list$`GAP1 LTR + ARS KO`
 #dev by Julie
 plot_list = list()
 i=1
-for(exp in unique(fw_freq_and_counts$Description)) {
+for(exp in unique(freq_and_counts$Description)) {
   #print(plot_dist(obs))
-  plot_list[[i]] = fw_freq_and_counts %>%
+  plot_list[[i]] = freq_and_counts %>%
     #filter(Gate == "Single_cells" & Count>70000) %>%
     #filter(!(Gate == "Single_cells"))%>%
     #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
@@ -366,55 +365,21 @@ for(exp in unique(fw_freq_and_counts$Description)) {
     theme(text = element_text(size=20))
   i = i+1
 }
-names(plot_list) = unique(fw_freq_and_counts$Description)
+names(plot_list) = unique(freq_and_counts$Description)
 plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
 plot_list$`GAP1 ARS KO`
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 LTR + ARS KO`
 
 
-
-
-#Plot ridgeplots of each population to catch contaminated timepoints/outlier values.
-  #(Later will calculate Sup values for each population)
-#I could write a Function that plots ridgeplots. Then I can write use map() to apply this FUNCtion to all population.csv since I have 32 pops
-pop_files = list.files(pattern = "sc_distributions_")[-1:-3]
-make_ridgeplots = function(file_name){
-  pop_name = sub("sc_distributions_", "", sub("_all_timepoints.csv","", file_name))
-
-  pop_data = read.csv(file_name, stringsAsFactors = T) %>%
-    mutate(generation = factor(generation, levels = unique(generation)))
-
-  lowcell = count(pop_data, generation, sample) %>% filter(n < 70000)
-
-  pop_data %>%
-    anti_join(lowcell) %>%
-    ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-    geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
-    xlab("Normalized fluorescence (a.u.)") +
-    ylab("Generation") +
-    ggtitle(paste0(pop_name)) +
-    theme_classic() +
-    scale_x_continuous(limits=c(0.0,3), breaks = c(0, 1, 2, 3.0)) +
-    scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
-    scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-    theme(
-      legend.position = 'none', #remove the legend
-      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-      axis.text.y = element_text(family="Arial", size = 10, color = "black")
-    )
-  ggsave(paste0(pop_name,"_ridgeplot_scale2.png"))
-}
-
-map(pop_files, make_ridgeplots)
-
+# Plot proportion of the population with a CNV over time
 
 my_facet_names <- as_labeller(c("GAP1 WT architecture" = "Wildtype architecture",
                           "GAP1 LTR KO" = "LTR KO",
                         "GAP1 ARS KO" = "ARS KO",
                         "GAP1 LTR + ARS KO" = "LTR and ARS KO"))
-# Plot proportion of the population with a CNV over time
-fw_freq_and_counts %>%
+
+freq_and_counts %>%
   filter(Count>70000,
          generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
@@ -454,33 +419,10 @@ fw_freq_and_counts %>%
         strip.text = element_text(size=25)
         )
 
-#Plot proportion of the populations with a CNV over time (collapse the replicates)
-#freq %>%
-fw_freq_and_counts %>%
-  filter(Count>70000) %>%
-  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  #ggplot(aes(Frequency)) + geom_histogram(bins=50) #right skewed distribution
-  ggplot(aes(generation, Frequency, color = Description)) +
-  scale_color_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+
-  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+
-  #geom_point(alpha = 0.5, size =1) +
-  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill=Description), alpha=0.3) +
-  facet_wrap(~Description) +
-  theme_minimal() +
-  ggtitle("loess regression of the populations") +
-  ylab("Proportion of the population with GAP1 CNV") +
-  scale_x_continuous(breaks=seq(0,250,50)) +
-  scale_y_continuous(breaks=seq(0,100,25))+
-  theme(text = element_text(size=12),
-        legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 10, color = "black"))
-
-
 ###################################################
-# plot ridgeplots (histograms):
+# Plot Ridgeplots (density histograms):
 # instead of looking at the MEDIAN GFP values per population per generation,
-# we want to see the ENTIRE DISTRIBUTION of GFP of the cells per population per generation.
+# we want to see the ENTIRE DISTRIBUTION of GFP of single cells per population per generation.
 
 #plot ridgeplots of controls over time
 #sc_distr_alltimepoints %>%
@@ -518,9 +460,43 @@ ggplot(aes(B2A_FSC, generation, fill = Description)) +
       strip.background = element_blank(), #removed box around facet title
       strip.text = element_text(size=12)
   )
+
 ggsave("controls_generation_ridgeplot_excludeLowCellSamples.png")
 ggsave("controls_generation_ridgeplot_Facet.png")
 
+#Plot ridgeplots of each experimental and control population (32 in all) to catch contaminated timepoints/outlier values.
+#Wrote a Function that plots ridgeplots.
+# Then I can write use map() to apply this FUNCtion to all population.csv since I have 32 pops
+
+pop_files = list.files(pattern = "sc_distributions_")[-1:-3] %>% sort()
+make_ridgeplots = function(file_name){
+  pop_name = sub("sc_distributions_", "", sub("_all_timepoints.csv","", file_name))
+
+  pop_data = read.csv(file_name, stringsAsFactors = T) %>%
+    mutate(generation = factor(generation, levels = unique(generation)))
+
+  lowcell = count(pop_data, generation, sample) %>% filter(n < 70000)
+
+  pop_data %>%
+    anti_join(lowcell) %>%
+    ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
+    geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
+    xlab("Normalized fluorescence (a.u.)") +
+    ylab("Generation") +
+    ggtitle(paste0(pop_name)) +
+    theme_classic() +
+    scale_x_continuous(limits=c(0.0,3), breaks = c(0, 1, 2, 3.0)) +
+    scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
+    scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
+    theme(
+      legend.position = 'none', #remove the legend
+      axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
+      axis.text.y = element_text(family="Arial", size = 10, color = "black")
+    )
+  ggsave(paste0(pop_name,"_ridgeplot_scale2.png"))
+}
+
+map(pop_files, make_ridgeplots) #map() applies this ridgeplot function to all 32 population.csv files
 
 ###### Plot normalized median mCitrine fluorescence over time
 #overlay 0,1,2 controls on same graph as experimental with gray lines
@@ -537,7 +513,7 @@ sc_distr_alltimepoints %>%
   select(-FSC.A, -B2.A, -B2A_FSC) %>%
   write_csv("medians_normalized_fluor_alltimepoints.csv")
 
-cell_numbers = fw_counts %>%
+cell_numbers = count %>%
   filter(Gate == "Single_cells")
 
 norm_medians = read_csv("medians_normalized_fluor_alltimepoints.csv") %>%
@@ -639,32 +615,8 @@ plot_list$`GAP1 ARS KO`
 plot_list$`GAP1 LTR KO`
 plot_list$`GAP1 LTR + ARS KO`
 
-# Combine the replicates/populations and plot median normalized fluorescence over time
-      # dashed gray controls lines on top of the experiment lineplot
-clean_adj_norm_medians %>%
-  filter(Type == "Experimental") %>%
-  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>% #filter out outliers (likely resulting from contamination)
-ggplot(mapping = aes(generation, Med_B2A_FSC, color = Description)) +
-  stat_smooth(method="loess", span=0.1, se=TRUE, aes(fill = Description), alpha=0.3) + #experimentals loess regression with standard error cloud
-  geom_line(mapping = aes(generation, Med_B2A_FSC, color = Type, linetype = Type),
-            data = clean_adj_norm_medians %>% filter(Type != "Experimental")) + #controls lineplot
-  scale_linetype_manual(values = c("dashed", "dashed", "dashed"))+ #dashed lines for controls
-  scale_color_manual(values=c("gray", "gray", "gray","#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #line color
-  scale_fill_manual(values=c("#DE54B9", "#5474DE", "#54DE79", "#DEBD52"))+ #standard error cloud color
-  facet_wrap(~Description) +
-  theme_classic() +
-  ggtitle("loess regression of combined populations") + theme(plot.title = element_text(hjust = 0.5)) +
-  xlab("Generation") +
-  ylab("Median normalized fluorescence (a.u.)") +
-  scale_x_continuous(breaks=seq(0,250,50)) +
-  theme(legend.position = "none",
-        text = element_text(size=12),
-        strip.background = element_blank(), #remove box around facet title
-        strip.text = element_text(size=12),
-        axis.text.x = element_text(family="Arial", size = 12, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 12, color = "black")) #I did it!
-ggsave("loes_regression_MedNormFluo_011222.png")
 
+# Make ridgeplots for each population
 ### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
 #for(pop in unique(sc_distr_alltimepoints$sample)) {
 #  print(pop)
@@ -675,101 +627,6 @@ ggsave("loes_regression_MedNormFluo_011222.png")
 
 
 
-###### RANDOM INVESTIGATIONS ############
-
-#### Investigate the zig zaggy timepoints by graphing the ridgeplots for those populations to see what the distribution is like. (Zigzaggy lines of any one population can seen in the plot_list plots)
-#my idea is maybe the distribution shape can tel whether it's CNV dynamics or contamination.
-sc_gap1_4 = read.csv(file = "sc_distributions_gap1_4_all_timepoints.csv", stringsAsFactors = T) %>%
-  mutate(generation = factor(generation, levels = unique(generation)))
-
-sc_gap1_4 %>%
-  ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-  geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
-  xlab("Normalized fluorescence (a.u.)") +
-  ylab("Generation") +
-  ggtitle("GAP1 WT 4") +
-  theme_classic() +
-  scale_x_continuous(limits=c(0.0,2.5), breaks = c(0, 1, 2, 2.5)) +
-  scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
-  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-  theme(
-    legend.position = 'none', #remove the legend
-    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-    axis.text.y = element_text(family="Arial", size = 10, color = "black")
-  )
-ggsave("gap1_4_ridgeplot_scale2.png")
-
-sc_gap1_4 %>%
-  group_by(generation) %>%
-  mutate(norm_median = median(B2A_FSC)) %>%
-  distinct() %>%
-  ggplot(aes(generation, norm_median, group = 1)) +
-  geom_line()+
-  geom_point()+
-  ggtitle("gap1_4")+
-  ylab("normalized B2A/FSC then median")
-  theme_classic()
-ggsave("gap1_4_normalized_median_lineplot.png")
-
-sc_gap1_4 %>%
-  group_by(generation) %>%
-  mutate(med_B2A = median(B2.A)) %>% View()
-  ggplot(aes(generation, med_B2A, group = 1)) +
-  geom_line() +
-  geom_point()+
-  ggtitle("gap1_4") +
-  ylab("median B2-A fluorescence (a.u)") +
-  theme_classic()
-ggsave("gap1_4_raw-B2A_lineplot.png")
-
-sc_gap1_4 %>%
-  group_by(generation) %>%
-  mutate(med_FSC = median(FSC.A)) %>%
-ggplot(aes(generation, med_FSC, group = 1)) +
-  geom_line() +
-  geom_point()+
-  ggtitle("gap1_4") +
-  ylab("median FSC fluorescence (a.u)") +
-  theme_classic()
-ggsave("gap1_4_raw-FSC_lineplot.png")
-
-clean_adj_norm_medians %>% filter(sample == "gap1_4") %>%
-  ggplot(aes(generation, Med_B2A_FSC, group = 1))+
-  geom_line()+
-  geom_point()+
-  theme_classic()
-ggsave("gap1_4_median_then_norm_lineplot.png")
-
-clean_adj_norm_medians %>%
-  filter(sample == "gap1_4", generation > 120) %>%
-  select(sample, Description, generation, `FSC-A`, GFP, Med_B2A_FSC, Count) %>% View()
-
-#experimental populations that dip down, investigate.
-dips = clean_adj_norm_medians %>%
-  filter(Med_B2A_FSC < 1.5 & Type == "Experimental") %>%
-  write_csv("Med_B2A_FSC_dips.csv")
-
-#investigate sample gap1_all_3. Graph ridgeplots.
-gap1_all_3 <- read.csv(file = "sc_distributions_gap1_all_3_all_timepoints.csv", stringsAsFactors = T) %>%
-  mutate(generation = factor(generation, levels = unique(generation)))
-gap1_all_3 %>%
-ggplot(aes(x = B2A_FSC, y = generation, fill = ..x.., height=..density..)) +
-  geom_density_ridges_gradient(scale = 2.0, rel_min_height = 0.01) +
-  xlab("Normalized fluorescence (a.u.)") +
-  ylab("Generation") +
-  ggtitle("GAP1 LTR + ARS 3") +
-  theme_classic() +
-  #scale_x_continuous(limits=c(0.0,5), breaks = c(0, 1, 5, 0.5)) +
-  scale_y_discrete(expand = expansion(add = c(0.2, 2.5))) + #expands the graph space or else the top is cut off
-  scale_fill_distiller(type = "seq", palette = 5, direction = 1, guide = "colourbar") + #makes it green
-  theme(
-    legend.position = 'none', #remove the legend
-    axis.text.x = element_text(family="Arial", size = 10, color = "black"), #edit x-tick labels
-    axis.text.y = element_text(family="Arial", size = 10, color = "black")
-  )
-ggsave("gap1_all_3_ridgeplots.png")
-
-
 ####################################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
 # Author: Julie
@@ -778,7 +635,7 @@ ggsave("gap1_all_3_ridgeplots.png")
 
 #CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is called the Two_or_more copy gate.
 CNV_false_pos_df = #freq %>%
-  fw_freq_and_counts %>%
+  freq_and_counts %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
   filter(Type == "1_copy_ctrl") %>%
@@ -799,7 +656,7 @@ thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency) #
 
 #Determine Tup for each population, the generation when CNVs first appear above the threshold frequency.
 Tup_per_pop = #freq %>%
-  fw_freq_and_counts %>%
+  freq_and_counts %>%
   filter(Count>70000) %>%
   anti_join(fails) %>%
   filter(Type == "Experimental", Gate == "two_or_more_copy", Frequency >= thres_mean) %>%
@@ -852,7 +709,7 @@ summary(Tup_anova)
 # accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
 
 #Calculate natural log proportion of each population with CNV relative to that without CNV
-ln_table = fw_freq_and_counts %>%
+ln_table = freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
@@ -867,7 +724,7 @@ ln_table = fw_freq_and_counts %>%
 # as part of the function, include a variable that changes number of fit points (window width)
 # I recycled some code from Lauer et al. 2018
 
-pop_list = unique(ln_table$sample)
+pop_list = unique(ln_table$sample) %>% sort()
 gens = unique(ln_table$generation)
 
 equation = function(x) {
@@ -881,7 +738,6 @@ equation = function(x) {
 #function to apply for loop to each of 28 populations, used some code from Lauer et al. 2018
 sliding_fit = function(num_fitpoints, population){
   timepoints = nrow(subset(ln_table, sample %in% c(population)))
-  #timepoints = subset(ln_table, sample %in% c(population)) %>% distinct(generation) %>% nrow()
   rounds = timepoints- (timepoints/num_fitpoints) - 1
   m <- matrix(ncol = 6, nrow = rounds) #nrow = number of iterations. number of iterations depend on the number of generations and the number of fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
   colnames(m) <- c("start", "end", "gen_start", "gen_end", "slope", "rsquared")
@@ -896,6 +752,7 @@ sliding_fit = function(num_fitpoints, population){
       }
       fit <- lm(logECNV_NoCNV ~ generation, fit_points_df) #linear model, lm(y~x, by the data)
       print(summary(fit))
+
       ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
       geom_point() +
       geom_smooth(data=fit_points_df, method=lm, show.legend=FALSE) +
@@ -928,22 +785,19 @@ sliding_fit = function(num_fitpoints, population){
 
 #call the function and assign outputted matrix to a variable
 result <- sliding_fit(4, pop_list[27])
-assign(paste0(pop_list[27],"_fits","_",4,"pts"), result) #rename and save to environment
+assign(paste0(pop_list[27],"_fits","_",4,"pts"), result) #Use assign() to rename and save to R environment
 
-
-sliding_fit(4, population = pop_list[1:3]) #doesn't work
+sliding_fit(4, pop_list[1:3]) #doesn't work
 lapply(pop_list, sliding_fit(4, pop_list)) #doesn't work
 
 #call the function for all pops in the pop_list using map()
-map(.x = pop_list[1:28], ~sliding_fit(4, .x))
+map(.x = pop_list[1:28], ~sliding_fit(4, .x)) #tilde inside functions (https://stackoverflow.com/questions/70665707/what-is-the-meaning-of-and-inside-the-function-map)
 
 
 summary(fit)$coef[[4]] #fourth coefficient is the standard error of the linear model slope
 
 
-
-
-####### MY PALLETEE
+####### MY PALLETTE
 
 #Gold Metallic (6)
 #DEBD52
