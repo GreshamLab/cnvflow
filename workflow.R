@@ -627,7 +627,7 @@ for(exp in unique(clean_adj_norm_medians$Description)) {
     scale_x_continuous(breaks=seq(0,250,50))+
     theme_bw() +
     theme(#text = element_text(size=20),
-          axis.text.x = element_text(size=10),
+          axis.text.x = element_text(size=8),
           plot.margin = unit(c(1, 1, 1, 1), "cm"),
           strip.background = element_blank(), #removed box around facet title
     )
@@ -851,14 +851,7 @@ summary(Tup_anova)
 # barcode experiment. Data and code used to generate these figures can be
 # accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
 
-equation = function(x) {
-  lm_coef <- list(a = round(coef(x)[1], digigts = 2),
-                  b = unname(round(coef(fit)[2], digits = 4)),# get rid of it printing c()
-                  r2 = round(summary(x)$r.squared, digits = 2));
-  lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
-  as.character(as.expression(lm_eq));
-}
-
+#Calculate natural log proportion of each population with CNV relative to that without CNV
 ln_table = fw_freq_and_counts %>%
   filter(Count>70000) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
@@ -869,22 +862,29 @@ ln_table = fw_freq_and_counts %>%
          CNV_NoCNV = prop_CNV/prop_NoCNV,
          logECNV_NoCNV = log(CNV_NoCNV)) #log() function is natural logarithm in R (even though  log() commonly thought as base10 )
 
-#To do: write a function to calculate Sup, Explained Variance, make graphs, ggsave graphs
-#then, use map() to apply function to all populations - I have 28
+# JULIE: A function to calculate Sup, Explained Variance, make graphs, ggsave graphs
+# then, use map() to apply function to all 28 populations - I have 28
 # as part of the function, include a variable that changes number of fit points (window width)
+# I recycled some code from Lauer et al. 2018
+
 pop_list = unique(ln_table$sample)
 gens = unique(ln_table$generation)
 
+equation = function(x) {
+  lm_coef <- list(a = round(coef(x)[1], digits = 2),
+                  b = round(summary(x)[4]$coefficients[2], digits = 4),
+                  r2 = round(summary(x)$r.squared, digits = 2));
+  lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
+  as.character(as.expression(lm_eq));
+}
+
 #function to apply for loop to each of 28 populations, used some code from Lauer et al. 2018
-#dev
-num_fitpoints = 4
-population = pop_list[26]
 sliding_fit = function(num_fitpoints, population){
   timepoints = nrow(subset(ln_table, sample %in% c(population)))
   #timepoints = subset(ln_table, sample %in% c(population)) %>% distinct(generation) %>% nrow()
   rounds = timepoints- (timepoints/num_fitpoints) - 1
-  m <- matrix(ncol = 5, nrow = rounds) #nrow = number of iterations. number of iterations depend on the number of generations and the number of fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
-  colnames(m) <- c("start", "end", "gen_start", "gen_end", "rsquared")
+  m <- matrix(ncol = 6, nrow = rounds) #nrow = number of iterations. number of iterations depend on the number of generations and the number of fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
+  colnames(m) <- c("start", "end", "gen_start", "gen_end", "slope", "rsquared")
   start = 1
   end = num_fitpoints
     for (i in 1:rounds){
@@ -909,13 +909,14 @@ sliding_fit = function(num_fitpoints, population){
 
       ggsave(paste0(population,"_Sup_g",gens[start],"-",gens[end],"_",num_fitpoints,"pts.png"), width = 8, height = 5)
 
-      print(paste0("From timepoints ",start," to ", end, ", generations ", gens[start], " to ", gens[end], ", rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
+      print(paste0("From timepoints ",start," to ", end, ", generations ", gens[start], " to ", gens[end],", slope was ", as.numeric(coef(fit)[2]) %>% round(4)," and rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
 
         m[i,1] <- start
         m[i, 2]<- end
         m[i, 3] <- gens[start]
         m[i,4] <- gens[end]
-        m[i,5] <- as.numeric(summary(fit)[8]) %>% round(2)
+        m[i, 5] <- as.numeric(coef(fit)[2]) %>% round(4)
+        m[i,6] <- as.numeric(summary(fit)[8]) %>% round(2)
 
         start = start + 1
         end = end + 1
@@ -928,21 +929,17 @@ sliding_fit = function(num_fitpoints, population){
 #call the function and assign outputted matrix to a variable
 result <- sliding_fit(4, pop_list[27])
 assign(paste0(pop_list[27],"_fits","_",4,"pts"), result) #rename and save to environment
-result <- sliding_fit(5, pop_list[26])
 
-sliding_fit(4, population = pop_list[1])
-lapply(pop_list, sliding_fit(4, pop_list))
+
+sliding_fit(4, population = pop_list[1:3]) #doesn't work
+lapply(pop_list, sliding_fit(4, pop_list)) #doesn't work
 
 #call the function for all pops in the pop_list using map()
-map(.x = pop_list[21], ~sliding_fit(4, .x))
-map(pop_list[1:3], sliding_fit(num_fitpoints =4))
-sliding_fit(4, pop)
-sliding_fit(4, pop_list[3])
-sliding_fit(5, pop_list[3])
+map(.x = pop_list[1:28], ~sliding_fit(4, .x))
 
-summary(fit)$coef[[4]] #fourth coefficient is the standard error
 
-confint(fit, 'Generation', level = 0.95)
+summary(fit)$coef[[4]] #fourth coefficient is the standard error of the linear model slope
+
 
 
 
