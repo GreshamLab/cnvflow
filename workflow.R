@@ -15,12 +15,12 @@ library(CytoExploreR)
 library(tidyverse)
 library(ggridges)
 
-# Set working directory and get list of subdirectories
-#setwd('../FCS files/') #Grace's working directory
+# Set working directory and get list of subdirectories containing FCS files
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
 #setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
 #setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
 setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
+
 folders = list.dirs()[5:28] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
@@ -278,8 +278,6 @@ lowcell = freq_and_counts %>%
   mutate(generation = factor(generation, levels = unique(generation))) %>% #View()
   select(-Count)
 
-#df %>% anti_join(lowcell) #example code to remove lowcell df from bigger table
-
 ## check controls are in their proper gates
   fails = freq_and_counts %>%
     #fails = freq %>%
@@ -321,39 +319,12 @@ freq_and_counts %>%
   scale_x_continuous(breaks=seq(0,250,50)) +
   theme(text = element_text(size=12))
 
-# plot proportion of population in each gate over time for all experimental
-#original code
-plot_list = list()
-i=1
-for(exp in unique(freq$Description)) {
-  #print(plot_dist(obs))
-  plot_list[[i]] = freq %>%
-    filter(Count>70000) %>%
-    #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
-    filter(Description==exp) %>%
-    ggplot(aes(generation, Frequency, color = Gate)) +
-    geom_line(size = 1.5) +
-    facet_wrap(~sample) +
-    ylab("% of cells in gate") +
-    theme_minimal()+
-    scale_x_continuous(breaks=seq(0,250,50))+
-    theme(text = element_text(size=12))
-  i = i+1
-}
-names(plot_list) = unique(freq$Description)
-plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
-plot_list$`GAP1 ARS KO`
-plot_list$`GAP1 LTR KO`
-plot_list$`GAP1 LTR + ARS KO`
-
-#dev by Julie
-plot_list = list()
+# plot proportion of population in each gate over time for each of 28 experimental populations
+prop_plot_list = list()
 i=1
 for(exp in unique(freq_and_counts$Description)) {
-  #print(plot_dist(obs))
-  plot_list[[i]] = freq_and_counts %>%
-    #filter(Gate == "Single_cells" & Count>70000) %>%
-    #filter(!(Gate == "Single_cells"))%>%
+  prop_plot_list[[i]] = freq_and_counts %>%
+    filter(Count>70000) %>%
     #filter(generation != 79, generation != 116,generation != 182,generation != 252) %>%
     filter(Description==exp) %>%
     ggplot(aes(generation, Frequency, color = Gate)) +
@@ -362,14 +333,14 @@ for(exp in unique(freq_and_counts$Description)) {
     ylab("% of cells in gate") +
     theme_minimal()+
     scale_x_continuous(breaks=seq(0,250,50))+
-    theme(text = element_text(size=20))
+    theme(text = element_text(size=10))
   i = i+1
 }
-names(plot_list) = unique(freq_and_counts$Description)
-plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
-plot_list$`GAP1 ARS KO`
-plot_list$`GAP1 LTR KO`
-plot_list$`GAP1 LTR + ARS KO`
+names(prop_plot_list) = unique(freq_and_counts$Description)
+prop_plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+prop_plot_list$`GAP1 ARS KO`
+prop_plot_list$`GAP1 LTR KO`
+prop_plot_list$`GAP1 LTR + ARS KO`
 
 
 # Plot proportion of the population with a CNV over time
@@ -540,7 +511,7 @@ clean_adj_norm_medians = adj_norm_medians %>%
   anti_join(adj_norm_medians %>% filter(generation == 203 & Type == "1_copy_ctrl")) %>%
   anti_join(adj_norm_medians %>% filter(generation == 231 & Type == "0_copy_ctrl")) %>%
   anti_join(adj_norm_medians %>% filter(generation == 260 & Type == "1_copy_ctrl"))
-#anti_join() gap1_4 two copy gate samples at g79, 124, 231, 252 -- why? not justified.
+#anti_join() gap1_4 two copy gate samples at g79, 124, 231, 252 -- why? not justified. That's what the data show. We don't know whether it's real or from contamination.
 
 #Graph experimental with along controls
 clean_adj_norm_medians %>%
@@ -548,15 +519,6 @@ clean_adj_norm_medians %>%
   ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
   geom_line(aes(linetype = Type), size = 2.0) +
   scale_linetype_manual(values = c("dashed", "dashed", "dashed", "solid")) +
-#  scale_color_manual(values=c("gray", "gray", "gray", #controls
-#                              "#DEBD52", "#DBB741", "#D7B02F", "#CAA426","#D9BB59", #WT,5, golds
-#                              #rep("#5474DE", 8),  #ALL,8, blue/purple "#5474DE"
-#                              "#5774E5","#637EE7", "#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3", #ALL,8, blue/purple "#5474DE"
-#                              "#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #rep("#DE54B9", 7), #ARS, 7,  pink "#DE54B9"
-#                              "#54DE79","#41DB6A","#2FD75C","#26CA52","#23B84B","#60E182","#6CE38C","#78E595" #rep("#54DE79", 8)  #LTR,8, green "#54DE79"
-#  ))+
-
-
   scale_color_manual(values = c(
     "black", "black", "black", #controls
     "gray","gray","gray","gray","gray", #wildtype, 5, gray
@@ -564,7 +526,6 @@ clean_adj_norm_medians %>%
     "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
     "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR,8,
   )) +
-#  facet_wrap(~Description) +
   facet_wrap(~factor(Description,
                      levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
@@ -586,14 +547,14 @@ clean_adj_norm_medians %>%
 #ggsave("MedNormFluro_v2_010722.png")
 ggsave("MedNormFluor_051022.png")
 
-# Graph single plots of median normalized fluoresence for every population (sample)
+# Graph single plots of median normalized fluorescence for every population (sample)
 # Later, match it up with the single cell distribution ridgeplots to see if ridgeplots are consistent with the median.
 # (They should be consistent)
-plot_list = list()
+fluor_single_plots = list()
 i=1
 for(exp in unique(clean_adj_norm_medians$Description)) {
-  plot_list[[i]] = clean_adj_norm_medians %>%
-    filter(Description==exp) %>%
+  fluor_single_plots[[i]] = clean_adj_norm_medians %>%
+    #filter(Description==exp) %>%
     ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
     geom_line(aes(linetype = Type), size = 1.5) +
     facet_wrap(~sample) +
@@ -603,20 +564,21 @@ for(exp in unique(clean_adj_norm_medians$Description)) {
     scale_x_continuous(breaks=seq(0,250,50))+
     theme_bw() +
     theme(#text = element_text(size=20),
-          axis.text.x = element_text(size=8),
+          axis.text.x = element_text(size=10),
           plot.margin = unit(c(1, 1, 1, 1), "cm"),
           strip.background = element_blank(), #removed box around facet title
     )
   i = i+1
 }
-names(plot_list) = unique(clean_adj_norm_medians$Description)
-plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
-plot_list$`GAP1 ARS KO`
-plot_list$`GAP1 LTR KO`
-plot_list$`GAP1 LTR + ARS KO`
+names(fluor_single_plots) = unique(clean_adj_norm_medians$Description)
+fluor_single_plots$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+fluor_single_plots$`GAP1 ARS KO`
+fluor_single_plots$`GAP1 LTR KO`
+fluor_single_plots$`GAP1 LTR + ARS KO`
 
 
 # Make ridgeplots for each population
+
 ### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
 #for(pop in unique(sc_distr_alltimepoints$sample)) {
 #  print(pop)
@@ -624,8 +586,6 @@ plot_list$`GAP1 LTR + ARS KO`
 #  filter(sample == pop) %>%
 #  write_csv(paste0("sc_distributions_",pop,"_all_timepoints.csv"))
 #}
-
-
 
 ####################################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
@@ -787,12 +747,8 @@ sliding_fit = function(num_fitpoints, population){
 result <- sliding_fit(4, pop_list[27])
 assign(paste0(pop_list[27],"_fits","_",4,"pts"), result) #Use assign() to rename and save to R environment
 
-sliding_fit(4, pop_list[1:3]) #doesn't work
-lapply(pop_list, sliding_fit(4, pop_list)) #doesn't work
-
 #call the function for all pops in the pop_list using map()
 map(.x = pop_list[1:28], ~sliding_fit(4, .x)) #tilde inside functions (https://stackoverflow.com/questions/70665707/what-is-the-meaning-of-and-inside-the-function-map)
-
 
 summary(fit)$coef[[4]] #fourth coefficient is the standard error of the linear model slope
 
