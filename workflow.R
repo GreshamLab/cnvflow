@@ -14,6 +14,7 @@
 library(CytoExploreR)
 library(tidyverse)
 library(ggridges)
+library(docstring)
 
 # Set working directory and get list of subdirectories containing FCS files
 #setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
@@ -24,10 +25,10 @@ setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer
 folders = list.dirs()[5:28] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
-version_name = "jc_v4"
+version_name = "newGates_080322"
 
-#STEP 1: Generate experiment details file.
-#A .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
+#STEP 1: Generate experiment details file from folder and FCS file names
+# Experiment details file is a .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
 #Author: Grace
 
 make_exp_details = function(folder_name, samplesheet) {
@@ -54,14 +55,19 @@ make_exp_details = function(folder_name, samplesheet) {
 
 }
 
-map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv") #needs to be run once
-#map(folders[1], make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
+#needs to be run once
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
+
+
 #STEP 2: Read in all files in a directory and rename the channels.
-#Results in one timepoint's gating set containing all .fcs files, associated experiment details, and marker details
+#A directory contains an FCS file for each populations for a single timepoint.
+#Results in 1 timepoint gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 
-exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
-#exp_details_path = list.files(path = folder08, pattern = "_experiment_details.csv", full.names = T)
+# here we will choose 3 timepoints worth of data to load in
+# these data will guide us drawing gates.
+exp_details_path = list.files(path = paste0(folders), pattern = "_experiment_details.csv", full.names = T)
+
 timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
 #use flowWorkspace::pData to annotate the experiment details file associated with the gating set
@@ -108,8 +114,9 @@ cyto_gate_draw(transformed_timepoint_gating_set,
                alias = "Cells",
                channels = c("FSC-A","SSC-A"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
+               gatingTemplate = "cytek_gating_",version_name,".csv"
 )
+
 
 #Then we define the singlets based on forward scatter height and width
 cyto_gate_draw(transformed_timepoint_gating_set,
@@ -117,7 +124,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
                alias = "Single_cells",
                channels = c("FSC-A","FSC-H"),
                axes_limits = "data",
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv"
+               gatingTemplate = "cytek_gating_",version_name,".csv"
 )
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
@@ -133,19 +140,13 @@ cyto_gate_draw(transformed_timepoint_gating_set,
                channels = c("FSC-A","B2-A"),
                axes_limits = "data",
                #select = list(Strain = c("DGY1","DGY500","DGY1315")),  #control strains
-               gatingTemplate = "cytek_gating_01_02_04_v2.csv",
+               gatingTemplate = "cytek_gating_",version_name,".csv",
                overlay = c(DGY1, DGY500, DGY1315),
                point_col = c("gray", "green", "red", "blue")
 )
 
-#STEP 4:  Generate statistics tables and single cell data tables
-#Author: Titir & Julie
-
-stats_freq_01 <- cyto_stats_compute(transformed_timepoint_gating_set01,
-                                  parent = "Single_cells",
-                                  alias = c("zero_copy", "one_copy", "two_or_more_copy"),
-                                  stat="freq",
-                                  save_as = "stats_freq_01.csv")
+#STEP 4:  Generate single cell data tables and normalized fluorescence
+#Author: Julie
 
 timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
 
@@ -154,7 +155,7 @@ map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, p
   left_join(experiment_details %>% #join by name column to add metadata
   mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
-  write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
+  write_csv(paste0(version_name,"_SingleCellDistributions_",prefix,".csv"))
 
 #STEP 5:  Use function to perform analysis
 #A function that will
@@ -209,28 +210,20 @@ experiment_details
   cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
 #  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
 
-  #6. write stats: freq file for % of cells inside each gate, median FSC and GFP for each population, median FSC and GFP for each gated population
-  #Titir & Julie
+  #6. Get cell counts and frequencies inside each gate
+  #Julie
 
   #get cell count from each gate
   gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
     rename(Gate = pop, name = sample, Count = count) %>%
     left_join(experiment_details) %>%
-    write_csv(paste0("01_02_04_v2_fw_count_", prefix,".csv"))
+    write_csv(paste0(version_name,"_counts_",prefix,".csv"))
+
   #get frequency of cells inside each gate
   gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
     rename(Gate = pop, name = sample, Frequency = percent) %>%
     left_join(experiment_details) %>%
-    write_csv(paste0("01_02_04_v2_fw_freq_", prefix,".csv"))
-
-  #raw transformed B2-A and FSC values for each cell (not the median)
-#  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
-#  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
-#   mutate(name = as.factor(name)) %>% #convert `name` to factor
-#   left_join(experiment_details %>% #join by name column to add metadata
-#               mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
-#   mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor for each cell
-#   write_csv(paste0("01_02_04_v2_SingleCellDistributions_",prefix,".csv"))
+    write_csv(paste0(version_name,"_freq_",prefix,".csv"))
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -242,13 +235,13 @@ try(map(folders[1:length(folders)],analyze_all_exp, my_markers, gating_template 
 #STEP 7: Pull in all counts or freq or single cell distribution files from directory and combine into a single dataframe
 #Author: Julie
 
-list.files(path = ".", pattern = "01_02_04_v2_fw_counts_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
+list.files(path = ".", pattern = paste0(version_name,"_counts_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
   read_csv() %>%
-  write_csv(file = "01_02_04_v2_fw_counts_all_timepoints.csv") #write a function to establish/customize the version file name then can paste0(version_filename)
+  write_csv(file = paste0(version_name,"_counts_all_timepoints.csv")) #write a function to establish/customize the version file name then can paste0(version_filename)
 
-list.files(path = ".", pattern = "01_02_04_v2_fw_freq_([0-9])+_EE_GAP1_ArchMuts_2021") %>%
+list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
   read_csv() %>%
-  write_csv(file = "01_02_04_v2_fw_freq_all_timepoints.csv")
+  write_csv(file = paste0(version_name,"_freq_all_timepoints.csv"))
 
 # Do on hpc because large files, do once
 # list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
