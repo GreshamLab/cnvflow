@@ -22,10 +22,12 @@ library(docstring)
 #setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
 setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
 
-folders = list.dirs()[5:28] #select the FSC file folders in your directory
+#In addition to having  directories containing data FSC files, make a gating directory, which is a directory that contains ALL the FSC files you want to overlay for drawing gates.
+folders = list.dirs()[c(2,5:28)] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
-version_name = "newGates_080322"
+version_name = "newGates_01_02_04_ars_all"
+# other versions: 01_02_04_v2
 
 #STEP 1: Generate experiment details file from folder and FCS file names
 # Experiment details file is a .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
@@ -60,13 +62,14 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 
 
 #STEP 2: Read in all files in a directory and rename the channels.
-#A directory contains an FCS file for each populations for a single timepoint.
+#A directory contains an FCS file for each population.
 #Results in 1 timepoint gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 
-# here we will choose 3 timepoints worth of data to load in
-# these data will guide us drawing gates.
-exp_details_path = list.files(path = paste0(folders), pattern = "_experiment_details.csv", full.names = T)
+# here we will load in 1 directory that contains 3 timepoints worth of data to load in.
+# cyto_setup() does not permit loading in more than 1 directory, so I had to create a directory with the data files of interest.
+# these data will guide us on drawing gates.
+exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
 
 timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
 
@@ -244,9 +247,9 @@ list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_Arc
   write_csv(file = paste0(version_name,"_freq_all_timepoints.csv"))
 
 # Do on hpc because large files, do once
-# list.files(path = ".", pattern = "01_02_04_v2_SingleCellDistributions") %>%
+# list.files(path = ".", pattern = paste0(version_name,"_SingleCellDistributions")) %>%
 #   read_csv() %>%
-#   write_csv(file = "01_02_04_v2_SingleCellDistributions_all_timepoints.csv")
+#   write_csv(file = paste0(version_name,"_SingleCellDistributions_all_timepoints.csv"))
 
 #STEP 8: Plot ridgeplots, time series, & assess gates
 #Determine whether =>83% of controls are in the correct gate
@@ -254,9 +257,9 @@ list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_Arc
 #Author: Grace & Julie
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
-freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv") #%>% rename(Frequency = frequency)
-count= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
-sc_distr_alltimepoints <- read.csv("01_02_04_v2_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T) %>% mutate(generation = factor(generation, levels = unique(generation)))
+freq = read_csv(paste0(version_name,"_freq_all_timepoints.csv")) #%>% rename(Frequency = frequency)
+count= read_csv("_fw_counts_all_timepoints.csv")
+sc_distr_alltimepoints <- read.csv(paste0(version_name,"_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T)) %>% mutate(generation = factor(generation, levels = unique(generation)))
 freq_and_counts =
   count %>% filter(Gate == "Single_cells") %>%
   rename(Parent = Gate) %>%
