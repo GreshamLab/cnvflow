@@ -27,6 +27,7 @@ folders = list.dirs()[c(2,5:28)] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
 version_name = "newGates_01_02_04_ars_all"
+version_name = "01_02_04_v2"
 # other versions: 01_02_04_v2
 
 #STEP 1: Generate experiment details file from folder and FCS file names
@@ -75,18 +76,20 @@ timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, sel
 
 #use flowWorkspace::pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+
 for(i in 1:length(names(experiment_details))){
   flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
   }
 
-#file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv") #rename the experiment-markers.csv file. Need to do once.
+## Rename the experiment-markers.csv file. Need to do once.
+#file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv")
 
 #STEP 3:  Perform gating on gating set
 #Gate for 1) Cells, 2) Singlets, 3) CNVS
 #Results in a gating file, and gates applied to all samples in the gating set.
 #Author: Titir & Julie
 
-#transform the data
+## 3.1 transform the data
 # looks useful if I want to choose different transformation: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
 GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
                                       channels = c("B2-A"),
@@ -99,13 +102,13 @@ combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
 transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
                                                    trans = combined_trans) #applies the the transformation and returns it as a gatingSet
 
-#quickly check the transformation by plotting the data
-#cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
-#                  channels_x = "FSC-A",
-#                  channels_y = "GFP",
-#                  axes_limits = "data")
+## quickly check the transformation by plotting the data
+cyto_plot_explore(transformed_timepoint_gating_set[c(2,14,16,17,18,19,21)],
+                  channels_x = "FSC-A",
+                  channels_y = "B2-A",
+                  axes_limits = "data")
 
-##Gating using the entire timepoint dataset.
+## 3.2 Gating using the entire timepoint dataset or apply an existing gating template
 
 # note:if you already have a gating template and don't need to draw gates, then skip cyto_draw, use cyto_gatingTemplate_apply to apply the gating template.csv to your gating set
 cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
@@ -227,6 +230,18 @@ experiment_details
     rename(Gate = pop, name = sample, Frequency = percent) %>%
     left_join(experiment_details) %>%
     write_csv(paste0(version_name,"_freq_",prefix,".csv"))
+
+  #get single cell fluorescence normalized over cell size
+  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+    mutate(name = as.factor(name)) %>% #convert `name` to factor
+    left_join(experiment_details %>% #join by name column to add metadata
+                mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+    mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
+    write_csv(paste0(version_name,"_SingleCellDistributions_",prefix,".csv"))
+
+
 }
 
 #STEP 6:  Apply function from STEP 5 to all subdirectories
@@ -240,15 +255,18 @@ try(map(folders[1:length(folders)],analyze_all_exp, my_markers, gating_template 
 
 list.files(path = ".", pattern = paste0(version_name,"_counts_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
   read_csv() %>%
+  mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
   write_csv(file = paste0(version_name,"_counts_all_timepoints.csv")) #write a function to establish/customize the version file name then can paste0(version_filename)
 
 list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
   read_csv() %>%
+  mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
   write_csv(file = paste0(version_name,"_freq_all_timepoints.csv"))
 
-# Do on hpc because large files, do once
+## Do on hpc because large files, do once. Don't even try to run this command on your laptop. 12GB file.
 # list.files(path = ".", pattern = paste0(version_name,"_SingleCellDistributions")) %>%
 #   read_csv() %>%
+#   mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
 #   write_csv(file = paste0(version_name,"_SingleCellDistributions_all_timepoints.csv"))
 
 #STEP 8: Plot ridgeplots, time series, & assess gates
@@ -257,9 +275,14 @@ list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_Arc
 #Author: Grace & Julie
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
-freq = read_csv(paste0(version_name,"_freq_all_timepoints.csv")) #%>% rename(Frequency = frequency)
-count= read_csv("_fw_counts_all_timepoints.csv")
+#freq = read_csv(paste0(version_name,"_freq_all_timepoints.csv")) #%>% rename(Frequency = frequency)
+freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv")
+
+#count= read_csv(paste0(version_name,"_counts_all_timepoints.csv"))
+count= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
+
 sc_distr_alltimepoints <- read.csv(paste0(version_name,"_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T)) %>% mutate(generation = factor(generation, levels = unique(generation)))
+
 freq_and_counts =
   count %>% filter(Gate == "Single_cells") %>%
   rename(Parent = Gate) %>%
@@ -276,7 +299,6 @@ lowcell = freq_and_counts %>%
 
 ## check controls are in their proper gates
   fails = freq_and_counts %>%
-    #fails = freq %>%
   filter(Count>70000) %>% # exclude any well/timepoint with less than 70,000 single cells
   filter(str_detect(Description, "control")) %>%
   select(Description, Strain, generation, Gate, Frequency, name, Count) %>%
@@ -299,7 +321,7 @@ lowcell = freq_and_counts %>%
   #fails %>% write_csv("01_02_04_v2_83_fail.csv")
   #fails %>% write_csv("01_02_04_v2_fail_calc_thres_stringent_.csv")
   #fails %>% write_csv("01_02_04_v2_79_10_fail_.csv")
-  fails %>% write_csv("01_02_04_v2_fw_79_11_fail.csv")
+  #fails %>% write_csv("01_02_04_v2_fw_79_11_fail.csv")
 
 # plot proportion of control cells in control gates over time
 freq_and_counts %>%
@@ -339,7 +361,7 @@ prop_plot_list$`GAP1 LTR KO`
 prop_plot_list$`GAP1 LTR + ARS KO`
 
 
-# Plot proportion of the population with a CNV over time
+### Plot proportion of the population with a CNV over time
 
 my_facet_names <- as_labeller(c("GAP1 WT architecture" = "Wildtype architecture",
                           "GAP1 LTR KO" = "LTR KO",
@@ -362,7 +384,7 @@ freq_and_counts %>%
   facet_wrap(~factor(Description,
               levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
-  ylab("Proportion of cells with GAP1 amplications") +
+  ylab("Proportion of cells with GAP1 amplifications") +
 #  scale_color_manual(values = c("#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59", #WT,5,gold
 #"#637EE7","#6F88E9","#7B92EA","#4463E2","#3053DF","#2246D7","#1E3FC3","#5766E6", #ALL,8,bluepurple
 #"#DE54B9","#E160BE","#E36CC3","#E578C8","#E885CD","#DB41B2","#D72FAA", #ARS,7,pink
@@ -380,11 +402,14 @@ freq_and_counts %>%
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
         text = element_text(size=25),
         legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 30, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 30, color = "black"),
+        axis.text.x = element_text(size = 30, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 30, color = "black"),
         strip.background = element_blank(), #removed box around facet title
         strip.text = element_text(size=25)
         )
+
+ggsave("propCNV_01_02_04_v2_080522_8x12.pdf", bg = "#FFFFFF", height = 8, width = 12)
+ggsave("propCNV_01_02_04_v2_080522_10x14.pdf", bg = "#FFFFFF", height = 10, width = 14)
 
 ###################################################
 # Plot Ridgeplots (density histograms):
@@ -464,6 +489,15 @@ make_ridgeplots = function(file_name){
 }
 
 map(pop_files, make_ridgeplots) #map() applies this ridgeplot function to all 32 population.csv files
+
+### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
+#for(pop in unique(sc_distr_alltimepoints$sample)) {
+#  print(pop)
+#  sc_distr_alltimepoints %>%
+#  filter(sample == pop) %>%
+#  write_csv(paste0("sc_distributions_",pop,"_all_timepoints.csv"))
+#}
+
 
 ###### Plot normalized median mCitrine fluorescence over time
 #overlay 0,1,2 controls on same graph as experimental with gray lines
@@ -573,183 +607,12 @@ fluor_single_plots$`GAP1 LTR KO`
 fluor_single_plots$`GAP1 LTR + ARS KO`
 
 
-# Make ridgeplots for each population
-
-### on HPC: For Loop - for each sample, subset it and write a sc_distributions_SampleName_allTimepoints.csv
-#for(pop in unique(sc_distr_alltimepoints$sample)) {
-#  print(pop)
-#  sc_distr_alltimepoints %>%
-#  filter(sample == pop) %>%
-#  write_csv(paste0("sc_distributions_",pop,"_all_timepoints.csv"))
-#}
-
 ####################################################
 # STEP 9:  Quantify CNV dynamics (Lauer et al. 2018)
+# see script quant_cnv_dynamics.R
 # Author: Julie
-  # 1) First, calculate Tup, the generation at which CNVs are initially detected, (Lang et al. 2011 and Lauer et al. 2018)
-  # To do that, calculate the false positive rate for CNV detection (threshold), which I will define as the median frequency of 1 copy control cells appearing in the two_copy_or_more gate and gate across generations 8-260 plus the interquartile range (IQR) if the distribution of one copy controls appearing in the CNV gate as NOT normal. If the distribution is normal, then use the mean plus one standard deviation like in Lauer et al. 2018. Like in Lauer et al. 2018, samples surpassing this threshold is considered to contain CNVs.
 
-#CNV False Positive Rate is defined by the frequency of the 1 copy control strain appearing in the CNV gate which is called the Two_or_more copy gate.
-CNV_false_pos_df = #freq %>%
-  freq_and_counts %>%
-  filter(Count>70000) %>%
-  anti_join(fails) %>%
-  filter(Type == "1_copy_ctrl") %>%
-  filter(Gate %in% c("two_or_more_copy")) %>%
-  select(Type, Strain, Description, generation, Gate, Frequency, Count)
-
-# draw a histogram, see if distribution is normal by eye
-hist(CNV_false_pos_df$Frequency) #looks normal but could be left skewed
-  abline(v = median(CNV_false_pos_df$Frequency),col = "red",lwd = 1.5)
-  abline(v = mean(CNV_false_pos_df$Frequency), col = "blue", lwd = 1.5)
-
-#Test for normality
-shapiro.test(CNV_false_pos_df$Frequency) #null hypothesis is that the distribution is normal. if p <0.05, then it rejects the null hypothesis and so the distribution is NOT normal.
-    #W = 0.95715, p-value = 0.4886
-# Null hypothesis cannot be rejected. Our distribution is normal. Use the mean + 1SD as the threshold value.
-# mean = 4.29, sd = 2.32
-thres_mean = mean(CNV_false_pos_df$Frequency) + sd(CNV_false_pos_df$Frequency) #6.615341
-
-#Determine Tup for each population, the generation when CNVs first appear above the threshold frequency.
-Tup_per_pop = #freq %>%
-  freq_and_counts %>%
-  filter(Count>70000) %>%
-  anti_join(fails) %>%
-  filter(Type == "Experimental", Gate == "two_or_more_copy", Frequency >= thres_mean) %>%
-  select(Type, Strain, Description, sample, generation, Gate, Frequency) %>% #View()
-  group_by(sample) %>%
-  slice(which.min(generation))
-
-#Tup_per_pop %>% write_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
-#Tup_per_pop = read_csv(file = "01_02_04_v2_fw_Tup_per_pop.csv")
-
-ggplot(Tup_per_pop, aes(reorder(Description, -generation),generation, fill = Description)) +
-  geom_boxplot(outlier.shape = NA) +
-  xlab("Genotype") +
-  scale_fill_manual(values=c("#e26d5c", "#DEBD52", "#6699cc", "gray"))+
-  ylab("Generation of first CNV appearance") +
-  scale_x_discrete(labels=c("Wildtype architecture","LTR KO","ARS KO","LTR and ARS KO"))+
-  scale_y_continuous(breaks=c(8,20, 30, 40, 50, 60, max(Tup_per_pop$generation)))+
-  theme_classic() +
-  theme(legend.position = "none",
-        axis.text.x = element_text(family="Arial", size = 16, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(family="Arial", size = 20, color = "black"),
-        text = element_text(size=18))+
-  geom_jitter(size = 2, alpha = 0.9, color = c(
-    rep("black",5), #wildtype, 5, gray
-    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR and ARS gold
-    "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon repeats
-  rep("black", 8) #LTR,8, #blue
-))
-#ggsave("01_02_04_v2_fw_Tup_boxplot_042022.png")
-#ggsave("01_02_04_v2_fw_Tup_boxplot_051022.png")
-
-# ANOVA to test for significance
-# One Way ANOVA because there is only 1 independent variable, genotype.
-# Anova Tut: https://www.scribbr.com/statistics/anova-in-r/
-Tup_anova = aov(generation~Description, data = Tup_per_pop)
-summary(Tup_anova)
-#            Df  Sum Sq Mean Sq F value  Pr(>F)
-#Description  3   4483  1494.3   6.772 0.00181 **
-#Residuals   24   5296   220.7
-# Conclusion: There IS a significant difference in the means. Genotype has has significant effect on Tup.
-
-#Calculate Sup
-# "Sup is the rate of increase in CNV abundance during the initial expansion of the CNV subpopulation" Lauer et al. 2018
-# S1 Text. Calculation of CNV dynamics parameters.
-# Graphic representation of linear fit (and corresponding R2 values)
-# during initial population expansion of CNV alleles.
-# Slope of the linear fit corresponds to the dynamics parameter Sup shown in
-# Table 1 and was calculated for the original evolution experiment and the
-# barcode experiment. Data and code used to generate these figures can be
-# accessed in OSF: https://osf.io/fxhze/. CNV, copy number variant.
-
-#Calculate natural log proportion of each population with CNV relative to that without CNV
-ln_table = freq_and_counts %>%
-  filter(Count>70000) %>%
-  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
-  group_by(sample, generation) %>%
-  mutate(prop_CNV = sum(Frequency),
-         prop_NoCNV = 100-prop_CNV,
-         CNV_NoCNV = prop_CNV/prop_NoCNV,
-         logECNV_NoCNV = log(CNV_NoCNV)) #log() function is natural logarithm in R (even though  log() commonly thought as base10 )
-
-# JULIE: A function to calculate Sup, Explained Variance, make graphs, ggsave graphs
-# then, use map() to apply function to all 28 populations - I have 28
-# as part of the function, include a variable that changes number of fit points (window width)
-# I recycled some code from Lauer et al. 2018
-
-pop_list = unique(ln_table$sample) %>% sort()
-gens = unique(ln_table$generation)
-
-equation = function(x) {
-  lm_coef <- list(a = round(coef(x)[1], digits = 2),
-                  b = round(summary(x)[4]$coefficients[2], digits = 4),
-                  r2 = round(summary(x)$r.squared, digits = 2));
-  lm_eq <- substitute(slope == b~~~~italic(R)^2~"="~r2,lm_coef)
-  as.character(as.expression(lm_eq));
-}
-
-#function to apply for loop to each of 28 populations, used some code from Lauer et al. 2018
-sliding_fit = function(num_fitpoints, population){
-  timepoints = nrow(subset(ln_table, sample %in% c(population)))
-  rounds = timepoints- (timepoints/num_fitpoints) - 1
-  m <- matrix(ncol = 6, nrow = rounds) #nrow = number of iterations. number of iterations depend on the number of generations and the number of fitpoints. max num of generations = 24. minimum num of fitpoints is 2. therefore nrow max is 23.
-  colnames(m) <- c("start", "end", "gen_start", "gen_end", "slope", "rsquared")
-  start = 1
-  end = num_fitpoints
-    for (i in 1:rounds){
-      print(i)
-      pop_data <- subset(ln_table, sample %in% c(population))
-      fit_points_df <- subset(ln_table, sample %in% c(population) & generation >= gens[start] & generation <= gens[end])
-      if (is.na(gens[end]) == TRUE ){
-        break
-      }
-      fit <- lm(logECNV_NoCNV ~ generation, fit_points_df) #linear model, lm(y~x, by the data)
-      print(summary(fit))
-
-      ggplot(pop_data, aes(x=generation,y=(as.numeric(logECNV_NoCNV)), colour=sample)) +
-      geom_point() +
-      geom_smooth(data=fit_points_df, method=lm, show.legend=FALSE) +
-      scale_y_continuous(expand = c(0, 0), 'ln(Prop. CNV/Prop. non-CNV)', limits = c(min(pop_data$logECNV_NoCNV)-1, max(pop_data$logECNV_NoCNV)+1)) +
-      annotate("text", x = 200, y = min(pop_data$logECNV_NoCNV)-0.5, label = equation(fit), parse = TRUE) +
-      scale_x_continuous(breaks = scales::pretty_breaks(n = 5), "Generations", limits=c(0,260)) +
-      theme_classic() +
-      scale_color_manual(values = c('black')) +
-      guides(colour = guide_legend(override.aes = list(size=2))) +
-      theme(legend.position = c(.15,.95), plot.title = element_text(size=14, hjust = 0.5), legend.title = element_blank(), axis.title.y = element_text(face="bold", size=12), axis.text.y = element_text(size=12), axis.title.x = element_text(face="bold", size=12), axis.text.x = element_text(size=12))
-
-      ggsave(paste0(population,"_Sup_g",gens[start],"-",gens[end],"_",num_fitpoints,"pts.png"), width = 8, height = 5)
-
-      print(paste0("From timepoints ",start," to ", end, ", generations ", gens[start], " to ", gens[end],", slope was ", as.numeric(coef(fit)[2]) %>% round(4)," and rsquared was ", as.numeric(summary(fit)[8]) %>% round(2) ))  #populate a data frame? five columns: start, end, gen_start, gen_end,  Rsq.
-
-        m[i,1] <- start
-        m[i, 2]<- end
-        m[i, 3] <- gens[start]
-        m[i,4] <- gens[end]
-        m[i, 5] <- as.numeric(coef(fit)[2]) %>% round(4)
-        m[i,6] <- as.numeric(summary(fit)[8]) %>% round(2)
-
-        start = start + 1
-        end = end + 1
-        }
-    m = m %>% na.omit() #remove NAs
-    write_csv(as.data.frame(m), paste0(population,"_fits","_",num_fitpoints,"pts.csv"))
-    return(m)
-}
-
-#call the function and assign outputted matrix to a variable
-result <- sliding_fit(4, pop_list[27])
-assign(paste0(pop_list[27],"_fits","_",4,"pts"), result) #Use assign() to rename and save to R environment
-
-#call the function for all pops in the pop_list using map()
-map(.x = pop_list[1:28], ~sliding_fit(4, .x)) #tilde inside functions (https://stackoverflow.com/questions/70665707/what-is-the-meaning-of-and-inside-the-function-map)
-
-summary(fit)$coef[[4]] #fourth coefficient is the standard error of the linear model slope
-
-
-####### MY PALLETTE
+###########  MY PALLETTE
 
 #Gold Metallic (6)
 #DEBD52
