@@ -391,28 +391,14 @@ my_facet_names <- as_labeller(c("GAP1 WT architecture" = "Wildtype architecture"
                           "GAP1 LTR KO" = "LTR KO",
                         "GAP1 ARS KO" = "ARS KO",
                         "GAP1 LTR + ARS KO" = "LTR and ARS KO"))
+#colors
+wtGrays = c("gray","#666666","#CCCCCC","gray","#999999")
+allGolds = c("#DEBD52","#DBB741","#D7B02F","#dbb844","#D9BB59","#fdc409","#9c7e1e","#D9BB59")
+arsSalmons = c("#e26d5c","#e28f5c","#e25c6d","#da4631", "#f85c46", "#bb3521","#d9402a" )
+ltrBlues = c("#6699cc", '#66b3cc',"#6BAED6" ,"#4292C6", "#2171B5","#3799fb","#3972ab","#4799eb")
 
-#freq_and_counts %>%
-#  filter(!(Description %in% c("GAP1 ARS KO", "GAP1 LTR + ARS KO"))) %>%
-#  mutate(gating_template = paste0(version_name))%>%
-#  write_csv("freq_and_counts_WT_LTR.csv")
-
-#freq_and_counts %>%
-#  filter(!(Description %in% c("GAP1 WT architecture", "GAP1 LTR KO"))) %>%
-#  relocate(9, .after = Frequency) %>% #put col 9 to the end  #relocate(9, .after = Frequency)
-  #write_csv("freq_and_counts_ARS_ALL.csv")
-
-#wt_ltr = read_csv("freq_and_counts_WT_LTR.csv")
-#wt_ltr %>% filter(Description == "1 copy control")
-#ars_all = read_csv("freq_and_counts_ARS_ALL.csv")
-#ars_all %>% filter(Description == "1 copy control")
-#ars_all = ars_all %>%filter(!str_detect(Description,"control"))
-
-#freq_and_counts = read_csv("freq_and_counts_Merged_080622_all_timepoints.csv")
-
-freq_and_counts %>%
+propCNV = freq_and_counts %>%
   filter(Count>70000,
-        # generation <= 203) %>%
   generation <= 250) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
@@ -421,25 +407,14 @@ freq_and_counts %>%
                     Description == "2 copy control" & generation == 95 |
                     Description == "2 copy control" & generation == 108 |
                     Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
-  #anti_join(fails) %>% #exclude the contaminated controls timepoints (the failed timepoints)
-  group_by(sample, generation) %>%
-  mutate(prop_CNV = sum(Frequency)
-         ) %>%
-  select(sample, generation, Description, prop_CNV) %>%
-  distinct() %>%
-  ggplot(aes(generation, prop_CNV, color = sample)) +
+  ggplot(aes(generation, Frequency, color = sample)) +
   geom_line(size = 2.5) +
   #geom_point()+
   facet_wrap(~factor(Description,
               levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
   ylab("Proportion of cells with GAP1 amplifications") +
-  scale_color_manual(values = c(
-  "gray","gray","gray","gray","gray", #wildtype, 5, gray
-  "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #ALL ko ,8,gold
-  "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS ko, 7, softer salmon repeats
-  "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR ko, BLUE 8,
-)) +
+  scale_color_manual(values = c(wtGrays, allGolds,arsSalmons, ltrBlues)) +
   theme_classic() +
   scale_x_continuous(breaks=seq(0,250,50)) +
   scale_y_continuous(limits=c(0,100)) +
@@ -451,9 +426,53 @@ freq_and_counts %>%
         strip.background = element_blank(), #removed box around facet title
         strip.text = element_text(size=25)
         )
+propCNV
 
 ggsave(paste0("propCNV_",version_name,"_080722_8x12.pdf"), bg = "#FFFFFF", height = 8, width = 12)
 ggsave(paste0("propCNV_",version_name,"_080722_10x14.pdf"), bg = "#FFFFFF", height = 10, width = 14)
+
+
+# proportion of population in CNV over time for each population
+# facet by sample instead of Description
+propCNV_by_Pop = freq_and_counts %>%
+  filter(Count>70000,
+         # generation <= 203) %>%
+         generation <= 250) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  dplyr::filter(!(Description == "1 copy control" & generation == 182 |
+                    Description == "2 copy control" & generation == 79 |
+                    Description == "2 copy control" & generation == 95 |
+                    Description == "2 copy control" & generation == 108 |
+                    Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
+  ggplot(aes(generation, Frequency, color = sample)) +
+  geom_line(size = 2.5) +
+  #geom_point()+
+  facet_wrap(~sample, scales='free') +
+  xlab("Generation") +
+  ylab("Proportion of cells with GAP1 amplifications") +
+  scale_color_manual(values = c(
+    wtGrays,
+    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #ALL ko ,8,gold
+arsSalmons,
+    ltrBlues
+  )) +
+  theme_minimal() +
+  scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_y_continuous(limits=c(0,100)) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        text = element_text(size=12),
+        legend.position = "none",
+        axis.text.x = element_text(size = 10, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 12, color = "black"),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=12)
+  )
+propCNV_by_Pop
+
+ggsave(paste0("propCNV_by_pop_",version_name,"_080722.pdf"), bg = "#FFFFFF", height = 15, width = 20)
+
+
 
 ##### STEP 9 ##### Plot Ridgeplots (density histograms):
 # instead of looking at the MEDIAN GFP values per population per generation,
@@ -574,17 +593,12 @@ norm_medians = read_csv("medians_normalized_fluor_alltimepoints.csv") %>%
   filter(!(generation == 116 & Type == "2_copy_ctrl"))
 
 
-norm_medians %>%
+MedianFluor_plot = norm_medians %>%
   filter(Type == "Experimental") %>%
   filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%  #filter out outliers (likely resulting from contamination) as defined by Fluor <1.5
   ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
   geom_line(size = 2.0) +
-  scale_color_manual(values = c(
-    "gray","gray","gray","gray","gray", #wildtype, 5, gray
-    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #ALL ,8,gold
-    "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", "#e26d5c", #ARS, 7, softer salmon
-    "#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc","#6699cc" #LTR BLUE,8,
-  )) +
+  scale_color_manual(values = c(wtGrays, allGolds, arsSalmons, ltrBlues)) +
   facet_wrap(~factor(Description,
                      levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
   xlab("Generation") +
@@ -602,12 +616,13 @@ norm_medians %>%
         #axis.text.y = element_text(family="Arial", size = 24, color = "black")
         axis.text.y = element_text(size = 36, color = "black")
   )
+MedianFluor_plot
 ggsave("medNormFluorPlot.pdf")
 ggsave("medNormFluorPlot.png")
 
 
 ### graph the controls separately
-norm_medians %>%
+MedianFluor_ctrl = norm_medians %>%
   filter(Type %in% c("2_copy_ctrl","1_copy_ctrl")) %>%
   #filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) %>%  #filter out outliers (likely resulting from contamination) as defined by Fluor <1.5
   ggplot(aes(generation, Med_B2A_FSC, color= sample)) +
@@ -630,6 +645,7 @@ norm_medians %>%
         #axis.text.y = element_text(family="Arial", size = 24, color = "black")
         axis.text.y = element_text(size = 36, color = "black")
   )
+MedianFluor_ctrl
 ggsave("controls_normMedFluorPlot.png")
 
 
@@ -668,7 +684,9 @@ fluor_single_plots$`GAP1 LTR + ARS KO`
 # see script quant_cnv_dynamics.R
 # Author: Julie
 
-###########  MY PALLETTE
+###########  MY PALLETTE #####
+
+# for lineplots population-specific
 
 #Gold Metallic (6)
 #DEBD52
@@ -678,9 +696,13 @@ fluor_single_plots$`GAP1 LTR + ARS KO`
 #D9BB59
 #B89523
 
-# Blue (8)
+#colors for lineplots 08-07-22
+# wtGrays = c("gray","#666666","#CCCCCC","gray","#999999")
+# allGolds = c("#DEBD52","#DBB741","#D7B02F","#dbb844","#D9BB59","#fdc409","#9c7e1e","#D9BB59")
+# arsSalmons = c("#e26d5c","#e28f5c","#e25c6d","#da4631", "#f85c46", "#bb3521","#d9402a" )
+# ltrBlues = c("#6699cc", '#66b3cc',"#6BAED6" ,"#4292C6", "#2171B5","#3799fb","#3972ab","#4799eb")
 
-#NEW PALLETE 4/20/22
+#NEW PALLETE 4/20/22 use this for boxplots
 #WT = gray  "gray","gray","gray","gray","gray",
 #LTR and ARS = GOLD metalic "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
 #ARS = SALMON  "#e26d5c"
