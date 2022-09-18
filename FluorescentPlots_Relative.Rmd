@@ -1,0 +1,166 @@
+---
+title: "Fluorescent Plots Relative to 1 copy controls"
+output: html_notebook
+---
+
+Remake the normalize median over time plots but divide the median fluorescence by median 1 copy values so that what we observed it normalized to 1 copy. Call the new y-axis "Percent fluorescence relative to 1 copy control". Suggested by Cassandra at Yeast Meeting 2022. 
+
+Also through presenting my poster, I realized that the current y-axis with arbritrary units did not mean anything and I had to point out the 1 copy lines anyway, which mean the graph could not stand alone.
+
+9/13/22 - Paused on making these fluorescent plots relative to one (% of 1 copy) since the 1 copy and 2 copy DO NOT scale linearly! 
+
+
+Load libraries
+```{r}
+library(CytoExploreR)
+library(tidyverse)
+library(ggridges)
+library(docstring)
+```
+
+
+Set working directory
+```{r setup}
+knitr::opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")
+```
+
+
+Import fluorescent data. 
+```{r}
+version_name = "09_09_22"
+
+count=read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
+
+cell_numbers = count %>%
+  filter(Gate == "Single_cells")
+
+## Median normalized GFP fluorescence plot with controls separate
+## 5 plots
+
+cell_numbers = count %>%
+  filter(Gate == "Single_cells")
+
+n_medians = read_csv("medians_normalized_fluor_alltimepoints.csv") %>% left_join(cell_numbers) %>% select(-Outflow.well) %>% 
+  filter(Count > 70000) %>% #filter out low cells
+  filter(generation < 250) %>% 
+  filter(!(generation == 231 & Type == "0_copy_ctrl")) %>%   #filter out bad controls
+  filter(!(generation == 182 & Type == "1_copy_ctrl")) %>%
+  filter(!(generation == 203 & Type == "1_copy_ctrl")) %>%
+  filter(!(generation == 252 & Type == "1_copy_ctrl")) %>%
+  filter(!(generation == 260 & Type == "1_copy_ctrl")) %>%
+  filter(!(generation == 79 & Type == "2_copy_ctrl")) %>%
+  filter(!(generation == 95 & Type == "2_copy_ctrl")) %>%
+  filter(!(generation == 108 & Type == "2_copy_ctrl")) %>%
+  filter(!(generation == 116 & Type == "2_copy_ctrl")) %>% 
+  filter(!(Med_B2A_FSC<1.5 & Type == "Experimental")) #outlier values, likely due to contamination. 
+```
+
+
+
+What 1 copy control values should we use? Timepoints 1-4 seem reasonable. As that's what we did for gating. 
+```{r}
+n_medians %>% filter(Description == "1 copy control") %>% arrange(generation) %>% select(Med_B2A_FSC) %>% slice(1:4) %>% colMeans()
+
+```
+
+No to be honest, I should just divide the sample by the 1 copy control value for that same generation, to every sample.  
+Remember that only the Wildtype and LTR KO should use this calculation. 
+Remember that the 1 copy control ARE NOT good controls for the ARS KO and ALL KO and we can use the 1-4 timepoints of the experimental samples instead. 
+```{r}
+#one_ctrl = group_by(generation), filter(Description == "1 copy control") %>% select(Med_B2A_FSC)
+#group_by(generation)
+#mutate(rel_1copy = Med_B2A_FSC/1 copy control Med_B2A_FSC for that generation) %>% #compute normalized fluor
+```
+
+
+Using the full join(), we found that 1 copy control values were missing from 
+generations 58, 182, and 203. 
+```{r}
+full_join(n_medians %>% filter(Description == "1 copy control") %>% arrange(generation) %>%
+          select(generation, Med_B2A_FSC), 
+          new %>% group_by(generation) %>% count()
+          )
+
+full_join(n_medians %>% filter(Description == "2 copy control") %>% arrange(generation) %>%
+          select(generation, Med_B2A_FSC), 
+          new %>% group_by(generation) %>% count()
+          )
+```
+
+```{r}
+n_medians %>% filter(Description == "1 copy control") %>% arrange(generation) %>% select(generation, Med_B2A_FSC)
+
+n_medians %>% filter(Description == "2 copy control") %>% arrange(generation) %>% select(generation, Med_B2A_FSC)
+```
+
+```{r}
+#Make 58 in between 50 and 66 
+(1.750638+1.798279)/2
+
+#Make 182
+(1.757910+1.733389)/2
+
+# Make 203
+(1.757910+1.733389)/2
+
+n_medians = n_medians %>% 
+  add_row(generation = c(58, 182, 203), Med_B2A_FSC = c((1.750638+1.798279)/2, (1.757910+1.733389)/2, (1.757910+1.733389)/2), Description = "1 copy control", Type = "1_copy_ctrl", sample = "ctrl1", Strain = "DGY500")
+
+values_1ctrl = n_medians %>% filter(Description == "1 copy control") %>% arrange(generation) %>% select(Med_B2A_FSC) %>% unlist(use.names = F)
+values_1ctrl
+```
+
+So what I could do is pivot_wider and generate a new column that has the 1 copy Med_B2A_FSC haha . 3 new columns -- for 0 copy, 1 copy, 2 copy columns. 
+```{r}
+new=n_medians %>% mutate(type = Type) %>% pivot_wider(names_from = Type, values_from = Med_B2A_FSC)
+```
+
+
+```{r}
+new %>% group_by(generation) %>% count()
+```
+```{r}
+times = new %>% arrange(generation) %>% group_by(generation) %>% count() %>% pull(n)
+times
+
+sum(times) #627
+nrow(new) #627
+length(times) #22
+length(values_1ctrl) #22
+length(unique(new$generation)) #22
+```
+
+
+Make new columns for the 0,1,2 controls and fill them in manually using the rep() function. 
+```{r}
+new %>% 
+  arrange(generation) %>% 
+  mutate(one_ctrl = rep(values_1ctrl, times)) %>%
+  mutate(two_ctrl = )
+  mutate(zero_ctrl = )
+```
+
+Remove the 1_copy_ctrl rows? or keep them as a sanity check because they said be = 1 when divided. 
+```{r}
+df %>% 
+mutate(Rel_One = Experimental/one_ctrl)
+```
+
+I am going to pause on making these fluorescent plots relative to one (% of 1 copy) since the 1 copy and 2 copy DO NOT scale linearly! and even natural log transforming them doesn't make them linear..  Either way. Put a pause on this. Ask people in lab for suggestions. 
+1 copy control is around 1.7 
+2 copy control is around 2.01
+0 copy control is around 0.48
+```{r}
+log(1.7) #natural log
+log10(2.01)
+log10(2.01)
+log(2.01)
+(1.7-0.48)/(1.7-0.48)
+(2.01-0.48)/(1.7-0.48)
+log((2.01-0.48)/(1.7-0.48))
+logb((2.01-0.48)/(1.7-0.48))
+exp((2.01-0.48)/(1.7-0.48)) #3.5
+exp((1.7-0.48)/(1.7-0.48)) #2.7
+```
+
+

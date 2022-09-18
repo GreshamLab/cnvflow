@@ -1,0 +1,393 @@
+---
+title: "Get untransformed fluorescence values"
+author: "Julie Chuong"
+date: "Sep 13 2022"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+Get untransformed fluorescence values. 
+Additionally try to see if we can transform them such in a way that the 0,1,2 copy controls
+are in a linear scale. 
+
+
+Install CytoExplorer package and requirements (can be skipped if already installed)
+```{r}
+library(BiocManager)
+install.packages("cytolib", "flowCore", "flowWorkspace", "openCyto")
+```
+
+Install CytoExploreR from GitHub:
+```{r}
+library(devtools)
+devtools::install_github("DillonHammill/CytoExploreR")
+```
+
+Load required packages
+```{r}
+library(CytoExploreR)
+library(tidyverse)
+library(ggridges)
+library(docstring)
+```
+
+Set working directory and get list of subdirectories containing FCS files
+```{r setup}
+#setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
+knitr::opts_knit$set(root.dir = "/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
+```
+
+select the FSC file folders in your directory
+```{r}
+getwd()
+folders = list.dirs()[c(7:30)]
+```
+
+# Choose a name to be used for all output files including the gating template and associated flow data and graphs.
+```{r}
+version_name = "raw_flow"
+```
+
+STEP 1: Generate experiment details file from folder and FCS file names
+Experiment details file is a .csv file that contains the list of .fcs files in the directory and the associated metadata for each sample
+Author: Grace
+
+```{r}
+make_exp_details = function(folder_name, samplesheet) {
+  pref = folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021")
+  generation = folder_name %>% str_extract("[g]\\d+") %>% str_remove("g")
+
+  files = as_tibble(list.files(paste0(folder_name))) %>%
+    separate(value, into = c("well", "samp"), sep = " ", remove = F) %>%
+    mutate(well = str_extract(well, "([A-Z])([0-9]){1,2}$")) %>%
+    mutate(samp = str_remove(samp, ".fcs")) %>%
+    mutate(sample = case_when(str_detect(value, "Unstained") ~ "ctrl0",
+                              str_detect(value, "DGY500") ~ "ctrl1",
+                              str_detect(value, "DGY1315") ~ "ctrl2",
+                              TRUE ~ samp)) %>%
+    select(value,sample) %>%
+    rename(name = value) %>%
+    filter(!is.na(sample))
+
+  all = files %>%
+    left_join(read_csv(paste0("./",samplesheet)), by = c("sample" = "Sample name")) %>%
+    mutate(generation = as.numeric(generation))
+
+  write_csv(all, file = paste0(folder_name,"/",pref,"_experiment_details.csv"))
+
+}
+
+#needs to be run once
+map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
+```
+
+
+#STEP 2: Read in all files in a directory and rename the channels.
+#A directory contains an FCS file for each population.
+#Results in 1 timepoint gating set containing all .fcs files, associated experiment details, and marker details
+#Author: Julie
+
+# here we will load in 1 directory that contains 3 timepoints worth of data to load in.
+# cyto_setup() does not permit loading in more than 1 directory, so I had to create a directory with the data files of interest.
+# these data will guide us on drawing gates.
+```{r}
+exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
+exp_details_path
+```
+
+```{r}
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+```
+
+Use flowWorkspace::pData to annotate the experiment details file associated with the gating set
+```{r}
+experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+}
+
+cyto_details(timepoint_gating_set)
+```
+
+Rename the experiment-markers.csv file. Need to do once.
+```{r}
+file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv")
+```
+
+
+We want to skip the transformation and just output the raw fluorescence values
+
+Generate single cell data tables and normalized fluorescence
+
+Extract B2-A and FSC-A values
+```{r}
+timepoint_raw_list <- cyto_extract(timepoint_gating_set, raw = T, channels = c("FSC-A", "B2-A"))
+```
+
+```{r}
+norm_raw=map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`) #compute normalized fluor
+ # write_csv(paste0(version_name,"_SingleCellDistributions_",prefix,".csv"))
+
+norm_raw %>%
+  group_by(Description) %>%
+  summarize(median(B2A_FSC))
+
+hist(norm_raw$`B2-A`)
+hist(norm_raw$`FSC-A`)
+```
+### See if different transformation can make the 0, 1 and 2 copy controls scale linearly. 
+transform the data
+
+looks useful if I want to choose different transformation: https://dillonhammill.github.io/CytoExploreR/articles/CytoExploreR-Transformations.html
+
+
+Let's try ARCSINH Transformation
+```{r}
+GFP_trans <- cyto_transformer_arcsinh(timepoint_gating_set,
+                                      channels = c("B2-A"),
+                                      widthBasis = -10
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_arcsinh(timepoint_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                                   trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+```
+
+```{r}
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+arcsinh_norm = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`)
+
+arcsinh_norm%>%
+  group_by(Description) %>%
+  summarize(median(B2A_FSC))
+```
+
+Let's try log Transformation
+```{r}
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+
+experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+}
+
+GFP_trans <- cyto_transformer_log(timepoint_gating_set,
+                                      channels = c("B2-A"),
+                                      widthBasis = -100
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                                   trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+log_norm = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`)
+
+log_norm%>%
+  group_by(Description) %>%
+  summarize(median(B2A_FSC))
+```
+
+Currently, we use logicle for B2-a and log for FSC,ssc
+```{r}
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+
+experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+}
+
+GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
+                                      channels = c("B2-A"),
+                                      widthBasis = -100
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                                   trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+now = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`)
+
+now %>%
+  group_by(Description) %>%
+  summarize(median(B2A_FSC))
+```
+
+
+
+
+Try Arcsinh B2-A and Log FSC,SSC
+```{r}
+timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
+
+experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+
+for(i in 1:length(names(experiment_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+}
+
+GFP_trans <- cyto_transformer_arcsinh(timepoint_gating_set,
+                                      channels = c("B2-A"),
+                                      widthBasis = -100
+)#returns it as a list
+FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                                      channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+)
+combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                                   trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+arclog = map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+  mutate(name = as.factor(name)) %>% #convert `name` to factor
+  left_join(experiment_details %>% #join by name column to add metadata
+  mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+  mutate(B2A_FSC = `B2-A`/`FSC-A`)
+
+arclog %>%
+  group_by(Description) %>%
+  summarize(median(B2A_FSC))
+```
+
+#STEP 5:  Use function to perform analysis
+#A function that will
+#1 Read in all the files in a folder
+#2 Read in experiment details files using pData
+#3 Specify experiment markers
+#4 Transform gating set
+#5 Apply existing gating file using cyto_gatingTemplate_apply
+#6.Output stats file as .csv
+#Author: David & Julie
+
+my_markers<-c("GFP") #list your marker name(s)
+channel<-c("B2-A") #list your channel(s)
+names(my_markers)<-channel
+
+analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gating.csv") {
+
+  path <- folder_name #gets relative path name for folder to be analyzed
+
+  prefix <- folder_name %>% str_extract("([0-9])+_EE_GAP1_ArchMuts_2021") #extracts the time point number from folder name
+
+  exp_details_path <- paste0(path,"/",prefix,"_experiment_details.csv") #gets experiment details .csv from correct directory
+  #exp_details_path <- list.files(path = paste0(path), pattern = "_experiment_details.csv", full.names = T)
+  #1. read in files and make a gating set
+  print(path)
+  timepoint_gating_set <- cyto_setup(path=path, select="fcs", details=F, markers = F)
+
+  #2. read in experiment details for that gating set
+  experiment_details <- read_csv(exp_details_path, show_col_types = F) #import experiment-details.csv
+  #Write For Loop: for column in exp_details_path, add that column to timepoint_gating_set's metadata
+  experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
+  for(i in 1:length(names(experiment_details))){
+    flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
+  }
+experiment_details
+  #3. specify markers for that gating set
+  markernames(timepoint_gating_set)<-my_markers
+
+  #4. transform data
+  GFP_trans <- cyto_transformer_logicle(timepoint_gating_set,
+                                                 channels = c("B2-A"),
+                                                 widthBasis = -10
+                                                 )#returns it as a list
+  FSC_SSC_trans <- cyto_transformer_log(timepoint_gating_set,
+                        channels = c("FSC-A", "FSC-H", "SSC-A", "SSC-H")
+                        )
+  combined_trans <- cyto_transformer_combine(GFP_trans,FSC_SSC_trans)
+  transformed_timepoint_gating_set <- cyto_transform(timepoint_gating_set,
+                                       trans = combined_trans) #applies the the transformation and returns it as a gatingSet
+
+  #5. apply gating-template.csv to transformed gating set
+  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= gating_template)
+#  cyto_gatingTemplate_apply(transformed_timepoint_gating_set, gatingTemplate= "cytek_gating_01_02_04_v2.csv")
+
+  #6. Get cell counts and frequencies inside each gate
+  #Julie
+
+  #get cell count from each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells", "zero_copy", "one_copy", "two_or_more_copy")) %>%
+    rename(Gate = pop, name = sample, Count = count) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(version_name,"_counts_",prefix,".csv"))
+
+  #get frequency of cells inside each gate
+  gs_pop_get_stats(transformed_timepoint_gating_set, c("Single_cells","zero_copy", "one_copy", "two_or_more_copy"), type = "percent") %>%
+    rename(Gate = pop, name = sample, Frequency = percent) %>%
+    left_join(experiment_details) %>%
+    write_csv(paste0(version_name,"_freq_",prefix,".csv"))
+
+  #get single cell fluorescence normalized over cell size
+#  timepoint_raw_list <- cyto_extract(transformed_timepoint_gating_set, parent = "Single_cells", raw = TRUE, channels = c("FSC-A", "B2-A")) #raw flow data of each single cell as a list of matrices
+
+#  map_df(timepoint_raw_list, ~as.data.frame(.x), .id="name") %>% #convert to df, put list name in new column
+#    mutate(name = as.factor(name)) %>% #convert `name` to factor
+#    left_join(experiment_details %>% #join by name column to add metadata
+#                mutate(generation = as.factor(unique(experiment_details$generation)))) %>%
+#    mutate(B2A_FSC = `B2-A`/`FSC-A`) %>% #compute normalized fluor
+#    write_csv(paste0(version_name,"_SingleCellDistributions_",prefix,".csv"))
+
+
+}
+
+#STEP 6:  Apply function from STEP 5 to all subdirectories
+#Uses map from purr() to apply function from step 5 to all directories
+#Author: Julie
+
+try(map(folders[2:length(folders)],analyze_all_exp, my_markers, gating_template = paste0("cytek_gating_",version_name,".csv")))
+
+#STEP 7: Pull in all counts or freq or single cell distribution files from directory and combine into a single dataframe
+#Author: Julie
+#01_02_04_v2_fw_counts_all_timepoints
+#01_02_04_v2_fw_freq_all_timepoints
+list.files(path = ".", pattern = paste0(version_name,"_counts_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
+  read_csv() %>%
+  mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
+  write_csv(file = paste0(version_name,"_counts_all_timepoints.csv")) #write a function to establish/customize the version file name then can paste0(version_filename)
+
+list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_ArchMuts_2021")) %>%
+  read_csv() %>%
+  mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
+  write_csv(file = paste0(version_name,"_freq_all_timepoints.csv"))
+
+## Do on hpc because large files, do once. Don't even try to run this command on your laptop. 12GB file.
+# list.files(path = ".", pattern = paste0(version_name,"_SingleCellDistributions")) %>%
+#   read_csv() %>%
+#   mutate(gating_template = paste0("cytek_gating_",version_name,".csv")) %>%
+#   write_csv(file = paste0(version_name,"_SingleCellDistributions_all_timepoints.csv"))
+
+
+```{r}
+?data.frame(colname = vctor1, colname2 = vector2)
+```
+
