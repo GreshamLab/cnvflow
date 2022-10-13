@@ -286,13 +286,16 @@ list.files(path = ".", pattern = paste0(version_name,"_freq_([0-9])+_EE_GAP1_Arc
 #Author: Grace & Julie
 
 # read in frequency csv, cell numbers csvs, single cell distributions for all timepoints
-freq = read_csv(paste0(version_name,"_freq_all_timepoints.csv"))
+#freq = read_csv(paste0(version_name,"_freq_all_timepoints.csv"))
 #freq = read_csv("01_02_04_v2_fw_freq_all_timepoints.csv")
 #freq = read_csv("newGates_01_02_04_ars_all_freq_all_timepoints.csv")
 
-count= read_csv(paste0(version_name,"_counts_all_timepoints.csv"))
+
+#count= read_csv(paste0(version_name,"_counts_all_timepoints.csv"))
 #count= read_csv("01_02_04_v2_fw_counts_all_timepoints.csv")
 #count=read_csv("newGates_01_02_04_ars_all_counts_all_timepoints.csv")
+
+freq_and_counts = read_csv("freq_and_counts_Merged_080622_all_timepoints.csv")
 
 sc_distr_alltimepoints <- read.csv(paste0(version_name,"_SingleCellDistributions_all_timepoints.csv", stringsAsFactors = T)) %>% mutate(generation = factor(generation, levels = unique(generation)))
 
@@ -399,7 +402,7 @@ ltrBlues = c("#6699cc", '#66b3cc',"#6BAED6" ,"#4292C6", "#2171B5","#3799fb","#39
 
 propCNV = freq_and_counts %>%
   filter(Count>70000,
-  generation <= 250) %>%
+  generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   dplyr::filter(!(Description == "1 copy control" & generation == 182 |
@@ -416,7 +419,8 @@ propCNV = freq_and_counts %>%
   ylab("Proportion of cells with GAP1 amplifications") +
   scale_color_manual(values = c(wtGrays, allGolds,arsSalmons, ltrBlues)) +
   theme_classic() +
-  scale_x_continuous(breaks=seq(0,250,50)) +
+  #scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_x_continuous(breaks=seq(0,203,50)) +
   scale_y_continuous(limits=c(0,100)) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
         text = element_text(size=25),
@@ -430,6 +434,9 @@ propCNV
 
 ggsave(paste0("propCNV_",version_name,"_080722_8x12.pdf"), bg = "#FFFFFF", height = 8, width = 12)
 ggsave(paste0("propCNV_",version_name,"_080722_10x14.pdf"), bg = "#FFFFFF", height = 10, width = 14)
+ggsave("propCNV_101322_8x12.pdf", bg = "#FFFFFF", height = 8, width = 12)
+ggsave("propCNV_101322_8x12.png", bg = "#FFFFFF", height = 8, width = 12)
+ggsave("propCNV_101322_10x14.pdf", bg = "#FFFFFF", height = 10, width = 14)
 
 
 # proportion of population in CNV over time for each population
@@ -437,7 +444,7 @@ ggsave(paste0("propCNV_",version_name,"_080722_10x14.pdf"), bg = "#FFFFFF", heig
 propCNV_by_Pop = freq_and_counts %>%
   filter(Count>70000,
          # generation <= 203) %>%
-         generation <= 250) %>%
+         generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   dplyr::filter(!(Description == "1 copy control" & generation == 182 |
@@ -458,7 +465,7 @@ arsSalmons,
     ltrBlues
   )) +
   theme_minimal() +
-  scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_x_continuous(breaks=seq(0,203,50)) +
   scale_y_continuous(limits=c(0,100)) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
         text = element_text(size=12),
@@ -471,6 +478,15 @@ arsSalmons,
 propCNV_by_Pop
 
 ggsave(paste0("propCNV_by_pop_",version_name,"_080722.pdf"), bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNV_by_pop_101322.pdf", bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNV_by_pop_101322.png", bg = "#FFFFFF", height = 15, width = 20)
+
+
+############
+# PropCNV plots with outliers removed
+#
+
+
 
 
 
