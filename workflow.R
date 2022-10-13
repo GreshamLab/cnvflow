@@ -395,10 +395,24 @@ my_facet_names <- as_labeller(c("GAP1 WT architecture" = "Wildtype architecture"
                         "GAP1 ARS KO" = "ARS KO",
                         "GAP1 LTR + ARS KO" = "LTR and ARS KO"))
 #colors
-wtGrays = c("gray","#666666","#CCCCCC","gray","#999999")
-allGolds = c("#DEBD52","#DBB741","#D7B02F","#dbb844","#D9BB59","#fdc409","#9c7e1e","#D9BB59")
+# wtGrays = c("gray","#666666","#CCCCCC","gray","#999999")  #OLD
+wtGrays = c("#354f52","#666666","#6b705c","#414833","#999999")
+#"#354f52", "#414833","#6b705c"
+# allGolds = c("#DEBD52","#DBB741","#D7B02F","#dbb844","#D9BB59","#fdc409","#9c7e1e","#D9BB59") #OLD
+allGolds = c("#ffba08", "#faa307", "#dda15e", "#7f5539", "#9c6644", "#fdc409", "#9c7e1e","#D9BB59")
+#"#dda15e" #nude
+#"#e85d04" orange-red
+#ee9b00 #gold
+#ca6702 #pumpkin
+#bb3e03 #warmer pumpkin
+#ae2012 #dark red
+#keep fdc409 its the super bright yellow one
+#keep 9c7e1e its the brown one
+#add some browns to the yellows  #"#b08968", "#7f5539", "#9c6644"
 arsSalmons = c("#e26d5c","#e28f5c","#e25c6d","#da4631", "#f85c46", "#bb3521","#d9402a" )
-ltrBlues = c("#6699cc", '#66b3cc',"#6BAED6" ,"#4292C6", "#2171B5","#3799fb","#3972ab","#4799eb")
+#ltrBlues = c("#6699cc", '#66b3cc',"#6BAED6" ,"#4292C6", "#2171B5","#3799fb","#3972ab","#4799eb") #old
+
+ltrBlues = c( "#6699cc", "#005f73", "#0a9396", "#4292C6", "#2171B5", "#3799fb", '#66b3cc', "#3a0ca3")
 
 propCNV = freq_and_counts %>%
   filter(Count>70000,
@@ -460,7 +474,8 @@ propCNV_by_Pop = freq_and_counts %>%
   ylab("Proportion of cells with GAP1 amplifications") +
   scale_color_manual(values = c(
     wtGrays,
-    "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #ALL ko ,8,gold
+    allGolds,
+   # "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #ALL ko ,8,gold
 arsSalmons,
     ltrBlues
   )) +
@@ -483,9 +498,65 @@ ggsave("propCNV_by_pop_101322.png", bg = "#FFFFFF", height = 15, width = 20)
 
 
 ############
-# PropCNV plots with outliers removed
-#
+# PropCNV plots with abberant timepoints and/or populations removed
 
+early_df = freq_and_counts %>%
+  filter(generation < 30,
+         Type %in% c("Experimental", "1_copy_ctrl"),
+         Description %in% c("1 copy control", "GAP1 WT architecture","GAP1 LTR KO"),
+         Gate == "two_or_more_copy") %>%
+  arrange(generation, sample)%>%
+  select(-name, -`Outflow well`, -Media)
+
+weird_early = early_df %>%
+  filter(Frequency > 15)
+
+freq_and_counts %>%
+  filter(sample == "gap1_all_6", Gate == "two_or_more_copy") %>%
+  arrange(generation) %>%
+  View()
+
+#chose these timepoints by eye
+weird_tp = freq_and_counts %>%
+  filter(sample == "gap1_4" & Gate == "two_or_more_copy" & generation == 66 |
+        sample == "gap1_all_3" & Gate == "two_or_more_copy" & generation == 166|
+        sample == "gap1_all_5" & Gate == "two_or_more_copy" & generation == 116|
+        sample == "gap1_all_6" & Gate == "two_or_more_copy" & generation == 124|
+        sample == "gap1_ltr_2"
+    )
+
+freq_and_counts %>%
+  filter(Count>70000,
+         generation <= 203) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  dplyr::filter(!(Description == "1 copy control" & generation == 182 |
+                    Description == "2 copy control" & generation == 79 |
+                    Description == "2 copy control" & generation == 95 |
+                    Description == "2 copy control" & generation == 108 |
+                    Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
+  anti_join(weird_early) %>%
+  anti_join(weird_tp) %>%
+  ggplot(aes(generation, Frequency, color = sample)) +
+  geom_line(size = 2.5) + #alpha=0.7
+  #geom_point()+
+  facet_wrap(~factor(Description,
+                     levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
+  xlab("Generation") +
+  ylab("Proportion of cells with GAP1 amplifications") +
+  scale_color_manual(values = c(wtGrays, allGolds,arsSalmons, ltrBlues)) +
+  theme_classic() +
+  #scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_x_continuous(breaks=seq(0,203,50)) +
+  scale_y_continuous(limits=c(0,100)) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        text = element_text(size=25),
+        legend.position = "none",
+        axis.text.x = element_text(size = 30, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 30, color = "black"),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=25)
+  )
 
 
 
