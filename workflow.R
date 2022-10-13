@@ -466,6 +466,8 @@ propCNV_by_Pop = freq_and_counts %>%
                     Description == "2 copy control" & generation == 95 |
                     Description == "2 copy control" & generation == 108 |
                     Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
+  anti_join(weird_early) %>%
+  anti_join(weird_tp) %>%
   ggplot(aes(generation, Frequency, color = sample)) +
   geom_line(size = 2.5) +
   #geom_point()+
@@ -483,21 +485,22 @@ arsSalmons,
   scale_x_continuous(breaks=seq(0,203,50)) +
   scale_y_continuous(limits=c(0,100)) +
   theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
-        text = element_text(size=12),
+        text = element_text(size=40),
         legend.position = "none",
-        axis.text.x = element_text(size = 10, color = "black"), #edit x-tick labels
-        axis.text.y = element_text(size = 12, color = "black"),
+        axis.text.x = element_text(size = 20, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 20, color = "black"),
         strip.background = element_blank(), #removed box around facet title
-        strip.text = element_text(size=12)
+        strip.text = element_text(size=30)
   )
 propCNV_by_Pop
 
 ggsave(paste0("propCNV_by_pop_",version_name,"_080722.pdf"), bg = "#FFFFFF", height = 15, width = 20)
-ggsave("propCNV_by_pop_101322.pdf", bg = "#FFFFFF", height = 15, width = 20)
-ggsave("propCNV_by_pop_101322.png", bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNVpop_clean_101322.pdf", bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNVpop_clean_101322.png", bg = "#FFFFFF", height = 15, width = 20)
 
 
-############
+##############################
+# Clean propCNV plot
 # PropCNV plots with abberant timepoints and/or populations removed
 
 early_df = freq_and_counts %>%
@@ -557,7 +560,10 @@ freq_and_counts %>%
         strip.background = element_blank(), #removed box around facet title
         strip.text = element_text(size=25)
   )
-
+ggsave("propCNV_clean_101322.pdf", bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNV_clean_101322.png", bg = "#FFFFFF", height = 15, width = 20)
+ggsave("propCNV_clean_101322_8x12.pdf", bg = "#FFFFFF", height = 8, width = 12)
+ggsave("propCNV_clean_101322_8x12.png", bg = "#FFFFFF", height = 8, width = 12)
 
 
 
