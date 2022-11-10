@@ -565,6 +565,77 @@ ggsave("propCNV_clean_101322.png", bg = "#FFFFFF", height = 15, width = 20)
 ggsave("propCNV_clean_101322_8x12.pdf", bg = "#FFFFFF", height = 8, width = 12)
 ggsave("propCNV_clean_101322_8x12.png", bg = "#FFFFFF", height = 8, width = 12)
 
+###### PropCNV Lineplots all in 1 pane, NOT FACETED ######
+
+freq_and_counts = read_csv("freq_and_counts_Merged_080622_all_timepoints.csv")
+quartz()
+one_pane = freq_and_counts %>%
+  filter(Count>70000,
+         generation <= 203) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  anti_join(weird_early) %>%
+  anti_join(weird_tp) %>%
+  dplyr::filter(!(Description == "1 copy control" & generation == 182 |
+                    Description == "2 copy control" & generation == 79 |
+                    Description == "2 copy control" & generation == 95 |
+                    Description == "2 copy control" & generation == 108 |
+                    Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
+  ggplot(aes(generation, Frequency, color = sample)) +
+  geom_line(size = 2.5) +
+  #geom_point()+
+#   facet_wrap(~factor(Description,
+#                      levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
+  xlab("Generation") +
+  ylab("Proportion of cells with GAP1 amplifications") +
+  scale_color_manual(values = c(wtGrays, allGolds,arsSalmons, ltrBlues)) +
+  theme_classic() +
+  #scale_x_continuous(breaks=seq(0,250,50)) +
+  scale_x_continuous(breaks=seq(0,203,50)) +
+  scale_y_continuous(limits=c(0,100)) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        text = element_text(size=25),
+        #legend.position = "none",
+        axis.text.x = element_text(size = 30, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 30, color = "black"),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=25)
+  )
+
+one_pane_early = freq_and_counts %>%
+  filter(Count>70000,
+         generation <= 108) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
+  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  anti_join(weird_early) %>%
+  anti_join(weird_tp) %>%
+  dplyr::filter(!(Description == "1 copy control" & generation == 182 |
+                    Description == "2 copy control" & generation == 79 |
+                    Description == "2 copy control" & generation == 95 |
+                    Description == "2 copy control" & generation == 108 |
+                    Description == "2 copy control" & generation == 116)) %>% #exclude these controls timepoints that look weird on ridgeplots
+  ggplot(aes(generation, Frequency, color = sample)) +
+  geom_line(size = 2.5) +
+  #geom_point()+
+  #   facet_wrap(~factor(Description,
+  #                      levels = c("GAP1 WT architecture","GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")), labeller = my_facet_names, scales='free') +
+  xlab("Generation") +
+  ylab("Proportion of cells with GAP1 amplifications") +
+  scale_color_manual(values = c(wtGrays, allGolds,arsSalmons, ltrBlues)) +
+  theme_classic() +
+  scale_x_continuous(breaks=seq(0,100,50)) +
+  #scale_x_continuous(breaks=seq(0,124,50)) +
+  #xlim(0, 108)+
+  scale_y_continuous(limits=c(0,108)) +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        text = element_text(size=25),
+        #legend.position = "none",
+        axis.text.x = element_text(size = 30, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 30, color = "black"),
+        strip.background = element_blank(), #removed box around facet title
+        strip.text = element_text(size=25)
+  )
+one_pane_early
 
 
 ##### STEP 9 ##### Plot Ridgeplots (density histograms):
