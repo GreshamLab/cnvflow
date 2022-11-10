@@ -503,15 +503,13 @@ ggsave("propCNVpop_clean_101322.png", bg = "#FFFFFF", height = 15, width = 20)
 # Clean propCNV plot
 # PropCNV plots with abberant timepoints and/or populations removed
 
-early_df = freq_and_counts %>%
+weird_early = freq_and_counts %>%
   filter(generation < 30,
          Type %in% c("Experimental", "1_copy_ctrl"),
          Description %in% c("1 copy control", "GAP1 WT architecture","GAP1 LTR KO"),
          Gate == "two_or_more_copy") %>%
-  arrange(generation, sample)%>%
-  select(-name, -`Outflow well`, -Media)
-
-weird_early = early_df %>%
+  arrange(generation, sample) %>% View()
+  #select(-name, -`Outflow well`, -Media)
   filter(Frequency > 15)
 
 freq_and_counts %>%
@@ -527,6 +525,9 @@ weird_tp = freq_and_counts %>%
         sample == "gap1_all_6" & Gate == "two_or_more_copy" & generation == 124|
         sample == "gap1_ltr_2"
     )
+
+weird = rbind(weird_early, weird_tp)
+weird  %>% write_csv("weird_111022.csv")
 
 freq_and_counts %>%
   filter(Count>70000,
