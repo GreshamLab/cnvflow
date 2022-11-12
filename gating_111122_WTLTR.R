@@ -258,7 +258,7 @@ experiment_details
 #Author: Julie
 
 try(map(folders[23:length(folders)],analyze_all_exp, my_markers, gating_template = paste0("cytek_gating_",version_name,".csv")))
-
+try(map(folders[4],analyze_all_exp, my_markers, gating_template = paste0("cytek_gating_",version_name,".csv")))
 #STEP 7: Pull in all counts or freq or single cell distribution files from directory and combine into a single dataframe
 #Author: Julie
 
@@ -379,9 +379,13 @@ for(exp in unique(freq_and_counts$Description)) {
 }
 names(prop_plot_list) = unique(freq_and_counts$Description)
 prop_plot_list$`GAP1 WT architecture` # change index to view replicates for different genetic backgrounds
+ggsave(paste0("wt_pops_",version_name,".png"), bg = "#FFFFFF")
 prop_plot_list$`GAP1 ARS KO`
+ggsave(paste0("ars_ko_pops_",version_name,".png"), bg = "#FFFFFF")
 prop_plot_list$`GAP1 LTR KO`
+ggsave(paste0("ltr_ko_pops_",version_name,".png"), bg = "#FFFFFF")
 prop_plot_list$`GAP1 LTR + ARS KO`
+ggsave(paste0("all_ko_pops_",version_name,".png"), bg = "#FFFFFF")
 
 
 ggsave(paste0("propCNV_",version_name,"_ALL.pdf"), bg = "#FFFFFF", height = 5, width = 12)
@@ -415,7 +419,7 @@ propCNV = freq_and_counts %>%
   filter(Count>70000,
   generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  #anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   dplyr::filter(!(Description == "1 copy control" & generation == 182 |
                     Description == "2 copy control" & generation == 79 |
                     Description == "2 copy control" & generation == 95 |
@@ -458,7 +462,7 @@ propCNV_by_Pop = freq_and_counts %>%
          # generation <= 203) %>%
          generation <= 203) %>%
   filter(Gate %in% c("two_or_more_copy"), Type == "Experimental") %>%
-  anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+  #anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
   dplyr::filter(!(Description == "1 copy control" & generation == 182 |
                     Description == "2 copy control" & generation == 79 |
                     Description == "2 copy control" & generation == 95 |
