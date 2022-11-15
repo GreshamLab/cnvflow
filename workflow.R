@@ -16,17 +16,13 @@ library(tidyverse)
 library(ggridges)
 library(docstring)
 
-# Set working directory and get list of subdirectories containing FCS files
-#setwd('/Volumes/GoogleDrive/My Drive/Gresham Lab_Papers/2021/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #David's working directory
-#setwd('G:/.shortcut-targets-by-id/1Bioj1YP_I7P8tqgmg4Zbt4EAfhb7J-0w/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files') #Titir's working directory
-#setwd("/Volumes/GoogleDrive/My Drive/greshamlab/Molecular Determinants of CNV Evolution Dynamics/Summer 2021 Group LTEE/FCS files") #Julie's WD
 setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer2021/data/Summer_LTEE_2021_FCS_files")  #Julie's WD
 
-#In addition to having  directories containing data FSC files, make a gating directory, which is a directory that contains ALL the FSC files you want to overlay for drawing gates.
-folders = list.dirs()[c(2,5:28)] #select the FSC file folders in your directory
+#In addition to having directories (one to many) containing data FSC files, make a gating directory, which is **ONE** directory that contains ALL the FSC files you want to overlay for drawing gates. Read in the names of those directories (data directories and one gating directory) here:
+folders = list.dirs()[c(5,9:32)] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
-version_name = "01_02_04_v4_wt_ltr" #timepoints folders 1,2,4 using WT and LTR and control samples only to draw gates (folder 01_02_04_wt_ltr_ctrls_only_FSCfiles) using 0,1,2 copy as guides.
+#version_name = "01_02_04_v4_wt_ltr" #timepoints folders 1,2,4 using WT and LTR and control samples only to draw gates (folder 01_02_04_wt_ltr_ctrls_only_FSCfiles) using 0,1,2 copy as guides.
 #version_name = "01_02_04_v3_wt_ltr" #timepoints folders 1,2,4 [using WT and LTR and control samples only](<- i don't think this is true. I think all samples were used to draw gates) using 0,1 copy as guides.
 #version_name = "newGates_01_02_04_ars_all" #timepoint tolders 1,2,4, using only ARS and LTR+ARS samples (folder 01_02_04_ars_all_only_FSCfiles) only to draw gates
 #version_name = "01_02_04_v2" #timepponts folders 1,2,4 all samples (experimental and controls) to draw gates
@@ -69,9 +65,10 @@ map(folders, make_exp_details, samplesheet = "EE_GAP1_ArchMuts_2021.csv")
 #Results in 1 timepoint gating set containing all .fcs files, associated experiment details, and marker details
 #Author: Julie
 
-# here we will load in 1 directory that contains 3 timepoints worth of data to load in.
-# cyto_setup() does not permit loading in more than 1 directory, so I had to create a directory with the data files of interest.
+# here we will load in my gating directory. It contains 3 timepoints worth of data to load in.
+# cyto_setup() does not permit loading in more than 1 directory, so I had to create a directory with the data files of interest to guide gate drawing.
 # these data will guide us on drawing gates.
+# Note: folders[1] is our gating directory
 exp_details_path = list.files(path = paste0(folders[1]), pattern = "_experiment_details.csv", full.names = T)
 
 timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, select="fcs", details=F) #edit Markers on Viewer pane, Save & Close
@@ -137,7 +134,7 @@ cyto_gate_draw(transformed_timepoint_gating_set,
 
 #Gating for CNVs using the 0,1 and 2 copy controls:
 indexes_ctr0 <- which(experiment_details$Description %in% c("0 copy control"))
-DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[as.numeric(indexes_ctr0)] #DGY1 c(30,61,92)
+DGY1 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[[as.numeric(indexes_ctr0)]] #DGY1 c(30,61,92)
 
 ind_ctr1 <-as.numeric(which(experiment_details$Description %in% c("1 copy control")))
 DGY500 <- cyto_extract(transformed_timepoint_gating_set, "Single_cells")[ind_ctr1] #DGY500
@@ -202,11 +199,12 @@ analyze_all_exp = function(folder_name, my_markers, gating_template="cytek_gatin
   #2. read in experiment details for that gating set
   experiment_details <- read_csv(exp_details_path, show_col_types = F) #import experiment-details.csv
   #Write For Loop: for column in exp_details_path, add that column to timepoint_gating_set's metadata
-  experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
-  for(i in 1:length(names(experiment_details))){
-    flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
-  }
-experiment_details
+
+  ordered_exp_details = pData(timepoint_gating_set) %>% left_join(experiment_details) #rerrange rows of data frame merging is correct. ie. fcs name matches the metadata
+   for(i in 1:length(names(ordered_exp_details))){
+     flowWorkspace::pData(timepoint_gating_set)[names(ordered_exp_details[i])]<-ordered_exp_details[i]
+   }
+
   #3. specify markers for that gating set
   markernames(timepoint_gating_set)<-my_markers
 
