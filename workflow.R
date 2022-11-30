@@ -22,7 +22,9 @@ setwd("/Volumes/GoogleDrive/My Drive/greshamlab/projects/EE_GAP1_ArchMuts_Summer
 folders = list.dirs()[c(5,9:32)] #select the FSC file folders in your directory
 
 # Choose a name to be used for all output files including the gating template and associated flow data and graphs.
+version_name = "03_112122_liberal" #Timepoint 3 only because it has the lowest median GFP. Liberal meaning lower border between 1 and 2 copy gates, which will lead to high positive rate and lowest threshold for CNV detection.
 version_name = "01_02_04_v2_111522"  #Used gating template 01_02_04_v2. This version reflect reanalysis with ordered_exp_details in Step 2 which now accurately attaches metadata to gating set.
+# version_name = "01_02_03_v5_wt_ltr" #timepoints 1 2 3 using WT and LTR KO experimental samples only - no controls - see script gating_111122_WTLTR.R
 #version_name = "01_02_04_v4_wt_ltr" #timepoints folders 1,2,4 using WT and LTR and control samples only to draw gates (folder 01_02_04_wt_ltr_ctrls_only_FSCfiles) using 0,1,2 copy as guides.
 #version_name = "01_02_04_v3_wt_ltr" #timepoints folders 1,2,4 [using WT and LTR and control samples only](<- i don't think this is true. I think all samples were used to draw gates) using 0,1 copy as guides.
 #version_name = "newGates_01_02_04_ars_all" #timepoint tolders 1,2,4, using only ARS and LTR+ARS samples (folder 01_02_04_ars_all_only_FSCfiles) only to draw gates
@@ -77,9 +79,10 @@ timepoint_gating_set <- cyto_setup(path = paste0(folders[1]), restrict=TRUE, sel
 #use flowWorkspace::pData to annotate the experiment details file associated with the gating set
 experiment_details <- read_csv(exp_details_path) #import experiment-details.csv
 
-for(i in 1:length(names(experiment_details))){
-  flowWorkspace::pData(timepoint_gating_set)[names(experiment_details[i])]<-experiment_details[i]
-  }
+ordered_exp_details = pData(timepoint_gating_set) %>% left_join(experiment_details) #rerrange rows of data frame merging is correct. ie. fcs name matches the metadata
+for(i in 1:length(names(ordered_exp_details))){
+  flowWorkspace::pData(timepoint_gating_set)[names(ordered_exp_details[i])]<-ordered_exp_details[i]
+}
 
 ## Rename the experiment-markers.csv file. Need to do once.
 #file.rename(dir(pattern = "Experiment-Markers.csv"),"EE_GAP1_ArchMuts_2021-Experiment-Markers.csv")
@@ -507,7 +510,7 @@ weird_early = freq_and_counts %>%
          Type %in% c("Experimental", "1_copy_ctrl"),
          Description %in% c("1 copy control", "GAP1 WT architecture","GAP1 LTR KO"),
          Gate == "two_or_more_copy") %>%
-  arrange(generation, sample) %>% View()
+  arrange(generation, sample) %>%
   #select(-name, -`Outflow well`, -Media)
   filter(Frequency > 15)
 
@@ -526,7 +529,7 @@ weird_tp = freq_and_counts %>%
     )
 
 weird = rbind(weird_early, weird_tp)
-weird  %>% write_csv("weird_111022.csv")
+weird %>% write_csv("weird_111022.csv")
 
 freq_and_counts %>%
   filter(Count>70000,
@@ -637,6 +640,44 @@ one_pane_early = freq_and_counts %>%
   )
 one_pane_early
 
+
+#####
+#Plot proportion of the populations with a CNV over time (collapse the replicates)
+# with generalized additive model
+freq_and_counts = read_csv("freq_and_counts_Merged_080622_all_timepoints.csv")
+#freq %>%
+quartz()
+freq_and_counts %>%
+  filter(Count>70000) %>%
+  filter(Gate %in% c("two_or_more_copy"), Type == "Experimental",
+         generation <= 203) %>%
+   anti_join(fails)  %>% #remove contaminated and outliers informed by population ridgeplots (above) and fluor lineplots (below)
+   anti_join(weird_early) %>%
+   anti_join(weird_tp) %>%
+  mutate(Description = factor(Description, levels=c("GAP1 WT architecture", "GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO")))%>%
+  ggplot(aes(generation, Frequency, color = Description)) +
+  scale_color_manual(values=c("gray6", "#6699cc", "#e26d5c", "#DEBD52"),  #custom colors
+                     limits=c("GAP1 WT architecture", "GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO"),
+                     labels=c("Wild type architecture", "LTR KO", "ARS KO", "LTR and ARS KO"))+
+  scale_fill_manual(values=c("gray6", "#6699cc", "#e26d5c", "#DEBD52"), #custom colors
+                    limits=c("GAP1 WT architecture", "GAP1 LTR KO", "GAP1 ARS KO","GAP1 LTR + ARS KO"), #second, change order of legend items, by listing in the order you want em. using the real names in the aes(color =  ) argument
+                    labels=c("Wild type architecture", "LTR KO", "ARS KO", "LTR and ARS KO"))+#third, now you can change legend labels
+  geom_smooth(method="gam", span=1, aes(fill=Description), alpha=0.5) +
+  scale_x_continuous(breaks=seq(0,200,50))+
+  scale_y_continuous(breaks=seq(0,100,25))+
+  #scale_fill_discrete(name = "Dose", labels = c("A", "B", "C"))
+  xlab("Generation")+
+  ylab("Percent of cells with GAP1 CNV") +
+  theme_classic() +
+  theme(plot.margin = unit(c(1, 1, 1, 1), "cm"),
+        axis.title = element_text(size = 40),
+        text = element_text(size=25),
+        legend.title = element_blank(),
+        axis.text.x = element_text(size = 40, color = "black"), #edit x-tick labels
+        axis.text.y = element_text(size = 40, color = "black"))
+
+ggsave(paste0("propCNVgam_113022_8x12.pdf"), bg = "#FFFFFF", height = 8, width = 12)
+ggsave(paste0("propCNVgam_113022_8x12.png"), bg = "#FFFFFF", height = 8, width = 12)
 
 ##### STEP 9 ##### Plot Ridgeplots (density histograms):
 # instead of looking at the MEDIAN GFP values per population per generation,
@@ -871,3 +912,5 @@ fluor_single_plots$`GAP1 LTR + ARS KO`
 #LTR and ARS = GOLD metalic "#DEBD52","#DBB741","#D7B02F","#CAA426","#D9BB59","#D7B02F","#CAA426","#D9BB59", #LTR,8,gold
 #ARS = SALMON  "#e26d5c"
 #LTR = BABY BLUE "#6699cc"
+
+
